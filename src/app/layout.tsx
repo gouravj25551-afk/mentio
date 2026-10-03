@@ -1,0 +1,34 @@
+import type { Metadata } from "next";
+import { Inter, Space_Grotesk } from "next/font/google";
+
+import { Providers } from "@/components/providers";
+import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", display: "swap" });
+
+export const metadata: Metadata = {
+  title: {
+    default: "Mentio — Book 1:1 calls with the people you aspire to become",
+    template: "%s · Mentio",
+  },
+  description:
+    "A direct line to GSoC mentors, open-source maintainers, Google and Microsoft interns, founders, PMs, designers and engineers. Pick a slot, book the call.",
+  keywords: ["mentorship", "GSoC", "LFX", "career", "interview prep", "open source"],
+  openGraph: {
+    title: "Mentio",
+    description: "Book 1:1 mentorship calls with people you aspire to become.",
+    type: "website",
+  },
+  icons: { icon: "/favicon.ico" },
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${display.variable}`}>
+      <body className="min-h-screen bg-background font-sans">
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}

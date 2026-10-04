@@ -1,0 +1,408 @@
+// Mentio — Production Prisma Schema
+// A mentorship marketplace. Schema is payments-ready: a Booking carries an
+// optional PaymentIntent reference so a provider (Stripe/Razorpay/etc.) can
+// be wired in without migrating existing data.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========== Auth ==========
+
+enum Role {
+  STUDENT
+  MENTOR
+  ADMIN
+}
+
+enum MentorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          Role      @default(STUDENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts            Account[]
+  sessions            Session[]
+  profile             Profile?
+  mentorProfile       MentorProfile?
+  bookingsAsStudent   Booking[]            @relation("StudentBookings")
+  reviewsGiven        Review[]             @relation("ReviewAuthor")
+  savedMentors        SavedMentor[]        @relation("Saver")
+  notifications       Notification[]
+  passwordResetTokens PasswordResetToken[]
+  verificationTokens  VerificationToken[]  @relation("UserVerification")
+  adminActionsBy      AdminAction[]        @relation("AdminActor")
+  adminActionsOn      AdminAction[]        @relation("AdminTarget")
+
+  @@index([role])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  userId     String?
+  user       User?    @relation("UserVerification", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ========== Profiles ==========
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  headline  String?
+  bio       String?  @db.Text
+  location  String?
+  timezone  String   @default("UTC")
+  languages String[] @default([])
+  website   String?
+  twitter   String?
+  linkedin  String?
+  github    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MentorProfile {
+  id               String       @id @default(cuid())
+  userId           String       @unique
+  slug             String       @unique
+  headline         String
+  bio              String       @db.Text
+  experience       String       @db.Text
+  achievements     String[]     @default([])
+  portfolio        String[]     @default([])
+  featured         Boolean      @default(false)
+  status           MentorStatus @default(PENDING)
+  // Pricing — zero means free (payments arrive in a future phase)
+  rateCents        Int          @default(0)
+  currency         String       @default("USD")
+  sessionLength    Int          @default(30) // minutes
+  responseTimeHrs  Int          @default(24)
+  totalSessions    Int          @default(0)
+  averageRating    Float        @default(0)
+  totalReviews     Int          @default(0)
+  acceptingBookings Boolean     @default(true)
+  approvedAt       DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categories    MentorCategory[]
+  skills        MentorSkill[]
+  availability  Availability[]
+  bookings      Booking[]        @relation("MentorBookings")
+  reviews       Review[]         @relation("ReviewedMentor")
+  savedBy       SavedMentor[]    @relation("Saved")
+  calendars     CalendarConnection[]
+
+  @@index([status])
+  @@index([featured])
+  @@index([averageRating])
+}
+
+// ========== Taxonomy ==========
+
+model Category {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String   @unique
+  description String?
+  icon        String?
+  color       String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  mentors MentorCategory[]
+}
+
+model Skill {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  mentors MentorSkill[]
+}
+
+model MentorCategory {
+  mentorProfileId String
+  categoryId      String
+
+  mentorProfile MentorProfile @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  category      Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([mentorProfileId, categoryId])
+  @@index([categoryId])
+}
+
+model MentorSkill {
+  mentorProfileId String
+  skillId         String
+
+  mentorProfile MentorProfile @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  skill         Skill         @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([mentorProfileId, skillId])
+  @@index([skillId])
+}
+
+// ========== Scheduling ==========
+
+enum Weekday {
+  SUN
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+}
+
+model Availability {
+  id              String   @id @default(cuid())
+  mentorProfileId String
+  weekday         Weekday
+  startMinutes    Int      // minutes since midnight in mentor's timezone
+  endMinutes      Int
+  createdAt       DateTime @default(now())
+
+  mentorProfile MentorProfile @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([mentorProfileId, weekday])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum BookingSource {
+  INTERNAL
+  CAL_COM
+  CALENDLY
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  studentId       String
+  mentorProfileId String
+  startsAt        DateTime
+  endsAt          DateTime
+  status          BookingStatus @default(PENDING)
+  source          BookingSource @default(INTERNAL)
+  topic           String
+  notes           String?       @db.Text
+  meetingUrl      String?
+  cancelReason    String?
+  cancelledAt     DateTime?
+  rescheduledFromId String?     @unique
+  rescheduledFrom Booking?      @relation("Reschedule", fields: [rescheduledFromId], references: [id])
+  rescheduledTo   Booking?      @relation("Reschedule")
+  // Payments-ready: hooks for a future provider
+  paymentIntentId String?
+  paymentStatus   String?
+  amountCents     Int           @default(0)
+  currency        String        @default("USD")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  student       User          @relation("StudentBookings", fields: [studentId], references: [id], onDelete: Cascade)
+  mentorProfile MentorProfile @relation("MentorBookings", fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  review        Review?
+
+  @@index([studentId, status])
+  @@index([mentorProfileId, status])
+  @@index([startsAt])
+}
+
+// ========== Reviews ==========
+
+model Review {
+  id              String   @id @default(cuid())
+  bookingId       String   @unique
+  mentorProfileId String
+  authorId        String
+  rating          Int      // 1..5
+  comment         String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  mentorProfile MentorProfile @relation("ReviewedMentor", fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  author        User          @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([mentorProfileId])
+  @@index([authorId])
+}
+
+// ========== Saved Mentors ==========
+
+model SavedMentor {
+  id              String   @id @default(cuid())
+  userId          String
+  mentorProfileId String
+  createdAt       DateTime @default(now())
+
+  user          User          @relation("Saver", fields: [userId], references: [id], onDelete: Cascade)
+  mentorProfile MentorProfile @relation("Saved", fields: [mentorProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mentorProfileId])
+  @@index([userId])
+}
+
+// ========== Notifications ==========
+
+enum NotificationType {
+  BOOKING_CREATED
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  BOOKING_RESCHEDULED
+  BOOKING_REMINDER
+  REVIEW_LEFT
+  MENTOR_APPROVED
+  MENTOR_REJECTED
+  PROFILE_UPDATED
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String?          @db.Text
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([createdAt])
+}
+
+// ========== Calendar Integrations ==========
+
+enum CalendarProvider {
+  CAL_COM
+  CALENDLY
+}
+
+model CalendarConnection {
+  id              String           @id @default(cuid())
+  mentorProfileId String
+  provider        CalendarProvider
+  externalId      String           // provider's user/account id
+  accessToken     String?          @db.Text
+  refreshToken    String?          @db.Text
+  expiresAt       DateTime?
+  eventTypeUrl    String?
+  active          Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  mentorProfile MentorProfile @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([mentorProfileId, provider])
+  @@index([provider])
+}
+
+// ========== Admin ==========
+
+enum AdminActionType {
+  APPROVE_MENTOR
+  REJECT_MENTOR
+  SUSPEND_USER
+  REINSTATE_USER
+  FEATURE_MENTOR
+  UNFEATURE_MENTOR
+  DELETE_REVIEW
+  CREATE_CATEGORY
+  UPDATE_CATEGORY
+  DELETE_CATEGORY
+}
+
+model AdminAction {
+  id         String          @id @default(cuid())
+  actorId    String
+  targetId   String?
+  type       AdminActionType
+  reason     String?
+  metadata   Json?
+  createdAt  DateTime        @default(now())
+
+  actor  User  @relation("AdminActor", fields: [actorId], references: [id], onDelete: Cascade)
+  target User? @relation("AdminTarget", fields: [targetId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([targetId])
+  @@index([type])
+}

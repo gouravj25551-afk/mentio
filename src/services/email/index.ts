@@ -6,6 +6,7 @@ export interface MailMessage {
   to: string;
   subject: string;
   text: string;
+  html?: string;
 }
 
 export interface Mailer {
@@ -26,7 +27,7 @@ class ResendMailer implements Mailer {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${this.apiKey}` },
-      body: JSON.stringify({ from: env.EMAIL_FROM, to: msg.to, subject: msg.subject, text: msg.text }),
+    body: JSON.stringify({ from: env.EMAIL_FROM, to: msg.to, subject: msg.subject, text: msg.text, html: msg.html }),
       signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) {

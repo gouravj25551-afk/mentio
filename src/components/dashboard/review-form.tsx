@@ -3,16 +3,18 @@ import { useState, useTransition } from "react";
 import { Loader2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export function ReviewForm({ bookingId, initialRating, initialComment = "" }: { bookingId: string; initialRating?: number; initialComment?: string }) {
   const [rating, setRating] = useState<number>(initialRating ?? 0);
   const [comment, setComment] = useState(initialComment);
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-1">
+      <div role="group" aria-label="Rating" className="flex gap-1">
         {Array.from({ length: 5 }).map((_, i) => {
           const idx = i + 1;
           return (
@@ -21,14 +23,15 @@ export function ReviewForm({ bookingId, initialRating, initialComment = "" }: { 
               type="button"
               onClick={() => setRating(idx)}
               className="rounded-md p-1 transition hover:bg-muted"
-              aria-label={`Rate ${idx} stars`}
+              aria-label={`${idx} ${idx === 1 ? "star" : "stars"}`}
+              aria-pressed={idx === rating}
             >
               <Star className={`h-6 w-6 ${idx <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />
             </button>
           );
         })}
       </div>
-      <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="What stood out? Keep it short and specific." />
+      <Textarea aria-label="Review comment" maxLength={1000} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="What stood out? Keep it short and specific." />
       <Button
         variant="brand"
         disabled={pending || rating === 0}
@@ -44,7 +47,8 @@ export function ReviewForm({ bookingId, initialRating, initialComment = "" }: { 
               toast.error(b?.error ?? "Could not submit review");
               return;
             }
-            toast.success("Review submitted — thanks for the feedback.");
+            toast.success("Review submitted. Thanks for the feedback.");
+            router.refresh();
           })
         }
       >

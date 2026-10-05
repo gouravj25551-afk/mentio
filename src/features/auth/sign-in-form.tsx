@@ -1,9 +1,9 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,8 @@ import { resendVerificationAction, signInWithPassword, signInWithGoogle } from "
 import { safeNextPath } from "@/lib/utils";
 
 export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
-  const [state, action] = useFormState(signInWithPassword, null);
-  const [resent, resend] = useFormState(resendVerificationAction, null);
+  const [state, action] = useActionState(signInWithPassword, null);
+  const [resent, resend] = useActionState(resendVerificationAction, null);
   const emailRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const search = useSearchParams();

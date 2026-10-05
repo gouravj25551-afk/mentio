@@ -1,8 +1,8 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { signInWithGoogle, signUpAction } from "@/features/auth/actions";
 
 export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { defaultRole?: "STUDENT" | "MENTOR"; googleEnabled: boolean }) {
-  const [state, action] = useFormState(signUpAction, null);
+  const [state, action] = useActionState(signUpAction, null);
   const [role, setRole] = useState<"STUDENT" | "MENTOR">(defaultRole);
 
   useEffect(() => {

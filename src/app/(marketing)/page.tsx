@@ -2,10 +2,8 @@ import { db } from "@/lib/db";
 import { publicUser } from "@/lib/public-select";
 import { Hero } from "@/components/landing/hero";
 import { FeaturedMentors } from "@/components/landing/featured-mentors";
-import { SocialProof } from "@/components/landing/social-proof";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { Categories } from "@/components/landing/categories";
-import { Testimonials } from "@/components/landing/testimonials";
 import { Benefits } from "@/components/landing/benefits";
 import { FAQ } from "@/components/landing/faq";
 import { CTA } from "@/components/landing/cta";
@@ -31,12 +29,10 @@ export default async function LandingPage() {
   return (
     <>
       <Hero />
-      <SocialProof />
       <FeaturedMentors mentors={featured} />
       <HowItWorks />
       <Categories categories={categories} />
       <Benefits />
-      <Testimonials />
       <FAQ />
       <CTA />
     </>

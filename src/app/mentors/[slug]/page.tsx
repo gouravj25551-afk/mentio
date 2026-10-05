@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, BadgeCheck, Clock, Globe, Linkedin, Star, Twitter } from "lucide-react";
@@ -17,6 +18,20 @@ import { SaveMentorButton } from "@/components/mentor/save-button";
 import { optionalUser } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { safeTimezone } from "@/lib/time";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const mentor = await getMentorBySlug(slug);
+  if (!mentor || mentor.status !== "APPROVED") return { title: "Mentor not found", robots: { index: false } };
+  const title = `${mentor.user.name} — ${mentor.headline}`;
+  const description = mentor.bio.replace(/\s+/g, " ").slice(0, 160);
+  return {
+    title,
+    description,
+    alternates: { canonical: `/mentors/${mentor.slug}` },
+    openGraph: { title, description, type: "profile", images: mentor.user.image ? [mentor.user.image] : undefined },
+  };
+}
 
 export default async function MentorPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

@@ -1,14 +1,15 @@
 "use client";
 
+import { useActionState } from "react";
 import Link from "next/link";
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { verifyEmailAction } from "@/features/auth/actions";
 
 export function VerifyEmailForm({ token }: { token: string }) {
-  const [state, action] = useFormState(verifyEmailAction, null);
+  const [state, action] = useActionState(verifyEmailAction, null);
 
   if (state?.ok) {
     return (

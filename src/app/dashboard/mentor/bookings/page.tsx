@@ -5,7 +5,7 @@ import { BookingsTable } from "@/components/dashboard/bookings-table";
 import { bookingRowSelect, toBookingRow } from "@/features/bookings/rows";
 
 export default async function MentorBookings() {
-  const user = await requireRole(["MENTOR", "ADMIN"]);
+  const user = await requireRole("MENTOR");
   const mentor = await db.mentorProfile.findUnique({ where: { userId: user.id } });
   if (!mentor) return <p className="text-sm text-muted-foreground">You don&apos;t have a mentor profile yet.</p>;
   const now = new Date();

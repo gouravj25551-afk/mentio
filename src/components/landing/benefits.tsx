@@ -2,10 +2,10 @@ import { ShieldCheck, Zap, Globe2, HeartHandshake } from "lucide-react";
 
 export function Benefits() {
   const items = [
-    { icon: ShieldCheck, title: "Vetted mentors only", desc: "Every mentor is reviewed. Students see rating distribution and real session count — no vanity badges." },
-    { icon: Zap, title: "Book in 30 seconds", desc: "No request-and-wait. Pick a slot, confirm, done. Reschedule or cancel from your dashboard." },
-    { icon: Globe2, title: "Timezone-aware", desc: "Availability is normalized to your timezone. Mentors keep theirs. The UI handles the rest." },
-    { icon: HeartHandshake, title: "Payments ready", desc: "Platform is built so free calls become paid without touching your existing bookings." },
+    { icon: ShieldCheck, title: "Vetted mentors only", desc: "Every mentor profile is reviewed by an admin before it goes live. Ratings come only from completed sessions." },
+    { icon: Zap, title: "Book in a minute", desc: "No request-and-wait. Pick a slot and confirm. Reschedule or cancel from your dashboard." },
+    { icon: Globe2, title: "Timezone-aware", desc: "Mentors set hours in their own timezone. You see every time in yours." },
+    { icon: HeartHandshake, title: "Free during the beta", desc: "Every session is free while we build. Paid sessions will only launch once payments are fully in place." },
   ];
   return (
     <section className="border-y bg-muted/20 py-24">

@@ -14,11 +14,23 @@ export function isValidTimezone(tz: string | null | undefined): tz is string {
 /** Falls back to UTC for a missing or invalid zone so one bad value can't break scheduling. */
 export const safeTimezone = (tz: string | null | undefined) => (isValidTimezone(tz) ? tz : "UTC");
 
-/** All IANA zones the runtime supports, for timezone pickers. */
+// ICU reports some zones under their pre-rename names (Asia/Calcutta), which people
+// can't find in a picker. Show the current names; both resolve identically.
+const MODERN_NAMES: Record<string, string> = {
+  "Asia/Calcutta": "Asia/Kolkata",
+  "Asia/Saigon": "Asia/Ho_Chi_Minh",
+  "Asia/Katmandu": "Asia/Kathmandu",
+  "Asia/Rangoon": "Asia/Yangon",
+  "Europe/Kiev": "Europe/Kyiv",
+  "Atlantic/Faeroe": "Atlantic/Faroe",
+  "America/Buenos_Aires": "America/Argentina/Buenos_Aires",
+};
+
+/** All IANA zones the runtime supports (current names), for timezone pickers. */
 export function listTimezones(): string[] {
   const fn = (Intl as unknown as { supportedValuesOf?: (k: string) => string[] }).supportedValuesOf;
-  const zones = fn ? fn("timeZone") : [];
-  return zones.includes("UTC") ? zones : ["UTC", ...zones];
+  const zones = (fn ? fn("timeZone") : []).map((z) => MODERN_NAMES[z] ?? z).filter(isValidTimezone);
+  return [...new Set(["UTC", ...zones])].sort((x, y) => (x === "UTC" ? -1 : y === "UTC" ? 1 : x.localeCompare(y)));
 }
 
 /** The wall-clock reading of an instant in a zone. */

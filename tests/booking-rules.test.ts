@@ -113,3 +113,15 @@ describe("status rules", () => {
     expect(statusMatchesPayment({ status: "PENDING", amountCents: 5000, paymentStatus: "PENDING" })).toBe(true);
   });
 });
+
+import { isValidTimezone, listTimezones } from "@/lib/time";
+
+describe("timezone list", () => {
+  it("offers modern names that the runtime accepts", () => {
+    const zones = listTimezones();
+    expect(zones[0]).toBe("UTC");
+    expect(zones).toContain("Asia/Kolkata");
+    expect(zones).not.toContain("Asia/Calcutta");
+    expect(zones.every(isValidTimezone)).toBe(true);
+  });
+});

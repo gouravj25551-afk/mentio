@@ -1,7 +1,7 @@
 "use client";
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { useActionState, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,7 +14,7 @@ function ResetPasswordForm() {
   const params = useSearchParams();
   const router = useRouter();
   const token = params.get("token") ?? "";
-  const [state, action] = useFormState(resetPasswordAction, null);
+  const [state, action] = useActionState(resetPasswordAction, null);
 
   useEffect(() => {
     if (state?.ok) {

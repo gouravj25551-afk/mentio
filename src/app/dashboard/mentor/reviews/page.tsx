@@ -7,7 +7,7 @@ import { formatDate, initials } from "@/lib/utils";
 import { Empty } from "@/components/ui/empty";
 
 export default async function MentorReviewsPage() {
-  const user = await requireRole(["MENTOR", "ADMIN"]);
+  const user = await requireRole("MENTOR");
   const mentor = await db.mentorProfile.findUnique({ where: { userId: user.id } });
   if (!mentor) return <p className="text-sm text-muted-foreground">Finish onboarding first.</p>;
   const reviews = await db.review.findMany({

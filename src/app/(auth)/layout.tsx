@@ -8,9 +8,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <Logo />
         <div className="relative">
           <blockquote className="max-w-md font-display text-2xl font-semibold tracking-tight">
-            "I booked a call with a GSoC org admin on a Tuesday. I was shortlisted the next week."
+            &ldquo;I booked a call with a GSoC org admin on a Tuesday. I was shortlisted the next week.&rdquo;
           </blockquote>
-          <p className="mt-4 text-sm text-muted-foreground">Nikita B. — CS senior, now GSoC '24 contributor</p>
+          <p className="mt-4 text-sm text-muted-foreground">Nikita B. — CS senior, now GSoC &apos;24 contributor</p>
         </div>
         <div className="absolute inset-0 -z-10 grid-bg [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" aria-hidden />
       </div>

@@ -9,7 +9,7 @@ export default async function AdminOverview() {
   await requireRole("ADMIN");
   const now = new Date();
   const thirty = new Date(now.getTime() - 30 * 86400000);
-  const [users, mentors, approvedMentors, pendingMentors, bookings, bookings30d, avgRating] = await Promise.all([
+  const [users, , approvedMentors, pendingMentors, bookings, bookings30d, avgRating] = await Promise.all([
     db.user.count(),
     db.user.count({ where: { role: "MENTOR" } }),
     db.mentorProfile.count({ where: { status: "APPROVED" } }),

@@ -37,7 +37,7 @@ export default async function MentorOnboarding() {
         <div className="text-xs uppercase tracking-widest text-muted-foreground">Mentor onboarding</div>
         <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">Set up your mentor profile</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Approval typically takes 48 hours. In the meantime, your profile won't be publicly discoverable.
+          Approval typically takes 48 hours. In the meantime, your profile won&apos;t be publicly discoverable.
         </p>
       </div>
       <Card className="p-6">

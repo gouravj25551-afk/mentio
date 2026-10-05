@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatMoney, formatDate, initials } from "@/lib/utils";
+import { formatDate, initials } from "@/lib/utils";
 import { getMentorBySlug, getRatingDistribution } from "@/features/mentors/queries";
 import { getAvailableSlots } from "@/features/bookings/slots";
 import { BookingPanel } from "@/components/booking/booking-panel";
@@ -18,8 +18,9 @@ import { auth } from "@/lib/auth";
 
 export const revalidate = 30;
 
-export default async function MentorPage({ params }: { params: { slug: string } }) {
-  const mentor = await getMentorBySlug(params.slug);
+export default async function MentorPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const mentor = await getMentorBySlug(slug);
   if (!mentor) notFound();
   const [slots, dist, session] = await Promise.all([
     getAvailableSlots({ mentorProfileId: mentor.id, days: 14, sessionLength: mentor.sessionLength }),

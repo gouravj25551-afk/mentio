@@ -14,7 +14,7 @@ export default async function AvailabilityPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight">Your weekly availability</h1>
-        <p className="text-sm text-muted-foreground">We'll surface slots inside this window on your mentor page.</p>
+        <p className="text-sm text-muted-foreground">We&apos;ll surface slots inside this window on your mentor page.</p>
       </div>
       <AvailabilityEditor
         initial={mentor.availability.map((a) => ({ weekday: a.weekday, startMinutes: a.startMinutes, endMinutes: a.endMinutes }))}

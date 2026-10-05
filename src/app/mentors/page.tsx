@@ -8,17 +8,25 @@ import { Empty } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { Search } from "lucide-react";
+import { discoverySchema } from "@/lib/validators";
 
 export const metadata = { title: "Browse mentors" };
 
 export default async function MentorsPage({
-  searchParams,
+  searchParams: rawSearchParams,
 }: {
-  searchParams: { q?: string; category?: string; skill?: string; sort?: any; page?: string };
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const page = Number(searchParams.page ?? 1);
+  const raw = await rawSearchParams;
+  const flat = Object.fromEntries(
+    Object.entries(raw).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]),
+  );
+  // Invalid values fall back to defaults instead of reaching the query layer.
+  const parsed = discoverySchema.safeParse(flat);
+  const searchParams = parsed.success ? parsed.data : discoverySchema.parse({});
+  const page = searchParams.page;
   const [{ mentors, total, pageCount }, categories, skills] = await Promise.all([
-    listMentors({ ...searchParams, page }),
+    listMentors(searchParams),
     db.category.findMany({ orderBy: { order: "asc" } }),
     db.skill.findMany({ orderBy: { name: "asc" } }),
   ]);
@@ -26,7 +34,9 @@ export default async function MentorsPage({
   const qs = (patch: Record<string, string | number | undefined>) => {
     const url = new URLSearchParams();
     for (const [k, v] of Object.entries({ ...searchParams, ...patch })) {
-      if (v !== undefined && v !== "" && v !== null) url.set(k, String(v));
+      if (k === "perPage" || v === undefined || v === "" || v === null) continue;
+      if ((k === "page" && Number(v) === 1) || (k === "sort" && v === "recommended")) continue;
+      url.set(k, String(v));
     }
     const s = url.toString();
     return s ? `?${s}` : "";
@@ -46,7 +56,7 @@ export default async function MentorsPage({
           <p className="text-sm text-muted-foreground">{total.toLocaleString()} mentors ready to help.</p>
         </div>
 
-        <DiscoveryFilters categories={categories} skills={skills} initial={searchParams} />
+        <DiscoveryFilters categories={categories} skills={skills} initial={{ q: searchParams.q, category: searchParams.category, skill: searchParams.skill, sort: searchParams.sort }} />
 
         {mentors.length === 0 ? (
           <Empty

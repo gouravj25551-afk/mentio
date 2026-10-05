@@ -13,7 +13,7 @@ export function CTA() {
             Stop sending cold DMs.
           </h2>
           <p className="mt-4 max-w-xl text-base text-white/80 md:text-lg">
-            Join 2,000+ students already learning from the people they look up to. Your first call takes 30 seconds to book.
+            Learn from people who have done what you want to do. Booking a call takes under a minute.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button asChild size="xl" className="bg-white text-primary hover:bg-white/90">

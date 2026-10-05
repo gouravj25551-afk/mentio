@@ -1,8 +1,8 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useFormStatus } from "react-dom";
+import Link from "next/link";
+import { useActionState, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -14,19 +14,22 @@ import { toast } from "sonner";
 import { signInWithGoogle, signUpAction } from "@/features/auth/actions";
 
 export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { defaultRole?: "STUDENT" | "MENTOR"; googleEnabled: boolean }) {
-  const [state, action] = useFormState(signUpAction, null);
+  const [state, action] = useActionState(signUpAction, null);
   const [role, setRole] = useState<"STUDENT" | "MENTOR">(defaultRole);
-  const router = useRouter();
 
   useEffect(() => {
-    if (state?.ok) {
-      toast.success("Account created — welcome to Mentio");
-      router.replace(role === "MENTOR" ? "/onboarding/mentor" : "/dashboard/student");
-      router.refresh();
-    } else if (state && !state.ok) {
-      toast.error(state.error);
-    }
-  }, [state, role, router]);
+    if (state && !state.ok) toast.error(state.error);
+  }, [state]);
+
+  if (state?.ok) {
+    return (
+      <div role="status" className="rounded-lg border bg-muted/40 p-6 text-sm">
+        <div className="font-medium">Check your email</div>
+        <p className="mt-1 text-muted-foreground">{state.message}</p>
+        <Link href="/sign-in" className="mt-4 inline-block underline underline-offset-4">Go to sign in</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -50,12 +53,13 @@ export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { default
             key={r}
             type="button"
             onClick={() => setRole(r)}
+            aria-pressed={role === r}
             className={cn(
               "rounded-md border px-3 py-3 text-left text-sm transition",
               role === r ? "border-foreground bg-background shadow-soft" : "border-border bg-muted/30 hover:bg-background"
             )}
           >
-            <div className="font-medium">{r === "STUDENT" ? "I'm learning" : "I'm mentoring"}</div>
+            <div className="font-medium">{r === "STUDENT" ? "I&apos;m learning" : "I&apos;m mentoring"}</div>
             <div className="text-xs text-muted-foreground">
               {r === "STUDENT" ? "Book calls, grow fast" : "Share your journey, get discovered"}
             </div>
@@ -75,8 +79,8 @@ export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { default
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input id="password" name="password" type="password" autoComplete="new-password" required />
-          <p className="text-xs text-muted-foreground">8+ chars, with an uppercase letter and a number.</p>
+          <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} maxLength={72} aria-describedby="password-hint" />
+          <p id="password-hint" className="text-xs text-muted-foreground">8+ chars, with an uppercase letter, a lowercase letter and a number.</p>
         </div>
         <Submit />
       </form>

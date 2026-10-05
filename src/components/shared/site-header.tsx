@@ -2,17 +2,17 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
 import { UserMenu } from "@/components/shared/user-menu";
-import { auth } from "@/lib/auth";
+import { optionalUser } from "@/lib/auth/guards";
 
 export async function SiteHeader() {
-  const session = await auth();
+  const user = await optionalUser();
   return (
     <header className="sticky top-0 z-40 w-full">
       <div className="glass border-b border-border/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
             <Logo />
-            <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
+            <nav aria-label="Main" className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
               <Link href="/mentors" className="hover:text-foreground">Browse mentors</Link>
               <Link href="/categories" className="hover:text-foreground">Categories</Link>
               <Link href="/#how-it-works" className="hover:text-foreground">How it works</Link>
@@ -20,10 +20,18 @@ export async function SiteHeader() {
             </nav>
           </div>
           <div className="flex items-center gap-2">
-            {session?.user ? (
-              <UserMenu user={session.user} />
+            {user ? (
+              <>
+                <Button asChild variant="ghost" size="sm" className="md:hidden">
+                  <Link href="/mentors">Mentors</Link>
+                </Button>
+                <UserMenu user={user} />
+              </>
             ) : (
               <>
+                <Button asChild variant="ghost" size="sm" className="md:hidden">
+                  <Link href="/mentors">Mentors</Link>
+                </Button>
                 <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
                   <Link href="/sign-in">Sign in</Link>
                 </Button>

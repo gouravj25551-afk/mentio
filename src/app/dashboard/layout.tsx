@@ -2,6 +2,8 @@ import { requireUser } from "@/lib/auth/guards";
 import { DashboardShell } from "@/components/dashboard/shell";
 import { db } from "@/lib/db";
 
+export const metadata = { robots: { index: false, follow: false } };
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
   const unread = await db.notification.count({ where: { userId: user.id, readAt: null } });

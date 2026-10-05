@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { LogOut, LayoutDashboard, UserCircle2, Settings2 } from "lucide-react";
+import { LogOut, LayoutDashboard, UserCircle2 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -18,7 +18,7 @@ export function UserMenu({ user }: { user: { name?: string | null; email?: strin
     "/dashboard/student";
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="rounded-full outline-none ring-ring focus-visible:ring-2">
+      <DropdownMenuTrigger aria-label="Account menu" className="rounded-full outline-none ring-ring focus-visible:ring-2">
         <Avatar className="h-9 w-9">
           <AvatarImage src={user.image ?? undefined} alt={user.name ?? "User"} />
           <AvatarFallback>{initials(user.name)}</AvatarFallback>
@@ -31,8 +31,9 @@ export function UserMenu({ user }: { user: { name?: string | null; email?: strin
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild><Link href={dash}><LayoutDashboard className="h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link href={`${dash}/profile`}><UserCircle2 className="h-4 w-4" /> Profile</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link href={`${dash}/settings`}><Settings2 className="h-4 w-4" /> Settings</Link></DropdownMenuItem>
+        {user.role !== "ADMIN" ? (
+          <DropdownMenuItem asChild><Link href={`${dash}/profile`}><UserCircle2 className="h-4 w-4" /> Profile</Link></DropdownMenuItem>
+        ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOutAction()}>
           <LogOut className="h-4 w-4" /> Sign out

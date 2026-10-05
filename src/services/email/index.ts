@@ -1,12 +1,11 @@
-// Mailer abstraction. Swap this for Resend, Postmark, SES, etc. without
-// touching callers. In dev, we log to the console.
+// Mailer abstraction. Production requires Resend (enforced in src/lib/env.ts);
+// development and tests log to the console.
 import { env, isResendEnabled } from "@/lib/env";
 
 export interface MailMessage {
   to: string;
   subject: string;
-  text?: string;
-  html?: string;
+  text: string;
 }
 
 export interface Mailer {
@@ -15,9 +14,8 @@ export interface Mailer {
 
 class ConsoleMailer implements Mailer {
   async send(msg: MailMessage) {
-    const line = `[email] → ${msg.to} · ${msg.subject}`;
-    // eslint-disable-next-line no-console
-    console.log(line, msg.text ? `\n${msg.text}` : "");
+    // Development only: prints links (including one-time tokens) so flows can be tested locally.
+    console.log(`[email] to=${msg.to} subject="${msg.subject}"\n${msg.text}`);
     return { id: `console-${Date.now()}` };
   }
 }
@@ -27,27 +25,34 @@ class ResendMailer implements Mailer {
   async send(msg: MailMessage) {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        from: env.EMAIL_FROM,
-        to: msg.to,
-        subject: msg.subject,
-        text: msg.text,
-        html: msg.html,
-      }),
+      headers: { "content-type": "application/json", authorization: `Bearer ${this.apiKey}` },
+      body: JSON.stringify({ from: env.EMAIL_FROM, to: msg.to, subject: msg.subject, text: msg.text }),
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`Resend error: ${err}`);
+      // Status only: the body can echo recipient addresses and message content.
+      throw new Error(`Resend responded with HTTP ${res.status}`);
     }
     const json = (await res.json()) as { id?: string };
     return { id: json.id };
   }
 }
 
-export const mailer: Mailer = isResendEnabled
-  ? new ResendMailer(env.RESEND_API_KEY!)
-  : new ConsoleMailer();
+export const mailer: Mailer = isResendEnabled ? new ResendMailer(env.RESEND_API_KEY!) : new ConsoleMailer();
+
+/** Absolute URL for a path, used in emails. */
+export const appUrl = (path: string) => `${env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}${path}`;
+
+/**
+ * Sends a transactional email and swallows failures (after logging them).
+ * Use where the caller must not fail or leak anything if delivery fails.
+ */
+export async function sendEmailSafely(msg: MailMessage): Promise<boolean> {
+  try {
+    await mailer.send(msg);
+    return true;
+  } catch (err) {
+    console.error("email delivery failed:", err instanceof Error ? err.message : err);
+    return false;
+  }
+}

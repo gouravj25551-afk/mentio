@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { cloneElement, useId, useState, useTransition } from "react";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,9 +23,10 @@ function toMins(s: string) {
   return h * 60 + m;
 }
 
-export function AvailabilityEditor({ initial }: { initial: Slot[] }) {
+export function AvailabilityEditor({ initial, timezone }: { initial: Slot[]; timezone: string }) {
   const [slots, setSlots] = useState<Slot[]>(initial.length ? initial : [{ weekday: "MON", startMinutes: 9 * 60, endMinutes: 17 * 60 }]);
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   function update(i: number, patch: Partial<Slot>) {
     setSlots((s) => s.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
@@ -35,27 +36,29 @@ export function AvailabilityEditor({ initial }: { initial: Slot[] }) {
 
   return (
     <Card className="p-6">
+      <p className="mb-4 text-xs text-muted-foreground">Times are in your timezone: {timezone}. Change it on your profile.</p>
       <div className="space-y-3">
         {slots.map((s, i) => (
           <div key={i} className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
             <Field label="Day">
               <Select value={s.weekday} onValueChange={(v) => update(i, { weekday: v as Weekday })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger aria-label={`Day for window ${i + 1}`}><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {WEEKDAYS.map((w) => <SelectItem key={w} value={w}>{w}</SelectItem>)}
                 </SelectContent>
               </Select>
             </Field>
             <Field label="Start">
-              <Input type="time" value={toTime(s.startMinutes)} onChange={(e) => update(i, { startMinutes: toMins(e.target.value) })} />
+              <Input type="time" step={900} value={toTime(s.startMinutes)} onChange={(e) => update(i, { startMinutes: toMins(e.target.value) })} />
             </Field>
             <Field label="End">
-              <Input type="time" value={toTime(s.endMinutes)} onChange={(e) => update(i, { endMinutes: toMins(e.target.value) })} />
+              <Input type="time" step={900} value={toTime(s.endMinutes)} onChange={(e) => update(i, { endMinutes: toMins(e.target.value) })} />
             </Field>
-            <Button variant="ghost" size="icon" onClick={() => remove(i)} aria-label="Remove"><Trash2 className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => remove(i)} aria-label={`Remove window ${i + 1}`}><Trash2 className="h-4 w-4" /></Button>
           </div>
         ))}
       </div>
+      {error ? <p role="alert" className="mt-3 text-sm text-destructive">{error}</p> : null}
       <div className="mt-4 flex items-center justify-between">
         <Button variant="outline" onClick={add}><Plus className="h-4 w-4" /> Add window</Button>
         <Button
@@ -70,9 +73,10 @@ export function AvailabilityEditor({ initial }: { initial: Slot[] }) {
               });
               if (!res.ok) {
                 const b = await res.json().catch(() => ({}));
-                toast.error(b?.error ?? "Could not save");
+                setError(b?.error ?? "Could not save. Please try again.");
                 return;
               }
+              setError(null);
               toast.success("Availability updated");
             })
           }
@@ -84,6 +88,12 @@ export function AvailabilityEditor({ initial }: { initial: Slot[] }) {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>{children}</div>;
+function Field({ label, children }: { label: string; children: React.ReactElement<{ id?: string }> }) {
+  const id = useId();
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>
+      {cloneElement(children, { id })}
+    </div>
+  );
 }

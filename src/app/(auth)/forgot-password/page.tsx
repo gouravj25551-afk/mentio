@@ -1,6 +1,6 @@
 "use client";
-import { useFormState, useFormStatus } from "react-dom";
-import { useEffect } from "react";
+import { useFormStatus } from "react-dom";
+import { useActionState, useEffect } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -11,13 +11,10 @@ import { Label } from "@/components/ui/label";
 import { forgotPasswordAction } from "@/features/auth/actions";
 
 export default function ForgotPasswordPage() {
-  const [state, action] = useFormState(forgotPasswordAction, null);
+  const [state, action] = useActionState(forgotPasswordAction, null);
   useEffect(() => {
     if (state?.ok) {
-      toast.success("If that email exists, we've sent a reset link.");
-      if (state.devToken) {
-        toast(`Dev reset: /reset-password?token=${state.devToken}`);
-      }
+      toast.success(state.message ?? "Check your email.");
     } else if (state && !state.ok) {
       toast.error(state.error);
     }
@@ -28,7 +25,7 @@ export default function ForgotPasswordPage() {
       <div>
         <h1 className="font-display text-3xl font-semibold tracking-tight">Reset your password</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Enter your email and we'll send you a link to set a new one.
+          Enter your email and we&apos;ll send you a link to set a new one.
         </p>
       </div>
       <form action={action} className="mt-8 space-y-4">

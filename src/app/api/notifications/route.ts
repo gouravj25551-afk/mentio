@@ -1,17 +1,22 @@
-import { auth } from "@/lib/auth";
-import { apiError, apiOk } from "@/lib/api";
+import { apiCatch, apiOk } from "@/lib/api";
+import { requireApiUser } from "@/lib/auth/guards";
 import { listNotifications, markAllRead } from "@/features/notifications/service";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) return apiError("UNAUTHENTICATED", 401);
-  const list = await listNotifications(session.user.id);
-  return apiOk(list);
+  try {
+    const user = await requireApiUser();
+    return apiOk(await listNotifications(user.id));
+  } catch (err) {
+    return apiCatch(err);
+  }
 }
 
 export async function POST() {
-  const session = await auth();
-  if (!session?.user) return apiError("UNAUTHENTICATED", 401);
-  await markAllRead(session.user.id);
-  return apiOk({ ok: true });
+  try {
+    const user = await requireApiUser();
+    await markAllRead(user.id);
+    return apiOk({ ok: true });
+  } catch (err) {
+    return apiCatch(err);
+  }
 }

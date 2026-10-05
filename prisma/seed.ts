@@ -1,8 +1,26 @@
 /* eslint-disable no-console */
 import { PrismaClient, Role, MentorStatus, Weekday, BookingStatus, NotificationType } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
+
+// ---------------------------------------------------------------------------
+// DEVELOPMENT-ONLY demo data. It creates fake mentors, fake reviews and an admin
+// account, so it must never run against a real database.
+// ---------------------------------------------------------------------------
+if (process.env.NODE_ENV === "production" && process.env.SEED_ALLOW_PRODUCTION !== "i-understand-this-creates-fake-users") {
+  console.error("Refusing to seed: NODE_ENV=production. This script creates fake users and an admin account.");
+  process.exit(1);
+}
+const dbUrl = process.env.DATABASE_URL ?? "";
+if (!/(localhost|127\.0\.0\.1|\[::1\])/.test(dbUrl) && process.env.SEED_ALLOW_REMOTE !== "true") {
+  console.error("Refusing to seed a non-local database. Set SEED_ALLOW_REMOTE=true if this is a disposable dev/staging DB.");
+  process.exit(1);
+}
 
 const db = new PrismaClient();
+
+// Random per run (or set SEED_PASSWORD): no fixed, publicly-known credentials.
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? `Seed-${randomBytes(9).toString("base64url")}1a`;
 
 const CATEGORIES = [
   { slug: "software-engineering", name: "Software Engineering", icon: "Code2", color: "#6366F1", description: "Backend, frontend, systems and full-stack engineering." },
@@ -28,38 +46,38 @@ const SKILLS = [
 ];
 
 const MENTORS = [
-  { name: "Aarav Mehta", email: "aarav@mentio.dev", headline: "Senior SWE @ Stripe · Ex-Google", cats: ["software-engineering", "interview-prep"], skills: ["TypeScript", "System Design", "DSA"], rate: 6000, rating: 4.9, featured: true },
-  { name: "Priya Rao", email: "priya@mentio.dev", headline: "GSoC Org Admin · Open Source Maintainer", cats: ["gsoc", "open-source"], skills: ["Open Source", "GSoC Proposal", "Python"], rate: 4000, rating: 4.8, featured: true },
-  { name: "Diego Martinez", email: "diego@mentio.dev", headline: "LFX Mentor · CNCF Contributor", cats: ["lfx", "open-source"], skills: ["Kubernetes", "Go", "CNCF"], rate: 5000, rating: 4.9, featured: true },
-  { name: "Hannah Chen", email: "hannah@mentio.dev", headline: "Microsoft SWE Intern Alum · Full-time @ Microsoft", cats: ["interview-prep", "career"], skills: ["Interview Coaching", "DSA", "System Design"], rate: 3500, rating: 4.7, featured: true },
-  { name: "Omar Yusuf", email: "omar@mentio.dev", headline: "AI Engineer @ Anthropic", cats: ["ai-ml"], skills: ["LLMs", "LangChain", "RAG"], rate: 8000, rating: 4.95, featured: true },
-  { name: "Lena Fischer", email: "lena@mentio.dev", headline: "Design Lead @ Linear", cats: ["design"], skills: ["Design Systems", "Figma"], rate: 7000, rating: 4.9, featured: true },
-  { name: "Rahul Shah", email: "rahul@mentio.dev", headline: "YC Founder · Ex-Uber PM", cats: ["startups", "product"], skills: ["Product Strategy", "Fundraising", "Pitching"], rate: 10000, rating: 4.85, featured: false },
-  { name: "Sofia Garcia", email: "sofia@mentio.dev", headline: "Staff PM @ Notion", cats: ["product"], skills: ["Product Strategy", "Roadmapping", "User Research"], rate: 7500, rating: 4.8, featured: false },
-  { name: "Kenji Watanabe", email: "kenji@mentio.dev", headline: "Google Intern · CS @ Tokyo", cats: ["interview-prep", "career"], skills: ["DSA", "Leetcode", "Behavioral Interviews"], rate: 2500, rating: 4.6, featured: false },
-  { name: "Zara Khan", email: "zara@mentio.dev", headline: "ML Research · PhD Stanford", cats: ["ai-ml"], skills: ["LLMs", "Fine-tuning", "Python"], rate: 9000, rating: 4.9, featured: false },
-  { name: "Marcus Johnson", email: "marcus@mentio.dev", headline: "Freelance Full-stack · $200K/yr independent", cats: ["freelancing", "software-engineering"], skills: ["Next.js", "Node.js", "Postgres"], rate: 5500, rating: 4.75, featured: false },
-  { name: "Elena Rossi", email: "elena@mentio.dev", headline: "Design Engineer @ Vercel", cats: ["design", "software-engineering"], skills: ["React", "Design Systems", "TypeScript"], rate: 6500, rating: 4.88, featured: false },
-  { name: "David Park", email: "david@mentio.dev", headline: "Linux Kernel Contributor · LFX Mentor", cats: ["lfx", "open-source"], skills: ["Linux Kernel", "Rust", "Open Source"], rate: 4500, rating: 4.9, featured: false },
-  { name: "Amina Diop", email: "amina@mentio.dev", headline: "Career Coach · 500+ switchers mentored", cats: ["career"], skills: ["Interview Coaching", "Behavioral Interviews"], rate: 4000, rating: 4.95, featured: false },
-  { name: "Noah Williams", email: "noah@mentio.dev", headline: "Founding Engineer · Series A Startup", cats: ["startups", "software-engineering"], skills: ["TypeScript", "Postgres", "AWS"], rate: 7000, rating: 4.8, featured: false },
-  { name: "Chloe Dubois", email: "chloe@mentio.dev", headline: "UX Researcher @ Figma", cats: ["design", "product"], skills: ["User Research", "Figma"], rate: 5500, rating: 4.7, featured: false },
-  { name: "Ravi Patel", email: "ravi@mentio.dev", headline: "DevOps Lead · CKAD, CKA", cats: ["software-engineering"], skills: ["Kubernetes", "Docker", "AWS", "GCP"], rate: 6000, rating: 4.78, featured: false },
-  { name: "Isabella Ferreira", email: "isabella@mentio.dev", headline: "Content Creator · 100K YouTube Devs", cats: ["freelancing", "career"], skills: ["Technical Writing"], rate: 3000, rating: 4.65, featured: false },
-  { name: "Lucas Silva", email: "lucas@mentio.dev", headline: "GraphQL Core Contributor", cats: ["open-source", "software-engineering"], skills: ["GraphQL", "TypeScript", "Node.js"], rate: 5500, rating: 4.82, featured: false },
-  { name: "Nadia Volkova", email: "nadia@mentio.dev", headline: "Growth PM · B2B SaaS", cats: ["product", "startups"], skills: ["Product Strategy", "Analytics"], rate: 6500, rating: 4.75, featured: false },
+  { name: "Aarav Mehta", email: "aarav@mentio.test", headline: "Senior SWE @ Stripe · Ex-Google", cats: ["software-engineering", "interview-prep"], skills: ["TypeScript", "System Design", "DSA"], rate: 0, rating: 4.9, featured: true },
+  { name: "Priya Rao", email: "priya@mentio.test", headline: "GSoC Org Admin · Open Source Maintainer", cats: ["gsoc", "open-source"], skills: ["Open Source", "GSoC Proposal", "Python"], rate: 0, rating: 4.8, featured: true },
+  { name: "Diego Martinez", email: "diego@mentio.test", headline: "LFX Mentor · CNCF Contributor", cats: ["lfx", "open-source"], skills: ["Kubernetes", "Go", "CNCF"], rate: 0, rating: 4.9, featured: true },
+  { name: "Hannah Chen", email: "hannah@mentio.test", headline: "Microsoft SWE Intern Alum · Full-time @ Microsoft", cats: ["interview-prep", "career"], skills: ["Interview Coaching", "DSA", "System Design"], rate: 0, rating: 4.7, featured: true },
+  { name: "Omar Yusuf", email: "omar@mentio.test", headline: "AI Engineer @ Anthropic", cats: ["ai-ml"], skills: ["LLMs", "LangChain", "RAG"], rate: 0, rating: 4.95, featured: true },
+  { name: "Lena Fischer", email: "lena@mentio.test", headline: "Design Lead @ Linear", cats: ["design"], skills: ["Design Systems", "Figma"], rate: 0, rating: 4.9, featured: true },
+  { name: "Rahul Shah", email: "rahul@mentio.test", headline: "YC Founder · Ex-Uber PM", cats: ["startups", "product"], skills: ["Product Strategy", "Fundraising", "Pitching"], rate: 0, rating: 4.85, featured: false },
+  { name: "Sofia Garcia", email: "sofia@mentio.test", headline: "Staff PM @ Notion", cats: ["product"], skills: ["Product Strategy", "Roadmapping", "User Research"], rate: 0, rating: 4.8, featured: false },
+  { name: "Kenji Watanabe", email: "kenji@mentio.test", headline: "Google Intern · CS @ Tokyo", cats: ["interview-prep", "career"], skills: ["DSA", "Leetcode", "Behavioral Interviews"], rate: 0, rating: 4.6, featured: false },
+  { name: "Zara Khan", email: "zara@mentio.test", headline: "ML Research · PhD Stanford", cats: ["ai-ml"], skills: ["LLMs", "Fine-tuning", "Python"], rate: 0, rating: 4.9, featured: false },
+  { name: "Marcus Johnson", email: "marcus@mentio.test", headline: "Freelance Full-stack · $200K/yr independent", cats: ["freelancing", "software-engineering"], skills: ["Next.js", "Node.js", "Postgres"], rate: 0, rating: 4.75, featured: false },
+  { name: "Elena Rossi", email: "elena@mentio.test", headline: "Design Engineer @ Vercel", cats: ["design", "software-engineering"], skills: ["React", "Design Systems", "TypeScript"], rate: 0, rating: 4.88, featured: false },
+  { name: "David Park", email: "david@mentio.test", headline: "Linux Kernel Contributor · LFX Mentor", cats: ["lfx", "open-source"], skills: ["Linux Kernel", "Rust", "Open Source"], rate: 0, rating: 4.9, featured: false },
+  { name: "Amina Diop", email: "amina@mentio.test", headline: "Career Coach · 500+ switchers mentored", cats: ["career"], skills: ["Interview Coaching", "Behavioral Interviews"], rate: 0, rating: 4.95, featured: false },
+  { name: "Noah Williams", email: "noah@mentio.test", headline: "Founding Engineer · Series A Startup", cats: ["startups", "software-engineering"], skills: ["TypeScript", "Postgres", "AWS"], rate: 0, rating: 4.8, featured: false },
+  { name: "Chloe Dubois", email: "chloe@mentio.test", headline: "UX Researcher @ Figma", cats: ["design", "product"], skills: ["User Research", "Figma"], rate: 0, rating: 4.7, featured: false },
+  { name: "Ravi Patel", email: "ravi@mentio.test", headline: "DevOps Lead · CKAD, CKA", cats: ["software-engineering"], skills: ["Kubernetes", "Docker", "AWS", "GCP"], rate: 0, rating: 4.78, featured: false },
+  { name: "Isabella Ferreira", email: "isabella@mentio.test", headline: "Content Creator · 100K YouTube Devs", cats: ["freelancing", "career"], skills: ["Technical Writing"], rate: 0, rating: 4.65, featured: false },
+  { name: "Lucas Silva", email: "lucas@mentio.test", headline: "GraphQL Core Contributor", cats: ["open-source", "software-engineering"], skills: ["GraphQL", "TypeScript", "Node.js"], rate: 0, rating: 4.82, featured: false },
+  { name: "Nadia Volkova", email: "nadia@mentio.test", headline: "Growth PM · B2B SaaS", cats: ["product", "startups"], skills: ["Product Strategy", "Analytics"], rate: 0, rating: 4.75, featured: false },
 ];
 
 async function main() {
   console.log("🌱 Seeding Mentio…");
 
   // --- Admin ---
-  const adminPassword = await bcrypt.hash("mentio-admin", 10);
+  const adminPassword = await bcrypt.hash(SEED_PASSWORD, 10);
   const admin = await db.user.upsert({
-    where: { email: "admin@mentio.app" },
-    update: {},
+    where: { email: "admin@mentio.test" },
+    update: { passwordHash: adminPassword },
     create: {
-      email: "admin@mentio.app",
+      email: "admin@mentio.test",
       name: "Mentio Admin",
       role: Role.ADMIN,
       passwordHash: adminPassword,
@@ -70,12 +88,12 @@ async function main() {
   });
 
   // --- Demo student ---
-  const demoPassword = await bcrypt.hash("mentio-demo", 10);
+  const demoPassword = adminPassword;
   await db.user.upsert({
-    where: { email: "student@mentio.app" },
-    update: {},
+    where: { email: "student@mentio.test" },
+    update: { passwordHash: adminPassword },
     create: {
-      email: "student@mentio.app",
+      email: "student@mentio.test",
       name: "Alex Student",
       role: Role.STUDENT,
       passwordHash: demoPassword,
@@ -112,10 +130,10 @@ async function main() {
   const mentorRecords: { profileId: string; userId: string }[] = [];
   for (const m of MENTORS) {
     const slug = m.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const password = await bcrypt.hash("mentio-mentor", 10);
+    const password = adminPassword;
     const user = await db.user.upsert({
       where: { email: m.email },
-      update: {},
+      update: { passwordHash: adminPassword },
       create: {
         email: m.email,
         name: m.name,
@@ -187,6 +205,7 @@ async function main() {
 
     // availability — M–F, 9am to 5pm
     const weekdays: Weekday[] = [Weekday.MON, Weekday.TUE, Weekday.WED, Weekday.THU, Weekday.FRI];
+    await db.availability.deleteMany({ where: { mentorProfileId: mentorProfile.id } });
     for (const w of weekdays) {
       await db.availability.create({
         data: {
@@ -205,10 +224,10 @@ async function main() {
   const studentIds: string[] = [];
   for (let i = 1; i <= 50; i++) {
     const name = `Student ${String(i).padStart(2, "0")}`;
-    const email = `student${i}@mentio.dev`;
+    const email = `student${i}@mentio.test`;
     const user = await db.user.upsert({
       where: { email },
-      update: {},
+      update: { passwordHash: adminPassword },
       create: {
         email,
         name,
@@ -234,6 +253,7 @@ async function main() {
     "Realistic plan, no fluff. Already implementing day one.",
   ];
   for (const m of mentorRecords) {
+    if ((await db.booking.count({ where: { mentorProfileId: m.profileId } })) > 0) continue; // already seeded
     for (let b = 0; b < 3; b++) {
       const studentId = studentIds[Math.floor(Math.random() * studentIds.length)];
       const past = b < 2;
@@ -251,7 +271,8 @@ async function main() {
           status,
           topic: ["Resume review", "Career strategy", "Interview prep", "GSoC proposal", "Portfolio feedback"][b % 5],
           notes: "Looking forward to our chat!",
-          meetingUrl: "https://meet.google.com/mentio-demo",
+          meetingUrl: `https://meet.jit.si/mentio-seed-${randomBytes(6).toString("hex")}`,
+          paymentStatus: "NOT_REQUIRED",
         },
       });
       if (status === BookingStatus.COMPLETED && Math.random() > 0.3) {
@@ -278,10 +299,10 @@ async function main() {
   console.log("✅ Seeded:");
   console.log(`   ${CATEGORIES.length} categories, ${SKILLS.length} skills`);
   console.log(`   ${MENTORS.length} mentors, 50 students`);
-  console.log("   Login:");
-  console.log("     Admin   → admin@mentio.app / mentio-admin");
-  console.log("     Student → student@mentio.app / mentio-demo");
-  console.log("     Mentor  → aarav@mentio.dev / mentio-mentor");
+  console.log("   Dev-only logins (password is random for this run):");
+  console.log(`     Admin   → admin@mentio.test / ${SEED_PASSWORD}`);
+  console.log(`     Student → student@mentio.test / ${SEED_PASSWORD}`);
+  console.log(`     Mentor  → aarav@mentio.test / ${SEED_PASSWORD}`);
 }
 
 main()

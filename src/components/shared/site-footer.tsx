@@ -4,7 +4,7 @@ import { Logo } from "@/components/shared/logo";
 export function SiteFooter() {
   return (
     <footer className="border-t bg-muted/30">
-      <div className="container grid gap-10 py-14 md:grid-cols-[2fr_1fr_1fr_1fr_1fr]">
+      <div className="container grid gap-10 py-14 md:grid-cols-[2fr_1fr_1fr]">
         <div>
           <Logo />
           <p className="mt-3 max-w-xs text-sm text-muted-foreground">
@@ -12,10 +12,8 @@ export function SiteFooter() {
           </p>
         </div>
         {[
-          { title: "Product", links: [["Browse mentors", "/mentors"], ["Categories", "/categories"], ["Pricing", "/pricing"]] },
-          { title: "For mentors", links: [["Become a mentor", "/sign-up?role=MENTOR"], ["Mentor dashboard", "/dashboard/mentor"], ["Guidelines", "/mentors/guidelines"]] },
-          { title: "Company", links: [["About", "/about"], ["Blog", "/blog"], ["Careers", "/careers"]] },
-          { title: "Legal", links: [["Privacy", "/privacy"], ["Terms", "/terms"], ["Cookies", "/cookies"]] },
+          { title: "Product", links: [["Browse mentors", "/mentors"], ["Categories", "/categories"]] },
+          { title: "For mentors", links: [["Become a mentor", "/sign-up?role=MENTOR"], ["Mentor dashboard", "/dashboard/mentor"]] },
         ].map((col) => (
           <div key={col.title}>
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{col.title}</div>
@@ -30,8 +28,7 @@ export function SiteFooter() {
       <div className="border-t">
         <div className="container flex flex-col items-start justify-between gap-2 py-6 text-xs text-muted-foreground md:flex-row md:items-center">
           <span>© {new Date().getFullYear()} Mentio. All rights reserved.</span>
-          <span>Built for the next generation of builders.</span>
-        </div>
+                  </div>
       </div>
     </footer>
   );

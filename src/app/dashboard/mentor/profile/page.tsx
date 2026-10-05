@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { MentorProfileForm } from "@/components/dashboard/mentor-profile-form";
 
 export default async function MentorProfilePage() {
-  const user = await requireRole(["MENTOR", "ADMIN"]);
+  const user = await requireRole("MENTOR");
   const [mentor, categories, skills] = await Promise.all([
     db.mentorProfile.findUnique({
       where: { userId: user.id },
@@ -23,14 +23,14 @@ export default async function MentorProfilePage() {
       <MentorProfileForm
         categories={categories}
         skills={skills}
+        status={mentor.status}
         initial={{
           headline: mentor.headline,
           bio: mentor.bio,
           experience: mentor.experience,
-          rateCents: mentor.rateCents,
-          currency: mentor.currency,
           sessionLength: mentor.sessionLength,
           responseTimeHrs: mentor.responseTimeHrs,
+          timezone: mentor.timezone,
           acceptingBookings: mentor.acceptingBookings,
           achievements: mentor.achievements,
           portfolio: mentor.portfolio,

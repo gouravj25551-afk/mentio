@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, Star } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Hero() {
@@ -40,18 +40,7 @@ export function Hero() {
               <Link href="/sign-up?role=MENTOR">Become a mentor</Link>
             </Button>
           </div>
-          <div className="mt-8 flex items-center justify-center gap-6 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <div className="flex -space-x-2">
-                {[0,1,2,3].map(i => <div key={i} className="h-5 w-5 rounded-full border-2 border-background bg-gradient-to-br from-indigo-400 to-sky-400" />)}
-              </div>
-              <span>2,000+ students booked</span>
-            </div>
-            <div className="flex items-center gap-1">
-              {[0,1,2,3,4].map(i => <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />)}
-              <span className="ml-1">4.9 avg rating</span>
-            </div>
-          </div>
+          <p className="mt-8 text-center text-xs text-muted-foreground">Free during the beta. No credit card.</p>
         </motion.div>
 
         <motion.div
@@ -64,17 +53,15 @@ export function Hero() {
             <div className="rounded-xl border bg-gradient-to-br from-background to-muted/30 p-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {[
-                  { title: "Open Source", desc: "GSoC, LFX, CNCF mentors who've been in your seat.", stat: "320+", label: "Mentors" },
-                  { title: "Interview Prep", desc: "FAANG & startup interviews with people who ship.", stat: "15K+", label: "Mock calls" },
-                  { title: "Career Pivots", desc: "Switch stacks, roles, cities — with a plan.", stat: "4.9★", label: "Avg rating" },
+                  { title: "Open Source", desc: "GSoC, LFX, CNCF mentors who've been in your seat." },
+                  { title: "Interview Prep", desc: "FAANG & startup interviews with people who ship." },
+                  { title: "Career Pivots", desc: "Switch stacks, roles, cities — with a plan." },
                 ].map((c) => (
                   <div key={c.title} className="rounded-lg border bg-background p-4">
                     <div className="flex items-baseline justify-between">
                       <h3 className="font-medium">{c.title}</h3>
-                      <span className="font-display text-lg font-semibold brand-text">{c.stat}</span>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{c.desc}</p>
-                    <div className="mt-3 text-[11px] uppercase tracking-wider text-muted-foreground">{c.label}</div>
                   </div>
                 ))}
               </div>

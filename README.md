@@ -2,58 +2,45 @@
 
 A direct line to the people you aspire to become — a mentorship marketplace where students book 1:1 calls with GSoC mentors, open-source maintainers, Google/Microsoft interns, founders, PMs, designers and engineers.
 
-Built as a complete, production-grade Next.js application: real auth, real database, real booking engine, real admin tools. Not a demo.
+A Next.js application with real auth, a real database, a transactional booking engine and admin tools. Currently a **free beta**: see [`docs/PRODUCTION.md`](docs/PRODUCTION.md) for what is and is not production-ready.
 
 ---
 
 ## Highlights
 
-- **Three roles with proper RBAC** — Student, Mentor, Admin. Every route is gated server-side.
-- **Real auth** — NextAuth v5 (credentials + Google OAuth), bcrypt, JWT sessions, forgot/reset flow, email-verification architecture.
-- **End-to-end booking engine** — availability windows → generated slots → double-booking-safe booking → cancel / reschedule / review.
-- **Payments-ready, no refactor** — `services/payments` is an interface; bookings carry `paymentIntentId`, `paymentStatus`, `amountCents`. Flip the adapter on when Stripe/Razorpay arrives.
-- **Calendar integrations** — Cal.com and Calendly adapters behind one interface. If credentials aren't set, the internal scheduler takes over seamlessly.
-- **Premium UI** — Linear/Stripe/Cal-inspired. Tailwind, shadcn primitives, Framer Motion, dark mode, responsive to phone.
-- **Notifications + email** — persisted notifications + pluggable mailer (Resend adapter; falls back to console in dev).
-- **Admin dashboard** — mentor approval queue, user list, booking log, platform analytics with charts.
-- **Seed script** — 20 mentors, 50 students, bookings, reviews, categories, skills — the app feels alive from `npm run db:seed`.
+- **Three roles, enforced on the server** — Student, Mentor, Admin. Roles are re-read from the database on every authorization, never trusted from the session token.
+- **Auth** — NextAuth v5 (email + password with email verification, optional Google), bcrypt, forgot/reset flow with hashed single-use tokens, no user enumeration, database-backed rate limits.
+- **Booking engine** — mentor-timezone availability → generated slots → transactional, double-booking-proof booking (advisory locks plus a database exclusion constraint) → cancel / reschedule / complete / review.
+- **Free beta, honestly** — no payment provider exists, so every session is free and paid bookings are impossible rather than faked. See [`docs/PRODUCTION.md`](docs/PRODUCTION.md).
+- **Meeting links** — an unguessable Jitsi room per booking, or the mentor's own validated link. Mentio does not create events in Cal.com or Calendly.
+- **Notifications + email** — persisted notifications plus Resend email (required in production; console in development).
+- **Admin dashboard** — mentor approval queue (complete profiles only), moderation, users, bookings, analytics.
+- **Tests** — 128 unit/integration tests against a real Postgres and a 33-check browser smoke test.
 
 ---
 
 ## Quick start
 
 ```bash
-# 1. Install
 npm install
-
-# 2. Env
-cp .env.example .env
-# fill DATABASE_URL (postgres), AUTH_SECRET (openssl rand -base64 32),
-# and optionally AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET
-
-# 3. Database
-npm run db:push
-npm run db:seed
-
-# 4. Run
+cp .env.example .env        # set DATABASE_URL and AUTH_SECRET (openssl rand -base64 32)
+npx prisma migrate deploy   # needs Postgres with btree_gist
+npm run db:seed             # development only; prints random demo passwords
 npm run dev
 ```
 
-Open <http://localhost:3000>.
+Open <http://localhost:3000>. In development, emails (verification and reset links) are printed to the server console.
 
-### Demo credentials (after seeding)
+### Demo accounts (development seed only)
 
-| Role    | Email                   | Password        |
-| ------- | ----------------------- | --------------- |
-| Admin   | `admin@mentio.app`      | `mentio-admin`  |
-| Student | `student@mentio.app`    | `mentio-demo`   |
-| Mentor  | `aarav@mentio.dev`      | `mentio-mentor` |
+`admin@mentio.test`, `student@mentio.test`, `aarav@mentio.test`. The password is random for each `npm run db:seed` run and printed at the end (or set `SEED_PASSWORD`). The seed refuses to run in production or against a non-local database.
 
 ---
 
 ## Docs
 
-- [`docs/SETUP.md`](docs/SETUP.md) — detailed local + Vercel setup
+- [`docs/SETUP.md`](docs/SETUP.md) — local setup and environment
+- [`docs/PRODUCTION.md`](docs/PRODUCTION.md) — production checklist, migrations, rollback, QA, known issues
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — layering, directory structure, where to put what
 - [`docs/DATABASE.md`](docs/DATABASE.md) — schema, indexes, invariants, payments-ready contract
 - [`docs/FEATURES.md`](docs/FEATURES.md) — feature-by-feature tour of the product
@@ -67,9 +54,10 @@ Open <http://localhost:3000>.
 - `npm run start` — serve the built app
 - `npm run lint` — ESLint
 - `npm run typecheck` — strict TypeScript
-- `npm run db:push` — push schema to database (no migration history)
-- `npm run db:migrate` — generate and run a migration
-- `npm run db:seed` — populate realistic demo data
+- `npm run db:migrate` — create and apply a migration (development)
+- `npm run db:seed` — dev-only demo data
+- `npm test` — unit + integration tests (needs a throwaway Postgres)
+- `npm run test:e2e` — real-browser smoke test
 - `npm run db:studio` — Prisma Studio
 
 ---
@@ -78,8 +66,7 @@ Open <http://localhost:3000>.
 
 Next.js 15 (App Router, Server Actions) · TypeScript · TailwindCSS · shadcn-style components ·
 Radix primitives · Framer Motion · Prisma + PostgreSQL · NextAuth v5 · Zod ·
-TanStack Query · Recharts · Sonner · UploadThing · Resend (optional) ·
-Cal.com + Calendly adapters.
+TanStack Query · Recharts · Sonner · Resend · Vitest · Playwright (e2e).
 
 ---
 
@@ -107,9 +94,9 @@ src/
 │   ├── bookings/
 │   └── notifications/
 ├── services/               # external integrations (interfaces first)
-│   ├── calendar/           # Cal.com + Calendly + internal
+│   ├── calendar/           # meeting links (+ disabled OAuth)
 │   ├── email/              # Resend + console fallback
-│   └── payments/           # payments-ready stub
+│   └── payments/           # free-beta guard; no provider
 ├── lib/                    # env, db, auth, utils, validators, rate-limit
 └── middleware.ts           # route protection + role gates
 ```

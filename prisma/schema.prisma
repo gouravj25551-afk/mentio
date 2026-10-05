@@ -4,7 +4,10 @@
 // be wired in without migrating existing data.
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  // omitApi lets src/lib/db.ts exclude User.passwordHash from every query by
+  // default, so it can never leak through an `include: { user: true }`.
+  previewFeatures = ["omitApi"]
 }
 
 datasource db {
@@ -95,12 +98,12 @@ model VerificationToken {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
+  id        String    @id @default(cuid())
+  token     String    @unique
   userId    String
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -128,37 +131,43 @@ model Profile {
 }
 
 model MentorProfile {
-  id               String       @id @default(cuid())
-  userId           String       @unique
-  slug             String       @unique
-  headline         String
-  bio              String       @db.Text
-  experience       String       @db.Text
-  achievements     String[]     @default([])
-  portfolio        String[]     @default([])
-  featured         Boolean      @default(false)
-  status           MentorStatus @default(PENDING)
+  id                String       @id @default(cuid())
+  userId            String       @unique
+  slug              String       @unique
+  headline          String
+  bio               String       @db.Text
+  experience        String       @db.Text
+  achievements      String[]     @default([])
+  portfolio         String[]     @default([])
+  featured          Boolean      @default(false)
+  status            MentorStatus @default(PENDING)
   // Pricing — zero means free (payments arrive in a future phase)
-  rateCents        Int          @default(0)
-  currency         String       @default("USD")
-  sessionLength    Int          @default(30) // minutes
-  responseTimeHrs  Int          @default(24)
-  totalSessions    Int          @default(0)
-  averageRating    Float        @default(0)
-  totalReviews     Int          @default(0)
-  acceptingBookings Boolean     @default(true)
-  approvedAt       DateTime?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  rateCents         Int          @default(0)
+  currency          String       @default("USD")
+  sessionLength     Int          @default(30) // minutes
+  // The mentor's own meeting/scheduling URL (validated allow-list, see src/lib/meeting-links.ts).
+  // When set, bookings use it instead of a generated room. Mentio does NOT create
+  // an event on the provider behind it, so it is always shown as "the mentor's link".
+  meetingLink       String?
+  // IANA timezone that Availability windows are expressed in
+  timezone          String       @default("UTC")
+  responseTimeHrs   Int          @default(24)
+  totalSessions     Int          @default(0)
+  averageRating     Float        @default(0)
+  totalReviews      Int          @default(0)
+  acceptingBookings Boolean      @default(true)
+  approvedAt        DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  categories    MentorCategory[]
-  skills        MentorSkill[]
-  availability  Availability[]
-  bookings      Booking[]        @relation("MentorBookings")
-  reviews       Review[]         @relation("ReviewedMentor")
-  savedBy       SavedMentor[]    @relation("Saved")
-  calendars     CalendarConnection[]
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categories   MentorCategory[]
+  skills       MentorSkill[]
+  availability Availability[]
+  bookings     Booking[]            @relation("MentorBookings")
+  reviews      Review[]             @relation("ReviewedMentor")
+  savedBy      SavedMentor[]        @relation("Saved")
+  calendars    CalendarConnection[]
 
   @@index([status])
   @@index([featured])
@@ -227,7 +236,7 @@ model Availability {
   id              String   @id @default(cuid())
   mentorProfileId String
   weekday         Weekday
-  startMinutes    Int      // minutes since midnight in mentor's timezone
+  startMinutes    Int // minutes since midnight in mentor's timezone
   endMinutes      Int
   createdAt       DateTime @default(now())
 
@@ -250,36 +259,50 @@ enum BookingSource {
   CALENDLY
 }
 
-model Booking {
-  id              String        @id @default(cuid())
-  studentId       String
-  mentorProfileId String
-  startsAt        DateTime
-  endsAt          DateTime
-  status          BookingStatus @default(PENDING)
-  source          BookingSource @default(INTERNAL)
-  topic           String
-  notes           String?       @db.Text
-  meetingUrl      String?
-  cancelReason    String?
-  cancelledAt     DateTime?
-  rescheduledFromId String?     @unique
-  rescheduledFrom Booking?      @relation("Reschedule", fields: [rescheduledFromId], references: [id])
-  rescheduledTo   Booking?      @relation("Reschedule")
-  // Payments-ready: hooks for a future provider
-  paymentIntentId String?
-  paymentStatus   String?
-  amountCents     Int           @default(0)
-  currency        String        @default("USD")
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+// What meetingUrl points at. EXTERNAL_LINK is a link the mentor supplied (for
+// example a Cal.com or Calendly scheduling page); Mentio did NOT create an
+// event on that provider. INTERNAL_ROOM is a generated video room.
+enum MeetingKind {
+  INTERNAL_ROOM
+  EXTERNAL_LINK
+}
 
-  student       User          @relation("StudentBookings", fields: [studentId], references: [id], onDelete: Cascade)
-  mentorProfile MentorProfile @relation("MentorBookings", fields: [mentorProfileId], references: [id], onDelete: Cascade)
+model Booking {
+  id                String        @id @default(cuid())
+  studentId         String
+  mentorProfileId   String
+  startsAt          DateTime
+  endsAt            DateTime
+  status            BookingStatus @default(PENDING)
+  source            BookingSource @default(INTERNAL)
+  topic             String
+  notes             String?       @db.Text
+  meetingUrl        String?
+  meetingKind       MeetingKind   @default(INTERNAL_ROOM)
+  completedAt       DateTime?
+  cancelReason      String?
+  cancelledAt       DateTime?
+  rescheduledFromId String?       @unique
+  rescheduledFrom   Booking?      @relation("Reschedule", fields: [rescheduledFromId], references: [id])
+  rescheduledTo     Booking?      @relation("Reschedule")
+  // Payments-ready: hooks for a future provider.
+  // paymentStatus: NOT_REQUIRED | PENDING | PAID | FAILED | REFUNDED (see src/lib/booking-rules.ts).
+  // A DB CHECK guarantees a CONFIRMED/COMPLETED booking is free or PAID.
+  paymentIntentId   String?
+  paymentStatus     String?
+  amountCents       Int           @default(0)
+  currency          String        @default("USD")
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Restrict: deleting a user must not silently erase the other party's booking history.
+  student       User          @relation("StudentBookings", fields: [studentId], references: [id], onDelete: Restrict)
+  mentorProfile MentorProfile @relation("MentorBookings", fields: [mentorProfileId], references: [id], onDelete: Restrict)
   review        Review?
 
   @@index([studentId, status])
   @@index([mentorProfileId, status])
+  @@index([mentorProfileId, startsAt])
   @@index([startsAt])
 }
 
@@ -290,7 +313,7 @@ model Review {
   bookingId       String   @unique
   mentorProfileId String
   authorId        String
-  rating          Int      // 1..5
+  rating          Int // 1..5
   comment         String?  @db.Text
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -360,7 +383,7 @@ model CalendarConnection {
   id              String           @id @default(cuid())
   mentorProfileId String
   provider        CalendarProvider
-  externalId      String           // provider's user/account id
+  externalId      String // provider's user/account id
   accessToken     String?          @db.Text
   refreshToken    String?          @db.Text
   expiresAt       DateTime?
@@ -391,13 +414,13 @@ enum AdminActionType {
 }
 
 model AdminAction {
-  id         String          @id @default(cuid())
-  actorId    String
-  targetId   String?
-  type       AdminActionType
-  reason     String?
-  metadata   Json?
-  createdAt  DateTime        @default(now())
+  id        String          @id @default(cuid())
+  actorId   String
+  targetId  String?
+  type      AdminActionType
+  reason    String?
+  metadata  Json?
+  createdAt DateTime        @default(now())
 
   actor  User  @relation("AdminActor", fields: [actorId], references: [id], onDelete: Cascade)
   target User? @relation("AdminTarget", fields: [targetId], references: [id], onDelete: SetNull)
@@ -405,4 +428,15 @@ model AdminAction {
   @@index([actorId])
   @@index([targetId])
   @@index([type])
+}
+
+// ========== Rate limiting ==========
+// Fixed-window counters shared by every serverless instance (see src/lib/rate-limit.ts).
+
+model RateLimitBucket {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
 }

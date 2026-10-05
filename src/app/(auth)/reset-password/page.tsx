@@ -1,7 +1,7 @@
 "use client";
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useActionState, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,15 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { resetPasswordAction } from "@/features/auth/actions";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const params = useSearchParams();
   const router = useRouter();
   const token = params.get("token") ?? "";
-  const [state, action] = useFormState(resetPasswordAction, null);
+  const [state, action] = useActionState(resetPasswordAction, null);
 
   useEffect(() => {
     if (state?.ok) {
-      toast.success("Password updated — sign in to continue.");
+      toast.success(state.message ?? "Password updated.");
       router.replace("/sign-in");
     } else if (state && !state.ok) {
       toast.error(state.error);
@@ -32,7 +32,7 @@ export default function ResetPasswordPage() {
         <input type="hidden" name="token" value={token} />
         <div className="space-y-2">
           <Label htmlFor="password">New password</Label>
-          <Input id="password" name="password" type="password" autoComplete="new-password" required />
+          <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} maxLength={72} />
         </div>
         <Submit />
       </form>
@@ -46,5 +46,13 @@ function Submit() {
     <Button type="submit" variant="brand" size="lg" className="w-full" disabled={pending}>
       {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Reset password
     </Button>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

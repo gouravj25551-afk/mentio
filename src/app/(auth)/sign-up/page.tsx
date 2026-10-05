@@ -4,8 +4,9 @@ import { isGoogleOAuthEnabled } from "@/lib/env";
 
 export const metadata = { title: "Create an account" };
 
-export default function SignUpPage({ searchParams }: { searchParams: { role?: string } }) {
-  const defaultRole = searchParams.role === "MENTOR" ? "MENTOR" : "STUDENT";
+export default async function SignUpPage({ searchParams }: { searchParams: Promise<{ role?: string }> }) {
+  const { role } = await searchParams;
+  const defaultRole = role === "MENTOR" ? "MENTOR" : "STUDENT";
   return (
     <>
       <div>

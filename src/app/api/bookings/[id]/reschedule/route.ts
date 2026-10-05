@@ -1,14 +1,13 @@
-import { auth } from "@/lib/auth";
-import { apiCatch, apiError, apiOk } from "@/lib/api";
-import { rescheduleBooking } from "@/features/bookings/actions";
+import { apiCatch, apiOk, readJson } from "@/lib/api";
+import { requireApiUser } from "@/lib/auth/guards";
+import { rescheduleBooking } from "@/features/bookings/service";
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const session = await auth();
-    if (!session?.user) return apiError("UNAUTHENTICATED", 401);
+    const user = await requireApiUser();
     const { id } = await ctx.params;
-    const body = await req.json();
-    const booking = await rescheduleBooking(id, body);
+    // Ownership and role rules live in the service so every caller gets them.
+    const booking = await rescheduleBooking(user, id, await readJson(req));
     return apiOk(booking);
   } catch (err) {
     return apiCatch(err);

@@ -1,64 +1,45 @@
 import "server-only";
-import { addMinutes, startOfDay, addDays } from "date-fns";
 import { db } from "@/lib/db";
-import type { Availability, Weekday } from "@prisma/client";
+import { ACTIVE_STATUSES, generateSlots, type Slot } from "@/lib/booking-rules";
+import { safeTimezone } from "@/lib/time";
 
-const WEEKDAY_INDEX: Record<Weekday, number> = {
-  SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6,
-};
+export type { Slot };
 
-export type Slot = { startsAt: string; endsAt: string };
-
-export async function getAvailableSlots(opts: {
-  mentorProfileId: string;
-  from?: Date;
+/** Bookable slots for a mentor over the next `days` days (empty if the mentor can't take bookings). */
+export async function getAvailableSlots(mentor: {
+  id: string;
+  status: string;
+  acceptingBookings: boolean;
+  sessionLength: number;
+  timezone: string;
   days?: number;
-  sessionLength?: number;
 }): Promise<Slot[]> {
-  const from = opts.from ?? new Date();
-  const days = opts.days ?? 14;
-  const sessionLength = opts.sessionLength ?? 30;
+  if (mentor.status !== "APPROVED" || !mentor.acceptingBookings) return [];
+  const days = mentor.days ?? 14;
+  const now = new Date();
 
-  const [availability, bookings] = await Promise.all([
-    db.availability.findMany({ where: { mentorProfileId: opts.mentorProfileId } }),
+  const [windows, bookings] = await Promise.all([
+    db.availability.findMany({
+      where: { mentorProfileId: mentor.id },
+      select: { weekday: true, startMinutes: true, endMinutes: true },
+    }),
     db.booking.findMany({
       where: {
-        mentorProfileId: opts.mentorProfileId,
-        status: { in: ["PENDING", "CONFIRMED"] },
-        startsAt: { gte: from, lte: addDays(from, days + 1) },
+        mentorProfileId: mentor.id,
+        status: { in: ACTIVE_STATUSES },
+        endsAt: { gt: now },
+        startsAt: { lt: new Date(now.getTime() + (days + 2) * 86_400_000) },
       },
       select: { startsAt: true, endsAt: true },
     }),
   ]);
 
-  const byWeekday = new Map<number, Availability[]>();
-  for (const a of availability) {
-    const key = WEEKDAY_INDEX[a.weekday];
-    const arr = byWeekday.get(key) ?? [];
-    arr.push(a);
-    byWeekday.set(key, arr);
-  }
-
-  const slots: Slot[] = [];
-  const now = new Date();
-  for (let i = 0; i < days; i++) {
-    const date = addDays(startOfDay(from), i);
-    const dow = date.getDay();
-    const windows = byWeekday.get(dow) ?? [];
-    for (const w of windows) {
-      let cursor = addMinutes(date, w.startMinutes);
-      const end = addMinutes(date, w.endMinutes);
-      while (addMinutes(cursor, sessionLength) <= end) {
-        const slotEnd = addMinutes(cursor, sessionLength);
-        if (cursor > now) {
-          const overlap = bookings.some(
-            (b) => !(slotEnd <= b.startsAt || cursor >= b.endsAt)
-          );
-          if (!overlap) slots.push({ startsAt: cursor.toISOString(), endsAt: slotEnd.toISOString() });
-        }
-        cursor = slotEnd;
-      }
-    }
-  }
-  return slots;
+  return generateSlots({
+    windows,
+    timezone: safeTimezone(mentor.timezone),
+    sessionLength: mentor.sessionLength,
+    busy: bookings,
+    now,
+    days,
+  });
 }

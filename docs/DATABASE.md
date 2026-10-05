@@ -64,4 +64,22 @@ Every `Booking` carries:
 - `paymentIntentId: String?` — opaque reference the payments adapter owns
 - `paymentStatus: String?` — adapter-defined
 
-Adding a real provider does **not** require a migration — only a new adapter in `src/services/payments`.
+There is no payment provider yet (free beta). Adding one needs an adapter in `src/services/payments` plus a webhook that sets `status = CONFIRMED` and `paymentStatus = PAID` together; the CHECK constraint above rejects anything else.
+
+
+## Migrations and constraints
+
+Schema changes ship as migrations in `prisma/migrations` (`prisma migrate deploy`), not `db push`. See [`PRODUCTION.md`](PRODUCTION.md) for the procedure for existing databases.
+
+Invariants enforced **by the database**, so a bug in application code cannot violate them:
+
+| Constraint | Guarantees |
+| --- | --- |
+| `Booking_no_overlap` (EXCLUDE, `btree_gist`) | A mentor never has two overlapping `PENDING`/`CONFIRMED` bookings. Back-to-back is fine; cancelled bookings free their time. |
+| `Booking_paid_before_confirmed_check` | A priced booking can only be `CONFIRMED`/`COMPLETED` when `paymentStatus = 'PAID'`. |
+| `Booking_time_order_check`, `Booking_amount_check` | `endsAt > startsAt`, `amountCents >= 0`. |
+| `Availability_window_check` | `0 <= start < end <= 1440`. |
+| `Review_rating_check` | rating 1..5. |
+| `MentorProfile_rate_check`, `_session_length_check` | rate >= 0, session length 15-240. |
+
+Other changes: booking foreign keys are `ON DELETE RESTRICT` (deleting a user can't erase the other party's history); `MentorProfile.timezone` is the zone availability windows are expressed in; `RateLimitBucket` backs the rate limiter; `User.passwordHash` is omitted from every Prisma query by default (`src/lib/db.ts`) and requested explicitly only by the credential check.

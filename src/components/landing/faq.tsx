@@ -3,12 +3,11 @@ import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 
 const items = [
-  { q: "Is Mentio free to use?", a: "Browsing and booking are free today. Payments arrive in a future phase — your existing bookings and flows continue to work when they do." },
-  { q: "How are mentors vetted?", a: "Every mentor profile is reviewed by our team. We check background, outcomes, and real reviews from past sessions." },
-  { q: "What if a mentor cancels?", a: "You're automatically notified and can rebook with the same or a different mentor in one click. No support tickets." },
-  { q: "Can I reschedule?", a: "Yes. Up to the session start — one click from your dashboard." },
-  { q: "Do mentors see each other's rates?", a: "No. Pricing is set per mentor, visible only to students on the mentor profile." },
-  { q: "Can I become a mentor?", a: "Yes. Apply from the Mentors page — approval typically takes 48 hours." },
+  { q: "Is Mentio free to use?", a: "Yes. Every session is free during the beta. Paid sessions will only launch once payments are fully in place, and you'll see the price before you book." },
+  { q: "How are mentors vetted?", a: "An admin reviews each mentor profile before it goes live. Ratings only come from students who completed a session." },
+  { q: "What if a mentor cancels?", a: "You're notified by email and in your dashboard, and you can book another time or another mentor." },
+  { q: "Can I reschedule?", a: "Yes, any time before the session starts, from your bookings page." },
+  { q: "Can I become a mentor?", a: "Yes. Create a mentor account and complete your profile. It goes live once an admin approves it." },
 ];
 
 export function FAQ() {
@@ -28,12 +27,14 @@ export function FAQ() {
                 <button
                   type="button"
                   className="flex w-full items-start justify-between gap-6 text-left"
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-${i}`}
                   onClick={() => setOpen(isOpen ? null : i)}
                 >
                   <span className="font-medium">{it.q}</span>
                   {isOpen ? <Minus className="mt-1 h-4 w-4" /> : <Plus className="mt-1 h-4 w-4" />}
                 </button>
-                {isOpen ? <p className="mt-3 text-sm text-muted-foreground">{it.a}</p> : null}
+                {isOpen ? <p id={`faq-${i}`} className="mt-3 text-sm text-muted-foreground">{it.a}</p> : null}
               </div>
             );
           })}

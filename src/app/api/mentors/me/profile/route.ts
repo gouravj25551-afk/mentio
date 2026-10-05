@@ -10,6 +10,10 @@ export async function PUT(req: Request) {
     const data = mentorProfileSchema.parse(await req.json());
     const mentor = await db.mentorProfile.findUnique({ where: { userId: session.user.id } });
     if (!mentor) return apiError("Not a mentor", 403);
+    if (mentor.status === "SUSPENDED") return apiError("Your mentor account is suspended.", 403);
+    // Pending and rejected mentors can only edit their application. Pricing, session length
+    // and booking availability are unlocked by admin approval and enforced here, not just in the UI.
+    const approved = mentor.status === "APPROVED";
     const updated = await db.$transaction(async (tx) => {
       await tx.mentorCategory.deleteMany({ where: { mentorProfileId: mentor.id } });
       await tx.mentorSkill.deleteMany({ where: { mentorProfileId: mentor.id } });
@@ -19,15 +23,19 @@ export async function PUT(req: Request) {
           headline: data.headline,
           bio: data.bio,
           experience: data.experience,
-          rateCents: data.rateCents,
-          currency: data.currency,
-          sessionLength: data.sessionLength,
-          responseTimeHrs: data.responseTimeHrs,
           achievements: data.achievements,
           portfolio: data.portfolio,
-          acceptingBookings: data.acceptingBookings,
           categories: { create: data.categoryIds.map((id) => ({ categoryId: id })) },
           skills: { create: data.skillIds.map((id) => ({ skillId: id })) },
+          ...(approved
+            ? {
+                rateCents: data.rateCents,
+                currency: "INR",
+                sessionLength: data.sessionLength,
+                responseTimeHrs: data.responseTimeHrs,
+                acceptingBookings: data.acceptingBookings,
+              }
+            : {}),
         },
       });
     });

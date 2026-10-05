@@ -60,9 +60,10 @@ export async function listMentors(params: DiscoveryParams) {
   return { mentors, total, page, perPage, pageCount: Math.max(1, Math.ceil(total / perPage)) };
 }
 
+/** Public lookup: only approved mentors are visible. Pending, rejected and suspended profiles return null. */
 export async function getMentorBySlug(slug: string) {
-  return db.mentorProfile.findUnique({
-    where: { slug },
+  return db.mentorProfile.findFirst({
+    where: { slug, status: "APPROVED" },
     include: {
       user: { include: { profile: true } },
       categories: { include: { category: true } },

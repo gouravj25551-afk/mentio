@@ -3,7 +3,8 @@ import { Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { formatMoney, initials } from "@/lib/utils";
+import { initials } from "@/lib/utils";
+import { displayPrice } from "@/lib/pricing";
 
 export function MentorCard({ mentor }: { mentor: any }) {
   return (
@@ -28,14 +29,18 @@ export function MentorCard({ mentor }: { mentor: any }) {
           ))}
         </div>
         <div className="mt-5 flex items-center justify-between border-t pt-4">
-          <div className="flex items-center gap-1 text-sm">
-            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-            <span className="font-medium">{mentor.averageRating.toFixed(1)}</span>
-            <span className="text-muted-foreground">({mentor.totalReviews})</span>
-          </div>
+          {mentor.totalReviews > 0 ? (
+            <div className="flex items-center gap-1 text-sm">
+              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+              <span className="font-medium">{mentor.averageRating.toFixed(1)}</span>
+              <span className="text-muted-foreground">({mentor.totalReviews})</span>
+            </div>
+          ) : (
+            <span className="text-sm text-muted-foreground">New mentor</span>
+          )}
           <div className="text-sm">
             <span className="text-muted-foreground">{mentor.sessionLength}m · </span>
-            <span className="font-medium">{formatMoney(mentor.rateCents, mentor.currency)}</span>
+            <span className="font-medium">{displayPrice(mentor.rateCents, mentor.currency)}</span>
           </div>
         </div>
       </Card>

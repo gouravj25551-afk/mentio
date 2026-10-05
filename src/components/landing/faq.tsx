@@ -3,12 +3,10 @@ import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 
 const items = [
-  { q: "Is Mentio free to use?", a: "Browsing and booking are free today. Payments arrive in a future phase — your existing bookings and flows continue to work when they do." },
-  { q: "How are mentors vetted?", a: "Every mentor profile is reviewed by our team. We check background, outcomes, and real reviews from past sessions." },
-  { q: "What if a mentor cancels?", a: "You're automatically notified and can rebook with the same or a different mentor in one click. No support tickets." },
-  { q: "Can I reschedule?", a: "Yes. Up to the session start — one click from your dashboard." },
-  { q: "Do mentors see each other's rates?", a: "No. Pricing is set per mentor, visible only to students on the mentor profile." },
-  { q: "Can I become a mentor?", a: "Yes. Apply from the Mentors page — approval typically takes 48 hours." },
+  { q: "Is Mentio free to use?", a: "Yes. Mentio is in early access and sessions are free for now. If we add paid sessions later, we'll say so clearly before anything is charged." },
+  { q: "How are mentors vetted?", a: "Every mentor applies and is reviewed by a person before their profile is visible to students." },
+  { q: "What if I need to cancel?", a: "You can cancel from your dashboard. The other person gets an email." },
+  { q: "Can I become a mentor?", a: "Yes. Create a mentor account and fill in your application. Once it's approved you can set your availability." },
 ];
 
 export function FAQ() {

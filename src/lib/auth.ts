@@ -5,6 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
+import { authConfig } from "@/lib/auth.config";
 import { db } from "@/lib/db";
 import { env, isGoogleOAuthEnabled } from "@/lib/env";
 import type { Role } from "@prisma/client";
@@ -21,7 +22,7 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
+declare module "@auth/core/jwt" {
   interface JWT {
     id: string;
     role: Role;
@@ -35,12 +36,7 @@ const credentialsSchema = z.object({
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
-  session: { strategy: "jwt" },
-  secret: env.AUTH_SECRET,
-  pages: {
-    signIn: "/sign-in",
-    error: "/sign-in",
-  },
+  ...authConfig,
   providers: [
     ...(isGoogleOAuthEnabled
       ? [

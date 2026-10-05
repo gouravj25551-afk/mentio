@@ -7,21 +7,26 @@ import { DiscoveryFilters } from "@/components/mentor/discovery-filters";
 import { Empty } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
-import { Search } from "lucide-react";
+import { Search, Users } from "lucide-react";
 
 export const metadata = { title: "Browse mentors" };
+// Reads the database on each request so `next build` never needs a database connection.
+export const dynamic = "force-dynamic";
 
 export default async function MentorsPage({
-  searchParams,
+  searchParams: searchParamsPromise,
 }: {
-  searchParams: { q?: string; category?: string; skill?: string; sort?: any; page?: string };
+  searchParams: Promise<{ q?: string; category?: string; skill?: string; sort?: any; page?: string }>;
 }) {
+  const searchParams = await searchParamsPromise;
   const page = Number(searchParams.page ?? 1);
   const [{ mentors, total, pageCount }, categories, skills] = await Promise.all([
     listMentors({ ...searchParams, page }),
     db.category.findMany({ orderBy: { order: "asc" } }),
     db.skill.findMany({ orderBy: { name: "asc" } }),
   ]);
+
+  const hasFilters = Boolean(searchParams.q || searchParams.category || searchParams.skill);
 
   const qs = (patch: Record<string, string | number | undefined>) => {
     const url = new URLSearchParams();
@@ -43,12 +48,20 @@ export default async function MentorsPage({
               ? categories.find((c) => c.slug === searchParams.category)?.name ?? "Mentors"
               : "Find your mentor"}
           </h1>
-          <p className="text-sm text-muted-foreground">{total.toLocaleString()} mentors ready to help.</p>
+          {total > 0 ? <p className="text-sm text-muted-foreground">{total.toLocaleString()} {total === 1 ? "mentor" : "mentors"} available.</p> : null}
         </div>
 
         <DiscoveryFilters categories={categories} skills={skills} initial={searchParams} />
 
-        {mentors.length === 0 ? (
+        {mentors.length === 0 && !hasFilters ? (
+          <Empty
+            icon={<Users className="h-5 w-5" />}
+            title="Our first mentors are joining soon"
+            description="Mentio is in early access and every mentor is reviewed by hand. Check back shortly, or apply to become one."
+            action={<Button asChild variant="brand"><Link href="/sign-up?role=MENTOR">Apply to become a mentor</Link></Button>}
+            className="mt-10"
+          />
+        ) : mentors.length === 0 ? (
           <Empty
             icon={<Search className="h-5 w-5" />}
             title="No mentors match that yet"

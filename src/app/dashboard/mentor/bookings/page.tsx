@@ -6,7 +6,7 @@ import { BookingsTable } from "@/components/dashboard/bookings-table";
 export default async function MentorBookings() {
   const user = await requireRole(["MENTOR", "ADMIN"]);
   const mentor = await db.mentorProfile.findUnique({ where: { userId: user.id } });
-  if (!mentor) return <p className="text-sm text-muted-foreground">You don't have a mentor profile yet.</p>;
+  if (!mentor) return <p className="text-sm text-muted-foreground">You don&apos;t have a mentor profile yet.</p>;
   const now = new Date();
   const [upcoming, past] = await Promise.all([
     db.booking.findMany({

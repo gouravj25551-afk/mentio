@@ -45,7 +45,7 @@ The booking engine is the heart of the product.
 
 ## Payments-ready contract
 
-Bookings carry `amountCents`, `currency`, `paymentIntentId`, `paymentStatus`. The booking flow currently creates a `NoopPayments` intent that immediately succeeds. To add Stripe:
+Bookings carry `amountCents`, `currency`, `paymentIntentId`, `paymentStatus`. Checkout is not implemented yet: bookings confirm immediately, `amountCents` is `0`, and `PAYMENTS_ENABLED` in `src/lib/pricing.ts` is `false`. Mentors can already store an INR price (in paise) for later. To add Stripe:
 
 ```ts
 // src/services/payments/index.ts

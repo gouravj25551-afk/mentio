@@ -60,7 +60,7 @@ Hot paths get indexes:
 Every `Booking` carries:
 
 - `amountCents: Int @default(0)` — zero means free
-- `currency: String @default("USD")`
+- `currency: String @default("INR")` (amounts are stored in paise)
 - `paymentIntentId: String?` — opaque reference the payments adapter owns
 - `paymentStatus: String?` — adapter-defined
 

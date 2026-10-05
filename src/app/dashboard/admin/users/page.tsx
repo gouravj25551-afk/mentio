@@ -11,6 +11,9 @@ export default async function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-semibold tracking-tight">Users</h1>
+      {users.length === 0 ? (
+        <Card className="p-10 text-center text-sm text-muted-foreground">No users yet.</Card>
+      ) : (
       <Card className="divide-y">
         {users.map((u) => (
           <div key={u.id} className="flex items-center gap-4 p-4">
@@ -24,6 +27,7 @@ export default async function AdminUsersPage() {
           </div>
         ))}
       </Card>
+      )}
     </div>
   );
 }

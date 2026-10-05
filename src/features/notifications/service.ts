@@ -1,7 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
 import type { NotificationType } from "@prisma/client";
-import { mailer } from "@/services/email";
 
 export async function createNotification(input: {
   userId: string;
@@ -10,17 +9,17 @@ export async function createNotification(input: {
   body?: string;
   link?: string;
 }) {
-  const notif = await db.notification.create({ data: input });
-  // fan-out to email channel (no-op in dev unless RESEND_API_KEY is set)
-  const user = await db.user.findUnique({ where: { id: input.userId }, select: { email: true, name: true } });
-  if (user?.email) {
-    await mailer.send({
-      to: user.email,
-      subject: input.title,
-      text: `${input.body ?? ""}${input.link ? `\n\n${process.env.NEXT_PUBLIC_APP_URL ?? ""}${input.link}` : ""}`.trim(),
-    });
+  // In-app only. Transactional emails are sent explicitly by the caller (see services/email/templates).
+  return db.notification.create({ data: input });
+}
+
+/** In-app notification that must never break the caller's already-committed work. */
+export async function createNotificationSafely(input: Parameters<typeof createNotification>[0]) {
+  try {
+    await createNotification(input);
+  } catch (err) {
+    console.error("[notification] create failed:", err instanceof Error ? err.message : "unknown error");
   }
-  return notif;
 }
 
 export async function listNotifications(userId: string, opts?: { unreadOnly?: boolean; take?: number }) {

@@ -22,7 +22,8 @@ export default async function MentorOnboarding() {
       },
       include: { categories: true, skills: true },
     });
-    await db.user.update({ where: { id: user.id }, data: { role: "MENTOR" } });
+    // Never touch an admin's role; only students become mentors here.
+    await db.user.updateMany({ where: { id: user.id, role: "STUDENT" }, data: { role: "MENTOR" } });
   }
   if (mentor.status === "APPROVED") redirect("/dashboard/mentor");
 
@@ -35,15 +36,18 @@ export default async function MentorOnboarding() {
     <div className="container mx-auto max-w-3xl space-y-6 py-16">
       <div>
         <div className="text-xs uppercase tracking-widest text-muted-foreground">Mentor onboarding</div>
-        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">Set up your mentor profile</h1>
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">Your mentor application</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Approval typically takes 48 hours. In the meantime, your profile won't be publicly discoverable.
+          {mentor.status === "REJECTED"
+            ? "Your application wasn't approved. You can update it below."
+            : "We review every application by hand. Until you're approved, your profile isn't public."}
         </p>
       </div>
       <Card className="p-6">
         <MentorProfileForm
           categories={categories}
           skills={skills}
+          approved={false}
           initial={{
             headline: mentor.headline,
             bio: mentor.bio,

@@ -14,6 +14,9 @@ export default async function AdminBookingsPage() {
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-semibold tracking-tight">Bookings</h1>
+      {bookings.length === 0 ? (
+        <Card className="p-10 text-center text-sm text-muted-foreground">No bookings yet.</Card>
+      ) : (
       <Card className="divide-y">
         {bookings.map((b) => (
           <div key={b.id} className="grid grid-cols-1 gap-2 p-4 text-sm sm:grid-cols-[1.5fr_1.5fr_1fr_1fr_auto] sm:items-center">
@@ -25,6 +28,7 @@ export default async function AdminBookingsPage() {
           </div>
         ))}
       </Card>
+      )}
     </div>
   );
 }

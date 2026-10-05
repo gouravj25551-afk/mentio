@@ -9,7 +9,11 @@ import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
 import { authLimiter } from "@/lib/rate-limit";
 import { forgotSchema, resetSchema, signInSchema, signUpSchema } from "@/lib/validators";
-import { Role } from "@prisma/client";
+import { MentorStatus, Role } from "@prisma/client";
+import { env } from "@/lib/env";
+import { slugify } from "@/lib/utils";
+import { sendEmailSafely } from "@/services/email/send";
+import { absoluteUrl, passwordResetEmail } from "@/services/email/templates";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -53,29 +57,32 @@ export async function signUpAction(_prev: unknown, formData: FormData): Promise<
   if (existing) return { ok: false, error: "An account with this email already exists." };
 
   const passwordHash = await hashPassword(parsed.data.password);
-  const user = await db.user.create({
+  const isMentor = parsed.data.role === "MENTOR";
+  // A mentor sign-up is an application: the profile starts as PENDING (the schema default)
+  // and stays hidden from discovery and bookings until an admin approves it.
+  await db.user.create({
     data: {
       email: parsed.data.email,
       name: parsed.data.name,
-      role: parsed.data.role as Role,
+      role: isMentor ? Role.MENTOR : Role.STUDENT,
       passwordHash,
       profile: { create: {} },
+      ...(isMentor
+        ? {
+            mentorProfile: {
+              create: {
+                slug: `${slugify(parsed.data.name) || "mentor"}-${crypto.randomBytes(3).toString("hex")}`,
+                headline: `${parsed.data.name} on Mentio`,
+                bio: "",
+                experience: "",
+                status: MentorStatus.PENDING,
+                currency: "INR",
+              },
+            },
+          }
+        : {}),
     },
   });
-
-  if (user.role === Role.MENTOR) {
-    const base = user.name?.toLowerCase().replace(/[^a-z0-9]+/g, "-") ?? `mentor-${user.id.slice(0, 6)}`;
-    const slug = `${base}-${user.id.slice(0, 6)}`;
-    await db.mentorProfile.create({
-      data: {
-        userId: user.id,
-        slug,
-        headline: `${user.name ?? "Mentor"} on Mentio`,
-        bio: "Tell students about your journey.",
-        experience: "",
-      },
-    });
-  }
 
   await signIn("credentials", {
     email: parsed.data.email,
@@ -93,22 +100,36 @@ export async function signOutAction() {
   await signOut({ redirectTo: "/" });
 }
 
-export async function forgotPasswordAction(_prev: unknown, formData: FormData): Promise<ActionResult & { devToken?: string }> {
+const hashToken = (token: string) => crypto.createHash("sha256").update(token).digest("hex");
+
+export async function forgotPasswordAction(_prev: unknown, formData: FormData): Promise<ActionResult> {
   const parsed = forgotSchema.safeParse({ email: formData.get("email") });
   if (!parsed.success) return { ok: false, error: "Enter a valid email." };
+
+  const limit = await authLimiter.check(`forgot:${parsed.data.email}`);
+  if (!limit.ok) return { ok: false, error: "Too many attempts. Try again shortly." };
+
   const user = await db.user.findUnique({ where: { email: parsed.data.email } });
   // Always return ok to avoid user enumeration
   if (!user) return { ok: true };
+
+  // Only a hash is stored, so a database leak can't be turned into working reset links.
   const token = crypto.randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + 60 * 60_000);
-  await db.passwordResetToken.create({
-    data: { token, userId: user.id, expiresAt },
+  await db.$transaction([
+    db.passwordResetToken.deleteMany({ where: { userId: user.id, usedAt: null } }),
+    db.passwordResetToken.create({
+      data: { token: hashToken(token), userId: user.id, expiresAt: new Date(Date.now() + 60 * 60_000) },
+    }),
+  ]);
+
+  // The token only ever travels by email. It is never returned to the browser or logged.
+  await sendEmailSafely("password reset", {
+    to: user.email,
+    ...passwordResetEmail({
+      name: user.name,
+      resetUrl: absoluteUrl(env.NEXT_PUBLIC_APP_URL, `/reset-password?token=${token}`),
+    }),
   });
-  if (process.env.NODE_ENV !== "production") {
-    console.log(`[dev] password reset link: /reset-password?token=${token}`);
-    return { ok: true, devToken: token };
-  }
-  // In production, email the link via the mailer service.
   return { ok: true };
 }
 
@@ -119,7 +140,7 @@ export async function resetPasswordAction(_prev: unknown, formData: FormData): P
   });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
 
-  const record = await db.passwordResetToken.findUnique({ where: { token: parsed.data.token } });
+  const record = await db.passwordResetToken.findUnique({ where: { token: hashToken(parsed.data.token) } });
   if (!record || record.usedAt || record.expiresAt < new Date()) {
     return { ok: false, error: "This reset link has expired. Request a new one." };
   }

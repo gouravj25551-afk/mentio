@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatMoney, formatDate, initials } from "@/lib/utils";
+import { formatDate, initials } from "@/lib/utils";
 import { getMentorBySlug, getRatingDistribution } from "@/features/mentors/queries";
 import { getAvailableSlots } from "@/features/bookings/slots";
 import { BookingPanel } from "@/components/booking/booking-panel";
@@ -18,8 +18,9 @@ import { auth } from "@/lib/auth";
 
 export const revalidate = 30;
 
-export default async function MentorPage({ params }: { params: { slug: string } }) {
-  const mentor = await getMentorBySlug(params.slug);
+export default async function MentorPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const mentor = await getMentorBySlug(slug);
   if (!mentor) notFound();
   const [slots, dist, session] = await Promise.all([
     getAvailableSlots({ mentorProfileId: mentor.id, days: 14, sessionLength: mentor.sessionLength }),
@@ -51,14 +52,16 @@ export default async function MentorPage({ params }: { params: { slug: string } 
                 </div>
                 <p className="mt-1 text-lg text-muted-foreground">{mentor.headline}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    <strong className="text-foreground">{mentor.averageRating.toFixed(1)}</strong>
-                    <span>({mentor.totalReviews} reviews)</span>
-                  </span>
-                  <span>·</span>
-                  <span>{mentor.totalSessions} sessions</span>
-                  <span>·</span>
+                  {mentor.totalReviews > 0 ? (
+                    <>
+                      <span className="inline-flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        <strong className="text-foreground">{mentor.averageRating.toFixed(1)}</strong>
+                        <span>({mentor.totalReviews} reviews)</span>
+                      </span>
+                      <span>·</span>
+                    </>
+                  ) : null}
                   <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />Responds in {mentor.responseTimeHrs}h</span>
                   <span>·</span>
                   <span className="inline-flex items-center gap-1"><Globe className="h-3.5 w-3.5" />{mentor.user.profile?.timezone ?? "UTC"}</span>

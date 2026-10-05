@@ -7,6 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { AdminMentorActions } from "@/components/dashboard/admin-mentor-actions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+const EMPTY_COPY = {
+  PENDING: "No applications waiting for review.",
+  APPROVED: "No approved mentors yet. Approve an application to get started.",
+  REJECTED: "No rejected applications.",
+  SUSPENDED: "No suspended mentors.",
+} as const;
+
 async function Section({ status }: { status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED" }) {
   const rows = await db.mentorProfile.findMany({
     where: { status },
@@ -14,7 +21,7 @@ async function Section({ status }: { status: "PENDING" | "APPROVED" | "REJECTED"
     orderBy: { createdAt: "desc" },
     take: 50,
   });
-  if (!rows.length) return <p className="p-6 text-sm text-muted-foreground">No mentors in this state.</p>;
+  if (!rows.length) return <p className="p-6 text-sm text-muted-foreground">{EMPTY_COPY[status]}</p>;
   return (
     <Card className="divide-y">
       {rows.map((m) => (

@@ -9,7 +9,10 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Pooled connection (Supabase transaction pooler) used by the app at runtime.
+  url       = env("DATABASE_URL")
+  // Direct connection used by `prisma migrate`. Never use the pooler for migrations.
+  directUrl = env("DIRECT_URL")
 }
 
 // ========== Auth ==========
@@ -138,9 +141,10 @@ model MentorProfile {
   portfolio        String[]     @default([])
   featured         Boolean      @default(false)
   status           MentorStatus @default(PENDING)
-  // Pricing — zero means free (payments arrive in a future phase)
+  // Pricing configuration for a future payments phase. Stored in paise (INR).
+  // Checkout is not implemented yet, so nothing is charged.
   rateCents        Int          @default(0)
-  currency         String       @default("USD")
+  currency         String       @default("INR")
   sessionLength    Int          @default(30) // minutes
   responseTimeHrs  Int          @default(24)
   totalSessions    Int          @default(0)
@@ -270,7 +274,7 @@ model Booking {
   paymentIntentId String?
   paymentStatus   String?
   amountCents     Int           @default(0)
-  currency        String        @default("USD")
+  currency        String        @default("INR")
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, Star } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Hero() {
@@ -17,11 +17,11 @@ export function Hero() {
           className="mx-auto max-w-3xl text-center"
         >
           <Link
-            href="/mentors"
+            href="/sign-up?role=MENTOR"
             className="group inline-flex items-center gap-2 rounded-full border bg-background/70 px-3 py-1 text-xs backdrop-blur transition hover:bg-background"
           >
             <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
-            <span>New: GSoC & LFX mentor cohort — now accepting bookings</span>
+            <span>Early access — mentor applications are open</span>
             <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
           </Link>
           <h1 className="mt-6 font-display text-5xl font-semibold tracking-tight sm:text-6xl md:text-7xl">
@@ -29,30 +29,17 @@ export function Hero() {
             <span className="brand-text">aspire to become.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted-foreground">
-            Book 1:1 calls with GSoC mentors, LFX contributors, Google and Microsoft interns,
-            founders, PMs, designers and senior engineers. No cold DMs, no gatekeepers.
+            Learn from vetted mentors. Book a 1:1 call with someone who has done what you want to do.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild variant="brand" size="xl">
               <Link href="/mentors">Browse mentors<ArrowRight className="h-4 w-4" /></Link>
             </Button>
             <Button asChild variant="outline" size="xl">
-              <Link href="/sign-up?role=MENTOR">Become a mentor</Link>
+              <Link href="/sign-up?role=MENTOR">Apply to become a mentor</Link>
             </Button>
           </div>
-          <div className="mt-8 flex items-center justify-center gap-6 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <div className="flex -space-x-2">
-                {[0,1,2,3].map(i => <div key={i} className="h-5 w-5 rounded-full border-2 border-background bg-gradient-to-br from-indigo-400 to-sky-400" />)}
-              </div>
-              <span>2,000+ students booked</span>
-            </div>
-            <div className="flex items-center gap-1">
-              {[0,1,2,3,4].map(i => <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />)}
-              <span className="ml-1">4.9 avg rating</span>
-            </div>
-          </div>
-        </motion.div>
+                </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -60,25 +47,17 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mx-auto mt-16 max-w-5xl"
         >
-          <div className="relative rounded-2xl border bg-background/40 p-2 shadow-soft backdrop-blur">
-            <div className="rounded-xl border bg-gradient-to-br from-background to-muted/30 p-6">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                {[
-                  { title: "Open Source", desc: "GSoC, LFX, CNCF mentors who've been in your seat.", stat: "320+", label: "Mentors" },
-                  { title: "Interview Prep", desc: "FAANG & startup interviews with people who ship.", stat: "15K+", label: "Mock calls" },
-                  { title: "Career Pivots", desc: "Switch stacks, roles, cities — with a plan.", stat: "4.9★", label: "Avg rating" },
-                ].map((c) => (
-                  <div key={c.title} className="rounded-lg border bg-background p-4">
-                    <div className="flex items-baseline justify-between">
-                      <h3 className="font-medium">{c.title}</h3>
-                      <span className="font-display text-lg font-semibold brand-text">{c.stat}</span>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{c.desc}</p>
-                    <div className="mt-3 text-[11px] uppercase tracking-wider text-muted-foreground">{c.label}</div>
-                  </div>
-                ))}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {[
+              { title: "Open source", desc: "Get unstuck on proposals, first contributions and program applications." },
+              { title: "Interview prep", desc: "Practice with people who have been on the other side of the table." },
+              { title: "Career moves", desc: "Switch stacks, roles or cities with a plan." },
+            ].map((c) => (
+              <div key={c.title} className="rounded-lg border bg-background p-4">
+                <h3 className="font-medium">{c.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{c.desc}</p>
               </div>
-            </div>
+            ))}
           </div>
         </motion.div>
       </div>

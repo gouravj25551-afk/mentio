@@ -3,7 +3,7 @@
 ## Public
 
 ### Landing page (`/`)
-Hero, social proof, featured mentors (DB-driven), how-it-works, categories grid, benefits, testimonials, FAQ, CTA, footer. Animated with Framer Motion. Dark + light.
+Hero, featured mentors (DB-driven, hidden when empty), how-it-works, categories grid, benefits, FAQ, CTA, footer. Animated with Framer Motion. Dark + light.
 
 ### Mentor discovery (`/mentors`)
 - Search by name/headline/bio
@@ -78,7 +78,7 @@ Falls back to internal silently on any failure.
 `ConsoleMailer` by default (logs); `ResendMailer` when `RESEND_API_KEY` is set. All notifications fan out through this.
 
 ### Payments (`services/payments`)
-`NoopPayments` today. Interface designed for a drop-in Stripe/Razorpay adapter.
+Not wired into bookings yet; `NoopPayments` is a placeholder. Interface designed for a drop-in Stripe/Razorpay adapter.
 
 ## Notifications
 

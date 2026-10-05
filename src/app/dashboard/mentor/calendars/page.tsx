@@ -50,7 +50,7 @@ export default async function CalendarsPage() {
                 <p className="text-sm text-muted-foreground">{p.description}</p>
                 {!p.configured ? (
                   <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
-                    Platform credentials for {p.name} aren't configured. Set them in <code>.env</code> to enable OAuth.
+                    Platform credentials for {p.name} aren&apos;t configured. Set them in <code>.env</code> to enable OAuth.
                   </p>
                 ) : null}
                 {existing ? (

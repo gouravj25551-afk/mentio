@@ -25,15 +25,13 @@ A Next.js application with real auth, a real database, a transactional booking e
 npm install
 cp .env.example .env        # set DATABASE_URL and AUTH_SECRET (openssl rand -base64 32)
 npx prisma migrate deploy   # needs Postgres with btree_gist
-npm run db:seed             # development only; prints random demo passwords
+npm run db:taxonomy         # idempotently load public categories and skills
 npm run dev
 ```
 
 Open <http://localhost:3000>. In development, emails (verification and reset links) are printed to the server console.
 
-### Demo accounts (development seed only)
-
-`admin@mentio.test`, `student@mentio.test`, `aarav@mentio.test`. The password is random for each `npm run db:seed` run and printed at the end (or set `SEED_PASSWORD`). The seed refuses to run in production or against a non-local database.
+There are no demo accounts or seeded mentors. Create the admin with `npm run admin:bootstrap` and add real mentors through the normal sign-up/onboarding and admin approval flow.
 
 ---
 
@@ -55,7 +53,7 @@ Open <http://localhost:3000>. In development, emails (verification and reset lin
 - `npm run lint` — ESLint
 - `npm run typecheck` — strict TypeScript
 - `npm run db:migrate` — create and apply a migration (development)
-- `npm run db:seed` — dev-only demo data
+- `npm run db:taxonomy` — idempotently load categories and skills (no users or mentors)
 - `npm test` — unit + integration tests (needs a throwaway Postgres)
 - `npm run test:e2e` — real-browser smoke test
 - `npm run db:studio` — Prisma Studio

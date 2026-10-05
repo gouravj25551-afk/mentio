@@ -61,9 +61,13 @@ export default async function MentorsPage({
         {mentors.length === 0 ? (
           <Empty
             icon={<Search className="h-5 w-5" />}
-            title="No mentors match that yet"
-            description="Try removing a filter or searching for a different skill."
-            action={<Button asChild variant="outline"><Link href="/mentors">Reset filters</Link></Button>}
+            title={total === 0 ? "Mentors are joining soon" : "No mentors match that yet"}
+            description={total === 0
+              ? "We are onboarding our first verified mentors. Check back soon, or apply to mentor on Mentio."
+              : "Try removing a filter or searching for a different skill."}
+            action={total === 0
+              ? <Button asChild variant="outline"><Link href="/sign-up?role=MENTOR">Become a mentor</Link></Button>
+              : <Button asChild variant="outline"><Link href="/mentors">Reset filters</Link></Button>}
             className="mt-10"
           />
         ) : (

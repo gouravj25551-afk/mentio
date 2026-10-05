@@ -7,7 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { formatMoney, initials } from "@/lib/utils";
 import type { MentorProfile, User, MentorCategory, Category } from "@prisma/client";
 
-type Row = MentorProfile & { user: User; categories: (MentorCategory & { category: Category })[] };
+// passwordHash is omitted from every query by default (see src/lib/db.ts).
+type PublicUser = Omit<User, "passwordHash">;
+
+type Row = MentorProfile & { user: PublicUser; categories: (MentorCategory & { category: Category })[] };
 
 export function FeaturedMentors({ mentors }: { mentors: Row[] }) {
   if (!mentors.length) return null;

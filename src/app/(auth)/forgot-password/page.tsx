@@ -14,10 +14,7 @@ export default function ForgotPasswordPage() {
   const [state, action] = useFormState(forgotPasswordAction, null);
   useEffect(() => {
     if (state?.ok) {
-      toast.success("If that email exists, we've sent a reset link.");
-      if (state.devToken) {
-        toast(`Dev reset: /reset-password?token=${state.devToken}`);
-      }
+      toast.success(state.message ?? "Check your email.");
     } else if (state && !state.ok) {
       toast.error(state.error);
     }

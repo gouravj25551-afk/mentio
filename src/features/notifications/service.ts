@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import type { NotificationType } from "@prisma/client";
-import { mailer } from "@/services/email";
+import { appUrl, sendEmailSafely } from "@/services/email";
 
 export async function createNotification(input: {
   userId: string;
@@ -11,13 +11,13 @@ export async function createNotification(input: {
   link?: string;
 }) {
   const notif = await db.notification.create({ data: input });
-  // fan-out to email channel (no-op in dev unless RESEND_API_KEY is set)
-  const user = await db.user.findUnique({ where: { id: input.userId }, select: { email: true, name: true } });
+  // Email is best-effort: a mail outage must never fail the booking that triggered it.
+  const user = await db.user.findUnique({ where: { id: input.userId }, select: { email: true } });
   if (user?.email) {
-    await mailer.send({
+    await sendEmailSafely({
       to: user.email,
       subject: input.title,
-      text: `${input.body ?? ""}${input.link ? `\n\n${process.env.NEXT_PUBLIC_APP_URL ?? ""}${input.link}` : ""}`.trim(),
+      text: `${input.body ?? ""}${input.link ? `\n\n${appUrl(input.link)}` : ""}`.trim() || input.title,
     });
   }
   return notif;

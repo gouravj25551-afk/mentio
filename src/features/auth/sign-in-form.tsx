@@ -3,7 +3,7 @@
 import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -11,25 +11,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { signInWithPassword, signInWithGoogle } from "@/features/auth/actions";
+import { resendVerificationAction, signInWithPassword, signInWithGoogle } from "@/features/auth/actions";
+import { safeNextPath } from "@/lib/utils";
 
 export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
   const [state, action] = useFormState(signInWithPassword, null);
+  const [resent, resend] = useFormState(resendVerificationAction, null);
+  const emailRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const search = useSearchParams();
+  const oauthError = search.get("error");
 
   useEffect(() => {
     if (state?.ok) {
       toast.success("Welcome back");
-      router.replace(search.get("next") || "/dashboard");
+      router.replace(safeNextPath(search.get("next")));
       router.refresh();
     } else if (state && !state.ok) {
       toast.error(state.error);
     }
   }, [state, router, search]);
 
+  useEffect(() => {
+    if (resent?.ok) toast.success(resent.message ?? "Verification email sent");
+    else if (resent && !resent.ok) toast.error(resent.error);
+  }, [resent]);
+
   return (
     <div className="space-y-5">
+      {oauthError ? (
+        <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+          {oauthError === "OAuthAccountNotLinked"
+            ? "That email already has a password account. Sign in with your password instead."
+            : "Sign-in failed. Please try again."}
+        </p>
+      ) : null}
       {googleEnabled ? (
         <>
           <form action={signInWithGoogle}>
@@ -47,7 +63,7 @@ export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
       <form action={action} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" autoComplete="email" required />
+          <Input ref={emailRef} id="email" name="email" type="email" autoComplete="email" required />
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -58,6 +74,12 @@ export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
         </div>
         <Submit label="Sign in" />
       </form>
+      {state && !state.ok && state.code === "email_not_verified" ? (
+        <form action={resend}>
+          <input type="hidden" name="email" value={emailRef.current?.value ?? ""} />
+          <Button type="submit" variant="outline" className="w-full">Resend verification email</Button>
+        </form>
+      ) : null}
     </div>
   );
 }

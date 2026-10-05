@@ -1,16 +1,16 @@
 import { z } from "zod";
 
-export const emailSchema = z.string().email().toLowerCase();
+export const emailSchema = z.string().trim().toLowerCase().email("Enter a valid email");
 export const passwordSchema = z
   .string()
   .min(8, "Must be at least 8 characters")
-  .max(100)
+  .max(72, "Must be at most 72 characters")
   .regex(/[A-Z]/, "Must include an uppercase letter")
   .regex(/[a-z]/, "Must include a lowercase letter")
   .regex(/[0-9]/, "Must include a number");
 
 export const signUpSchema = z.object({
-  name: z.string().min(2).max(80),
+  name: z.string().trim().min(2, "Enter your full name").max(80),
   email: emailSchema,
   password: passwordSchema,
   role: z.enum(["STUDENT", "MENTOR"]).default("STUDENT"),

@@ -10,17 +10,17 @@ export function CTA() {
         <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-black/10 blur-3xl" aria-hidden />
         <div className="relative max-w-2xl">
           <h2 className="font-display text-3xl font-semibold tracking-tight md:text-5xl">
-            Stop sending cold DMs.
+            Learn from someone who has done it.
           </h2>
           <p className="mt-4 max-w-xl text-base text-white/80 md:text-lg">
-            Join 2,000+ students already learning from the people they look up to. Your first call takes 30 seconds to book.
+            Mentio is in early access. Browse our first mentors, or apply to become one.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button asChild size="xl" className="bg-white text-primary hover:bg-white/90">
               <Link href="/mentors">Find your mentor <ArrowRight className="h-4 w-4" /></Link>
             </Button>
             <Button asChild size="xl" variant="outline" className="border-white/40 bg-white/0 text-white hover:bg-white/10">
-              <Link href="/sign-up?role=MENTOR">Mentor on Mentio</Link>
+              <Link href="/sign-up?role=MENTOR">Apply to become a mentor</Link>
             </Button>
           </div>
         </div>

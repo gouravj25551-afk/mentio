@@ -2,7 +2,6 @@ import { requireRole } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Stat } from "@/components/dashboard/stat";
-import { formatMoney } from "@/lib/utils";
 import { AnalyticsChart } from "@/components/dashboard/analytics-chart";
 
 export default async function MentorAnalyticsPage() {
@@ -39,7 +38,7 @@ export default async function MentorAnalyticsPage() {
     if (b.status === "COMPLETED") row.revenue += b.amountCents;
   }
 
-  const totalRevenue = bookings30d.filter((b) => b.status === "COMPLETED").reduce((a, b) => a + b.amountCents, 0);
+  const completed30 = bookings30d.filter((b) => b.status === "COMPLETED").length;
   const growth = bookings60 === 0 ? 100 : Math.round(((bookings30 - bookings60) / bookings60) * 100);
 
   return (
@@ -50,7 +49,7 @@ export default async function MentorAnalyticsPage() {
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <Stat label="Bookings" value={bookings30} trend={{ value: growth }} />
-        <Stat label="Revenue" value={formatMoney(totalRevenue, mentor.currency)} hint="Completed only" />
+        <Stat label="Completed sessions" value={completed30} hint="Payments are not live yet" />
         <Stat label="Avg rating" value={mentor.averageRating.toFixed(2)} hint={`${mentor.totalReviews} reviews`} />
       </div>
       <Card>

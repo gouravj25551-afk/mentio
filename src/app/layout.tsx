@@ -9,15 +9,15 @@ const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", 
 
 export const metadata: Metadata = {
   title: {
-    default: "Mentio — Book 1:1 calls with the people you aspire to become",
+    default: "Mentio — Learn from vetted mentors",
     template: "%s · Mentio",
   },
   description:
-    "A direct line to GSoC mentors, open-source maintainers, Google and Microsoft interns, founders, PMs, designers and engineers. Pick a slot, book the call.",
-  keywords: ["mentorship", "GSoC", "LFX", "career", "interview prep", "open source"],
+    "Book 1:1 mentorship calls with vetted mentors. Mentio is in early access.",
+  keywords: ["mentorship", "career", "interview prep", "open source"],
   openGraph: {
     title: "Mentio",
-    description: "Book 1:1 mentorship calls with people you aspire to become.",
+    description: "Learn from vetted mentors. Early access.",
     type: "website",
   },
   icons: { icon: "/favicon.ico" },

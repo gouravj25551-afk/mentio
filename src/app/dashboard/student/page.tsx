@@ -14,7 +14,7 @@ import { BookingStatus } from "@prisma/client";
 export default async function StudentOverview() {
   const user = await requireRole("STUDENT");
   const now = new Date();
-  const [upcoming, past, saved, totals] = await Promise.all([
+  const [upcoming, past, saved] = await Promise.all([
     db.booking.findMany({
       where: { studentId: user.id, startsAt: { gte: now }, status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] } },
       include: { mentorProfile: { include: { user: true } } },
@@ -23,7 +23,6 @@ export default async function StudentOverview() {
     }),
     db.booking.count({ where: { studentId: user.id, status: BookingStatus.COMPLETED } }),
     db.savedMentor.count({ where: { userId: user.id } }),
-    db.booking.aggregate({ where: { studentId: user.id }, _count: true }),
   ]);
 
   return (

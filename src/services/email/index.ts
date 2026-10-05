@@ -1,6 +1,6 @@
-// Mailer abstraction. Swap this for Resend, Postmark, SES, etc. without
-// touching callers. In dev, we log to the console.
-import { env, isResendEnabled } from "@/lib/env";
+// Mailer abstraction. Production sends through Resend (env validation requires
+// RESEND_API_KEY there). Without a key in development, mail is logged to the console.
+import { env, isProd, isResendEnabled } from "@/lib/env";
 
 export interface MailMessage {
   to: string;
@@ -16,8 +16,9 @@ export interface Mailer {
 class ConsoleMailer implements Mailer {
   async send(msg: MailMessage) {
     const line = `[email] → ${msg.to} · ${msg.subject}`;
+    // Bodies can contain single-use links, so only print them outside production.
     // eslint-disable-next-line no-console
-    console.log(line, msg.text ? `\n${msg.text}` : "");
+    console.log(line, !isProd && msg.text ? `\n${msg.text}` : "");
     return { id: `console-${Date.now()}` };
   }
 }
@@ -31,6 +32,7 @@ class ResendMailer implements Mailer {
         "content-type": "application/json",
         authorization: `Bearer ${this.apiKey}`,
       },
+      signal: AbortSignal.timeout(10_000),
       body: JSON.stringify({
         from: env.EMAIL_FROM,
         to: msg.to,

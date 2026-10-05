@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { formatMoney } from "@/lib/utils";
+import { displayPrice } from "@/lib/pricing";
 
 type Slot = { startsAt: string; endsAt: string };
 
@@ -76,7 +76,7 @@ export function BookingPanel({
     <Card className="p-0">
       <CardHeader className="border-b">
         <CardTitle className="flex items-baseline justify-between">
-          <span>{formatMoney(mentor.rateCents, mentor.currency)}</span>
+          <span>{displayPrice(mentor.rateCents, mentor.currency)}</span>
           <span className="text-sm font-normal text-muted-foreground">{mentor.sessionLength} min call</span>
         </CardTitle>
       </CardHeader>
@@ -165,7 +165,7 @@ export function BookingPanel({
             <DialogFooter>
               <Button type="submit" variant="brand" disabled={submitting || !authenticated}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                Confirm booking · {formatMoney(mentor.rateCents, mentor.currency)}
+                Confirm booking · {displayPrice(mentor.rateCents, mentor.currency)}
               </Button>
             </DialogFooter>
           </form>

@@ -45,8 +45,8 @@ export const mentorProfileSchema = z.object({
   headline: z.string().min(10).max(140),
   bio: z.string().min(40).max(4000),
   experience: z.string().min(20).max(4000),
-  rateCents: z.number().int().min(0).max(1_000_000),
-  currency: z.string().default("USD"),
+  rateCents: z.number().int().min(0).max(5_000_000), // paise (₹50,000 max)
+  currency: z.literal("INR").default("INR"),
   sessionLength: z.number().int().min(15).max(240).default(30),
   responseTimeHrs: z.number().int().min(1).max(168).default(24),
   categoryIds: z.array(z.string()).min(1),

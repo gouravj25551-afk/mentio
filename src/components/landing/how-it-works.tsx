@@ -2,9 +2,9 @@ import { Search, CalendarCheck2, Rocket } from "lucide-react";
 
 export function HowItWorks() {
   const steps = [
-    { icon: Search, title: "Discover", desc: "Filter by category, skill, program, or outcome. Read real reviews from students who've been there." },
-    { icon: CalendarCheck2, title: "Book a slot", desc: "Pick a time that works. Pay only when calls become paid — the booking flow stays the same." },
-    { icon: Rocket, title: "Make moves", desc: "Walk away with a plan, feedback, and a direct contact. Repeat as you grow." },
+    { icon: Search, title: "Discover", desc: "Filter mentors by category or skill and read their profiles." },
+    { icon: CalendarCheck2, title: "Book a slot", desc: "Pick a time from the mentor's availability. Sessions are free during early access." },
+    { icon: Rocket, title: "Make moves", desc: "Walk away with a plan and clear next steps." },
   ];
   return (
     <section id="how-it-works" className="container py-24">

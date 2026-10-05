@@ -23,6 +23,7 @@ export default async function MentorProfilePage() {
       <MentorProfileForm
         categories={categories}
         skills={skills}
+        approved={mentor.status === "APPROVED"}
         initial={{
           headline: mentor.headline,
           bio: mentor.bio,

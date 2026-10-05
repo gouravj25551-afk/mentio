@@ -1,53 +1,29 @@
 # Mentio
 
-A direct line to the people you aspire to become — a mentorship marketplace where students book 1:1 calls with GSoC mentors, open-source maintainers, Google/Microsoft interns, founders, PMs, designers and engineers.
+A mentorship marketplace. Students learn from vetted mentors by booking 1:1 calls. Mentio is in early access: every mentor application is reviewed by an admin before the profile goes live.
 
-Built as a complete, production-grade Next.js application: real auth, real database, real booking engine, real admin tools. Not a demo.
+## What it does
 
----
-
-## Highlights
-
-- **Three roles with proper RBAC** — Student, Mentor, Admin. Every route is gated server-side.
-- **Real auth** — NextAuth v5 (credentials + Google OAuth), bcrypt, JWT sessions, forgot/reset flow, email-verification architecture.
-- **End-to-end booking engine** — availability windows → generated slots → double-booking-safe booking → cancel / reschedule / review.
-- **Payments-ready, no refactor** — `services/payments` is an interface; bookings carry `paymentIntentId`, `paymentStatus`, `amountCents`. Flip the adapter on when Stripe/Razorpay arrives.
-- **Calendar integrations** — Cal.com and Calendly adapters behind one interface. If credentials aren't set, the internal scheduler takes over seamlessly.
-- **Premium UI** — Linear/Stripe/Cal-inspired. Tailwind, shadcn primitives, Framer Motion, dark mode, responsive to phone.
-- **Notifications + email** — persisted notifications + pluggable mailer (Resend adapter; falls back to console in dev).
-- **Admin dashboard** — mentor approval queue, user list, booking log, platform analytics with charts.
-- **Seed script** — 20 mentors, 50 students, bookings, reviews, categories, skills — the app feels alive from `npm run db:seed`.
-
----
+- **Three roles**: student, mentor, admin. Routes are gated server-side.
+- **Mentor applications**: mentor sign-up creates a `PENDING` profile. Pending and rejected mentors are hidden from discovery, can't be booked, and can't set availability. Only admins approve or reject.
+- **Booking**: availability windows become slots; bookings are double-booking safe; students and mentors can cancel.
+- **Email** via Resend: password reset, mentor approved/rejected, booking confirmed/cancelled.
+- **INR pricing config** for mentors, stored for a future payments phase. Checkout is not implemented and nothing is charged.
 
 ## Quick start
 
 ```bash
-# 1. Install
 npm install
-
-# 2. Env
-cp .env.example .env
-# fill DATABASE_URL (postgres), AUTH_SECRET (openssl rand -base64 32),
-# and optionally AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET
-
-# 3. Database
-npm run db:push
-npm run db:seed
-
-# 4. Run
+cp .env.example .env   # use a dev Supabase project; see docs/SETUP.md
+npm run db:deploy
+npm run db:taxonomy
+npm run admin:bootstrap
 npm run dev
 ```
 
-Open <http://localhost:3000>.
+Open <http://localhost:3000>. Full instructions, including Vercel and production, are in [`docs/SETUP.md`](docs/SETUP.md).
 
-### Demo credentials (after seeding)
-
-| Role    | Email                   | Password        |
-| ------- | ----------------------- | --------------- |
-| Admin   | `admin@mentio.app`      | `mentio-admin`  |
-| Student | `student@mentio.app`    | `mentio-demo`   |
-| Mentor  | `aarav@mentio.dev`      | `mentio-mentor` |
+> Never run seed or demo-data scripts against production. This repo has none; see the setup guide.
 
 ---
 
@@ -57,28 +33,29 @@ Open <http://localhost:3000>.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — layering, directory structure, where to put what
 - [`docs/DATABASE.md`](docs/DATABASE.md) — schema, indexes, invariants, payments-ready contract
 - [`docs/FEATURES.md`](docs/FEATURES.md) — feature-by-feature tour of the product
+- [`docs/LAUNCH_CHECKLIST.md`](docs/LAUNCH_CHECKLIST.md) — go-live checklist
 
 ---
 
 ## Scripts
 
 - `npm run dev` — Next.js in dev
-- `npm run build` — production build (runs `prisma generate` first)
+- `npm run build` — production build (runs `prisma generate` first; needs no database)
 - `npm run start` — serve the built app
-- `npm run lint` — ESLint
-- `npm run typecheck` — strict TypeScript
-- `npm run db:push` — push schema to database (no migration history)
-- `npm run db:migrate` — generate and run a migration
-- `npm run db:seed` — populate realistic demo data
-- `npm run db:studio` — Prisma Studio
+- `npm run lint` · `npm run typecheck` · `npm test`
+- `npm run db:deploy` — apply committed migrations (`prisma migrate deploy`)
+- `npm run db:migrate:dev` — create a migration (development database only)
+- `npm run db:generate` · `npm run db:studio`
+- `npm run db:taxonomy` — upsert baseline categories and skills (production-safe)
+- `npm run admin:bootstrap` — create or update the admin account from `ADMIN_EMAIL` / `ADMIN_PASSWORD`
 
 ---
 
 ## Tech
 
 Next.js 15 (App Router, Server Actions) · TypeScript · TailwindCSS · shadcn-style components ·
-Radix primitives · Framer Motion · Prisma + PostgreSQL · NextAuth v5 · Zod ·
-TanStack Query · Recharts · Sonner · UploadThing · Resend (optional) ·
+Radix primitives · Framer Motion · Prisma + PostgreSQL (Supabase) · NextAuth v5 · Zod ·
+TanStack Query · Recharts · Sonner · Resend ·
 Cal.com + Calendly adapters.
 
 ---

@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { paiseToRupees, rupeesToPaise } from "@/lib/pricing";
 
 type State = {
   headline: string;
@@ -28,7 +28,7 @@ type State = {
   skillIds: string[];
 };
 
-export function MentorProfileForm({ categories, skills, initial }: { categories: Category[]; skills: Skill[]; initial: State }) {
+export function MentorProfileForm({ categories, skills, initial, approved }: { categories: Category[]; skills: Skill[]; initial: State; approved: boolean }) {
   const [s, setS] = useState<State>(initial);
   const [pending, startTransition] = useTransition();
 
@@ -37,23 +37,27 @@ export function MentorProfileForm({ categories, skills, initial }: { categories:
 
   return (
     <Card className="space-y-5 p-6">
-      <div className="flex items-center justify-between rounded-md bg-muted p-3">
-        <div>
-          <div className="text-sm font-medium">Accepting bookings</div>
-          <div className="text-xs text-muted-foreground">Pause to temporarily hide your calendar.</div>
+      {approved ? (
+        <div className="flex items-center justify-between rounded-md bg-muted p-3">
+          <div>
+            <div className="text-sm font-medium">Accepting bookings</div>
+            <div className="text-xs text-muted-foreground">Pause to temporarily hide your calendar.</div>
+          </div>
+          <Switch checked={s.acceptingBookings} onCheckedChange={(v) => update("acceptingBookings", v)} />
         </div>
-        <Switch checked={s.acceptingBookings} onCheckedChange={(v) => update("acceptingBookings", v)} />
-      </div>
+      ) : null}
 
       <Field label="Headline"><Input value={s.headline} onChange={(e) => update("headline", e.target.value)} /></Field>
       <Field label="Bio"><Textarea rows={4} value={s.bio} onChange={(e) => update("bio", e.target.value)} /></Field>
       <Field label="Experience"><Textarea rows={4} value={s.experience} onChange={(e) => update("experience", e.target.value)} /></Field>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Rate (cents)"><Input type="number" min={0} value={s.rateCents} onChange={(e) => update("rateCents", Number(e.target.value) || 0)} /></Field>
-        <Field label="Session length (min)"><Input type="number" min={15} max={240} value={s.sessionLength} onChange={(e) => update("sessionLength", Number(e.target.value) || 30)} /></Field>
-        <Field label="Response time (hrs)"><Input type="number" min={1} max={168} value={s.responseTimeHrs} onChange={(e) => update("responseTimeHrs", Number(e.target.value) || 24)} /></Field>
-      </div>
+      {approved ? (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Price per session (₹)"><Input type="number" min={0} step={50} value={paiseToRupees(s.rateCents)} onChange={(e) => update("rateCents", rupeesToPaise(Number(e.target.value) || 0))} /></Field>
+          <Field label="Session length (min)"><Input type="number" min={15} max={240} value={s.sessionLength} onChange={(e) => update("sessionLength", Number(e.target.value) || 30)} /></Field>
+          <Field label="Response time (hrs)"><Input type="number" min={1} max={168} value={s.responseTimeHrs} onChange={(e) => update("responseTimeHrs", Number(e.target.value) || 24)} /></Field>
+        </div>
+      ) : null}
 
       <Field label="Categories">
         <div className="flex flex-wrap gap-1.5">

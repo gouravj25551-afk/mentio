@@ -1,15 +1,20 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
-import type { CalendarProvider } from "@prisma/client";
+import { providerFromSlug } from "@/services/calendar/oauth";
 
 export async function POST(req: Request, ctx: { params: Promise<{ provider: string }> }) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.redirect(new URL("/sign-in", req.url));
-  const mentor = await db.mentorProfile.findUnique({ where: { userId: session.user.id } });
-  if (!mentor) return NextResponse.redirect(new URL("/dashboard/mentor", req.url));
-  const { provider } = await ctx.params;
-  const normalized = provider.toUpperCase().replace("-", "_") as CalendarProvider;
-  await db.calendarConnection.deleteMany({ where: { mentorProfileId: mentor.id, provider: normalized } });
-  return NextResponse.redirect(new URL("/dashboard/mentor/calendars", req.url));
+  const { provider: slug } = await ctx.params;
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.redirect(new URL("/sign-in", req.url), 303);
+
+  const provider = providerFromSlug(slug);
+  const mentor = user.role === "MENTOR" ? await db.mentorProfile.findUnique({ where: { userId: user.id }, select: { id: true } }) : null;
+  if (provider && mentor) {
+    // Deleting the row removes the stored (encrypted) tokens entirely.
+    await db.calendarConnection.deleteMany({ where: { mentorProfileId: mentor.id, provider: provider.provider } });
+  }
+  // 303 so the browser follows the POST with a GET.
+  return NextResponse.redirect(new URL("/dashboard/mentor/calendars?disconnected=1", req.url), 303);
 }

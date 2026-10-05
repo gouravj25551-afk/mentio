@@ -8,7 +8,8 @@ ALTER TABLE "Booking" DROP CONSTRAINT "Booking_studentId_fkey";
 ALTER TABLE "Booking" DROP CONSTRAINT "Booking_mentorProfileId_fkey";
 
 -- AlterTable
-ALTER TABLE "MentorProfile" ADD COLUMN     "timezone" TEXT NOT NULL DEFAULT 'UTC';
+ALTER TABLE "MentorProfile" ADD COLUMN     "meetingLink" TEXT,
+ADD COLUMN     "timezone" TEXT NOT NULL DEFAULT 'UTC';
 
 -- AlterTable
 ALTER TABLE "Booking" ADD COLUMN     "completedAt" TIMESTAMP(3),
@@ -72,8 +73,10 @@ ALTER TABLE "Booking" ADD CONSTRAINT "Booking_amount_check" CHECK ("amountCents"
 
 -- A booking with a price can only be CONFIRMED/COMPLETED once it is PAID, so
 -- booking status and payment status can never contradict each other.
+-- (IS NOT DISTINCT FROM, not `=`: with a NULL paymentStatus, `= 'PAID'` is NULL and a
+-- CHECK treats NULL as satisfied, which would let an unpaid booking through.)
 ALTER TABLE "Booking" ADD CONSTRAINT "Booking_paid_before_confirmed_check"
-  CHECK ("status" NOT IN ('CONFIRMED', 'COMPLETED') OR "amountCents" = 0 OR "paymentStatus" = 'PAID') NOT VALID;
+  CHECK ("status" NOT IN ('CONFIRMED', 'COMPLETED') OR "amountCents" = 0 OR "paymentStatus" IS NOT DISTINCT FROM 'PAID') NOT VALID;
 
 ALTER TABLE "Availability" ADD CONSTRAINT "Availability_window_check"
   CHECK ("startMinutes" >= 0 AND "endMinutes" <= 1440 AND "endMinutes" > "startMinutes") NOT VALID;

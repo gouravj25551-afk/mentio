@@ -145,6 +145,10 @@ model MentorProfile {
   rateCents         Int          @default(0)
   currency          String       @default("USD")
   sessionLength     Int          @default(30) // minutes
+  // The mentor's own meeting/scheduling URL (validated allow-list, see src/lib/meeting-links.ts).
+  // When set, bookings use it instead of a generated room. Mentio does NOT create
+  // an event on the provider behind it, so it is always shown as "the mentor's link".
+  meetingLink       String?
   // IANA timezone that Availability windows are expressed in
   timezone          String       @default("UTC")
   responseTimeHrs   Int          @default(24)

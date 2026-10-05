@@ -1,14 +1,13 @@
-import { auth } from "@/lib/auth";
-import { apiCatch, apiError, apiOk } from "@/lib/api";
-import { createBooking } from "@/features/bookings/actions";
+import { apiCatch, apiOk, readJson } from "@/lib/api";
+import { requireApiUser } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
+import { participantUser, publicUser } from "@/lib/public-select";
+import { createBooking } from "@/features/bookings/service";
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user) return apiError("UNAUTHENTICATED", 401);
-    const body = await req.json();
-    const booking = await createBooking(body);
+    const user = await requireApiUser("STUDENT");
+    const booking = await createBooking(user, await readJson(req));
     return apiOk(booking, 201);
   } catch (err) {
     return apiCatch(err);
@@ -16,16 +15,24 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) return apiError("UNAUTHENTICATED", 401);
-  const where = session.user.role === "MENTOR"
-    ? { mentorProfile: { userId: session.user.id } }
-    : { studentId: session.user.id };
-  const list = await db.booking.findMany({
-    where,
-    include: { mentorProfile: { include: { user: true } }, student: true },
-    orderBy: { startsAt: "desc" },
-    take: 50,
-  });
-  return apiOk(list);
+  try {
+    const user = await requireApiUser();
+    // Each role sees only its own bookings; admins see all.
+    const where =
+      user.role === "ADMIN" ? {} : user.role === "MENTOR" ? { mentorProfile: { userId: user.id } } : { studentId: user.id };
+    const bookings = await db.booking.findMany({
+      where,
+      select: {
+        id: true, startsAt: true, endsAt: true, status: true, topic: true, notes: true,
+        meetingUrl: true, meetingKind: true, createdAt: true,
+        student: { select: participantUser },
+        mentorProfile: { select: { id: true, slug: true, user: { select: publicUser } } },
+      },
+      orderBy: { startsAt: "desc" },
+      take: 50,
+    });
+    return apiOk(bookings);
+  } catch (err) {
+    return apiCatch(err);
+  }
 }

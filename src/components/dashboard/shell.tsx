@@ -29,7 +29,7 @@ const mentorNav: NavItem[] = [
   { href: "/dashboard/mentor/availability", label: "Availability", icon: Clock },
   { href: "/dashboard/mentor/reviews", label: "Reviews", icon: Star },
   { href: "/dashboard/mentor/analytics", label: "Analytics", icon: LineChart },
-  { href: "/dashboard/mentor/calendars", label: "Calendars", icon: Sparkles },
+  { href: "/dashboard/mentor/calendars", label: "Meeting link", icon: Sparkles },
   { href: "/dashboard/mentor/profile", label: "Profile", icon: Settings2 },
 ];
 

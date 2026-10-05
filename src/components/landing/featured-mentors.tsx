@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { formatMoney, initials } from "@/lib/utils";
 import type { MentorProfile, User, MentorCategory, Category } from "@prisma/client";
 
-// passwordHash is omitted from every query by default (see src/lib/db.ts).
-type PublicUser = Omit<User, "passwordHash">;
+// Only public user fields are ever passed to this component.
+type PublicUser = Pick<User, "id" | "name" | "image">;
 
 type Row = MentorProfile & { user: PublicUser; categories: (MentorCategory & { category: Category })[] };
 

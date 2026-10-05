@@ -8,7 +8,7 @@ export function AdminMentorActions({ mentorProfileId, featured, status }: { ment
   const [pending, startTransition] = useTransition();
   const call = (action: string) =>
     startTransition(async () => {
-      const res = await fetch(`/api/admin/mentors/${mentorProfileId}/approve`, {
+      const res = await fetch(`/api/admin/mentors/${mentorProfileId}/moderate`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action }),

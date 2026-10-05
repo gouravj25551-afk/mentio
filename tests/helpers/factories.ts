@@ -64,3 +64,43 @@ export async function createMentor(
 }
 
 export const inHours = (h: number) => new Date(Date.now() + h * 3_600_000);
+
+import type { CurrentUser } from "@/lib/auth/guards";
+import { getAvailableSlots } from "@/features/bookings/slots";
+
+export const actor = (user: { id: string; name: string | null; email: string; role: Role; image?: string | null }): CurrentUser => ({
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  image: user.image ?? null,
+  role: user.role,
+  timezone: "UTC",
+});
+
+/** The first `n` slots a mentor really offers (so tests book through the same rules as users). */
+export async function offeredSlots(mentor: { id: string; status: string; acceptingBookings: boolean; sessionLength: number; timezone: string }, n = 5) {
+  const slots = await getAvailableSlots({ ...mentor, days: 14 });
+  if (slots.length < n) throw new Error(`Expected at least ${n} slots, got ${slots.length}`);
+  return slots.slice(0, n);
+}
+
+/** Inserts a booking directly (bypassing the rules) for arranging test state. */
+export async function insertBooking(opts: {
+  studentId: string;
+  mentorProfileId: string;
+  startsAt: Date;
+  minutes?: number;
+  status?: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
+}) {
+  return db.booking.create({
+    data: {
+      studentId: opts.studentId,
+      mentorProfileId: opts.mentorProfileId,
+      startsAt: opts.startsAt,
+      endsAt: new Date(opts.startsAt.getTime() + (opts.minutes ?? 30) * 60_000),
+      status: opts.status ?? "CONFIRMED",
+      topic: "Seeded topic",
+      paymentStatus: "NOT_REQUIRED",
+    },
+  });
+}

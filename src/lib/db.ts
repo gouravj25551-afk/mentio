@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 function createClient() {
   return new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
+    log: process.env.NODE_ENV === "development" ? ["warn", "error"] : process.env.NODE_ENV === "test" ? [] : ["error"],
     // Never select the password hash unless a query opts in with
     // `omit: { passwordHash: false }` (only the credential check does).
     omit: { user: { passwordHash: true } },

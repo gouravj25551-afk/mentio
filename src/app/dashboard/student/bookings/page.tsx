@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookingsTable } from "@/components/dashboard/bookings-table";
+import { bookingRowSelect, toBookingRow } from "@/features/bookings/rows";
 
 export const metadata = { title: "Bookings" };
 
@@ -12,12 +13,12 @@ export default async function StudentBookings() {
   const [upcoming, past] = await Promise.all([
     db.booking.findMany({
       where: { studentId: user.id, startsAt: { gte: now }, status: { in: ["PENDING", "CONFIRMED"] } },
-      include: { mentorProfile: { include: { user: true } } },
+      select: bookingRowSelect,
       orderBy: { startsAt: "asc" },
     }),
     db.booking.findMany({
       where: { studentId: user.id, OR: [{ startsAt: { lt: now } }, { status: { in: ["CANCELLED", "COMPLETED", "NO_SHOW"] } }] },
-      include: { mentorProfile: { include: { user: true } }, review: true },
+      select: bookingRowSelect,
       orderBy: { startsAt: "desc" },
       take: 50,
     }),
@@ -35,10 +36,10 @@ export default async function StudentBookings() {
           <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="upcoming">
-          <BookingsTable role="student" bookings={upcoming} empty={<p className="text-sm text-muted-foreground">No upcoming calls. <Link href="/mentors" className="font-medium underline-offset-4 hover:underline">Browse mentors →</Link></p>} />
+          <BookingsTable role="student" timezone={user.timezone} bookings={upcoming.map((b) => toBookingRow(b, user, now))} empty={<p className="text-sm text-muted-foreground">No upcoming calls. <Link href="/mentors" className="font-medium underline-offset-4 hover:underline">Browse mentors →</Link></p>} />
         </TabsContent>
         <TabsContent value="past">
-          <BookingsTable role="student" bookings={past} empty={<p className="text-sm text-muted-foreground">Nothing in your history yet.</p>} />
+          <BookingsTable role="student" timezone={user.timezone} bookings={past.map((b) => toBookingRow(b, user, now))} empty={<p className="text-sm text-muted-foreground">Nothing in your history yet.</p>} />
         </TabsContent>
       </Tabs>
     </div>

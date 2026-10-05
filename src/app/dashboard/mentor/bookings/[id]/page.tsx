@@ -1,7 +1,10 @@
-import { redirect } from "next/navigation";
+import { requireRole } from "@/lib/auth/guards";
+import { BookingDetailView } from "@/features/bookings/detail-view";
+
+export const metadata = { title: "Booking details" };
 
 export default async function MentorBookingDetail({ params }: { params: Promise<{ id: string }> }) {
+  const viewer = await requireRole(["MENTOR", "ADMIN"]);
   const { id } = await params;
-  // Reuse the student booking detail view — it's role-aware.
-  redirect(`/dashboard/student/bookings/${id}`);
+  return <BookingDetailView viewer={viewer} bookingId={id} area="mentor" />;
 }

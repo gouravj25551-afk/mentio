@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { forbidden, unauthenticated } from "@/lib/errors";
+import { safeTimezone } from "@/lib/time";
 import type { Role } from "@prisma/client";
 
 export type CurrentUser = {
@@ -12,6 +13,8 @@ export type CurrentUser = {
   email: string;
   image: string | null;
   role: Role;
+  /** IANA zone from the user's profile; times are shown in it. Always valid. */
+  timezone: string;
 };
 
 /**
@@ -23,10 +26,13 @@ export type CurrentUser = {
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const session = await auth();
   if (!session?.user?.id) return null;
-  return db.user.findUnique({
+  const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, name: true, email: true, image: true, role: true },
+    select: { id: true, name: true, email: true, image: true, role: true, profile: { select: { timezone: true } } },
   });
+  if (!user) return null;
+  const { profile, ...rest } = user;
+  return { ...rest, timezone: safeTimezone(profile?.timezone) };
 });
 
 // ---- Pages / server components: redirect on failure ----

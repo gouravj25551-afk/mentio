@@ -1,62 +1,72 @@
 # Mentio
 
-A mentorship marketplace. Students learn from vetted mentors by booking 1:1 calls. Mentio is in early access: every mentor application is reviewed by an admin before the profile goes live.
+A direct line to the people you aspire to become — a mentorship marketplace where students book 1:1 calls with GSoC mentors, open-source maintainers, Google/Microsoft interns, founders, PMs, designers and engineers.
 
-## What it does
+A Next.js application with real auth, a real database, a transactional booking engine and admin tools. Currently a **free beta**: see [`docs/PRODUCTION.md`](docs/PRODUCTION.md) for what is and is not production-ready.
 
-- **Three roles**: student, mentor, admin. Routes are gated server-side.
-- **Mentor applications**: mentor sign-up creates a `PENDING` profile. Pending and rejected mentors are hidden from discovery, can't be booked, and can't set availability. Only admins approve or reject.
-- **Booking**: availability windows become slots; bookings are double-booking safe; students and mentors can cancel.
-- **Email** via Resend: password reset, mentor approved/rejected, booking confirmed/cancelled.
-- **INR pricing config** for mentors, stored for a future payments phase. Checkout is not implemented and nothing is charged.
+---
+
+## Highlights
+
+- **Three roles, enforced on the server** — Student, Mentor, Admin. Roles are re-read from the database on every authorization, never trusted from the session token.
+- **Auth** — NextAuth v5 (email + password with email verification, optional Google), bcrypt, forgot/reset flow with hashed single-use tokens, no user enumeration, database-backed rate limits.
+- **Booking engine** — mentor-timezone availability → generated slots → transactional, double-booking-proof booking (advisory locks plus a database exclusion constraint) → cancel / reschedule / complete / review.
+- **Free beta, honestly** — no payment provider exists, so every session is free and paid bookings are impossible rather than faked. See [`docs/PRODUCTION.md`](docs/PRODUCTION.md).
+- **Meeting links** — an unguessable Jitsi room per booking, or the mentor's own validated link. Mentio does not create events in Cal.com or Calendly.
+- **Notifications + email** — persisted notifications plus Resend email (required in production; console in development).
+- **Admin dashboard** — mentor approval queue (complete profiles only), moderation, users, bookings, analytics.
+- **Tests** — 128 unit/integration tests against a real Postgres and a 33-check browser smoke test.
+
+---
 
 ## Quick start
 
 ```bash
 npm install
-cp .env.example .env   # use a dev Supabase project; see docs/SETUP.md
-npm run db:deploy
-npm run db:taxonomy
-npm run admin:bootstrap
+cp .env.example .env        # set DATABASE_URL and AUTH_SECRET (openssl rand -base64 32)
+npx prisma migrate deploy   # needs Postgres with btree_gist
+npm run db:seed             # development only; prints random demo passwords
 npm run dev
 ```
 
-Open <http://localhost:3000>. Full instructions, including Vercel and production, are in [`docs/SETUP.md`](docs/SETUP.md).
+Open <http://localhost:3000>. In development, emails (verification and reset links) are printed to the server console.
 
-> Never run seed or demo-data scripts against production. This repo has none; see the setup guide.
+### Demo accounts (development seed only)
+
+`admin@mentio.test`, `student@mentio.test`, `aarav@mentio.test`. The password is random for each `npm run db:seed` run and printed at the end (or set `SEED_PASSWORD`). The seed refuses to run in production or against a non-local database.
 
 ---
 
 ## Docs
 
-- [`docs/SETUP.md`](docs/SETUP.md) — detailed local + Vercel setup
+- [`docs/SETUP.md`](docs/SETUP.md) — local setup and environment
+- [`docs/PRODUCTION.md`](docs/PRODUCTION.md) — production checklist, migrations, rollback, QA, known issues
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — layering, directory structure, where to put what
 - [`docs/DATABASE.md`](docs/DATABASE.md) — schema, indexes, invariants, payments-ready contract
 - [`docs/FEATURES.md`](docs/FEATURES.md) — feature-by-feature tour of the product
-- [`docs/LAUNCH_CHECKLIST.md`](docs/LAUNCH_CHECKLIST.md) — go-live checklist
 
 ---
 
 ## Scripts
 
 - `npm run dev` — Next.js in dev
-- `npm run build` — production build (runs `prisma generate` first; needs no database)
+- `npm run build` — production build (runs `prisma generate` first)
 - `npm run start` — serve the built app
-- `npm run lint` · `npm run typecheck` · `npm test`
-- `npm run db:deploy` — apply committed migrations (`prisma migrate deploy`)
-- `npm run db:migrate:dev` — create a migration (development database only)
-- `npm run db:generate` · `npm run db:studio`
-- `npm run db:taxonomy` — upsert baseline categories and skills (production-safe)
-- `npm run admin:bootstrap` — create or update the admin account from `ADMIN_EMAIL` / `ADMIN_PASSWORD`
+- `npm run lint` — ESLint
+- `npm run typecheck` — strict TypeScript
+- `npm run db:migrate` — create and apply a migration (development)
+- `npm run db:seed` — dev-only demo data
+- `npm test` — unit + integration tests (needs a throwaway Postgres)
+- `npm run test:e2e` — real-browser smoke test
+- `npm run db:studio` — Prisma Studio
 
 ---
 
 ## Tech
 
 Next.js 15 (App Router, Server Actions) · TypeScript · TailwindCSS · shadcn-style components ·
-Radix primitives · Framer Motion · Prisma + PostgreSQL (Supabase) · NextAuth v5 · Zod ·
-TanStack Query · Recharts · Sonner · Resend ·
-Cal.com + Calendly adapters.
+Radix primitives · Framer Motion · Prisma + PostgreSQL · NextAuth v5 · Zod ·
+TanStack Query · Recharts · Sonner · Resend · Vitest · Playwright (e2e).
 
 ---
 
@@ -84,9 +94,9 @@ src/
 │   ├── bookings/
 │   └── notifications/
 ├── services/               # external integrations (interfaces first)
-│   ├── calendar/           # Cal.com + Calendly + internal
+│   ├── calendar/           # meeting links (+ disabled OAuth)
 │   ├── email/              # Resend + console fallback
-│   └── payments/           # payments-ready stub
+│   └── payments/           # free-beta guard; no provider
 ├── lib/                    # env, db, auth, utils, validators, rate-limit
 └── middleware.ts           # route protection + role gates
 ```

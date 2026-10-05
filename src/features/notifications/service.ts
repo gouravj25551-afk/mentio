@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import type { NotificationType } from "@prisma/client";
+import { appUrl, sendEmailSafely } from "@/services/email";
 
 export async function createNotification(input: {
   userId: string;
@@ -9,17 +10,17 @@ export async function createNotification(input: {
   body?: string;
   link?: string;
 }) {
-  // In-app only. Transactional emails are sent explicitly by the caller (see services/email/templates).
-  return db.notification.create({ data: input });
-}
-
-/** In-app notification that must never break the caller's already-committed work. */
-export async function createNotificationSafely(input: Parameters<typeof createNotification>[0]) {
-  try {
-    await createNotification(input);
-  } catch (err) {
-    console.error("[notification] create failed:", err instanceof Error ? err.message : "unknown error");
+  const notif = await db.notification.create({ data: input });
+  // Email is best-effort: a mail outage must never fail the booking that triggered it.
+  const user = await db.user.findUnique({ where: { id: input.userId }, select: { email: true } });
+  if (user?.email) {
+    await sendEmailSafely({
+      to: user.email,
+      subject: input.title,
+      text: `${input.body ?? ""}${input.link ? `\n\n${appUrl(input.link)}` : ""}`.trim() || input.title,
+    });
   }
+  return notif;
 }
 
 export async function listNotifications(userId: string, opts?: { unreadOnly?: boolean; take?: number }) {

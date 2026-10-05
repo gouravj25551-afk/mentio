@@ -1,29 +1,31 @@
 import { redirect } from "next/navigation";
-import { requireUser } from "@/lib/auth/guards";
+
+import { requireRole } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
+import { becomeMentorAction } from "@/features/mentors/actions";
 import { MentorProfileForm } from "@/components/dashboard/mentor-profile-form";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
+export const metadata = { title: "Mentor onboarding", robots: { index: false } };
+
 export default async function MentorOnboarding() {
-  const user = await requireUser();
-  let mentor = await db.mentorProfile.findUnique({
+  const user = await requireRole(["STUDENT", "MENTOR"]);
+  const mentor = await db.mentorProfile.findUnique({
     where: { userId: user.id },
     include: { categories: true, skills: true },
   });
+
   if (!mentor) {
-    const base = user.name?.toLowerCase().replace(/[^a-z0-9]+/g, "-") ?? `mentor-${user.id.slice(0, 6)}`;
-    mentor = await db.mentorProfile.create({
-      data: {
-        userId: user.id,
-        slug: `${base}-${user.id.slice(0, 6)}`,
-        headline: user.name ?? "New mentor on Mentio",
-        bio: "Tell students about your journey.",
-        experience: "",
-      },
-      include: { categories: true, skills: true },
-    });
-    // Never touch an admin's role; only students become mentors here.
-    await db.user.updateMany({ where: { id: user.id, role: "STUDENT" }, data: { role: "MENTOR" } });
+    return (
+      <div className="container mx-auto max-w-xl space-y-4 py-16">
+        <h1 className="font-display text-3xl font-semibold tracking-tight">Become a mentor</h1>
+        <p className="text-sm text-muted-foreground">Create a mentor profile. It becomes public after an admin approves it.</p>
+        <form action={becomeMentorAction}>
+          <Button type="submit" variant="brand">Start onboarding</Button>
+        </form>
+      </div>
+    );
   }
   if (mentor.status === "APPROVED") redirect("/dashboard/mentor");
 
@@ -36,26 +38,20 @@ export default async function MentorOnboarding() {
     <div className="container mx-auto max-w-3xl space-y-6 py-16">
       <div>
         <div className="text-xs uppercase tracking-widest text-muted-foreground">Mentor onboarding</div>
-        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">Your mentor application</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {mentor.status === "REJECTED"
-            ? "Your application wasn't approved. You can update it below."
-            : "We review every application by hand. Until you're approved, your profile isn't public."}
-        </p>
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">Set up your mentor profile</h1>
       </div>
       <Card className="p-6">
         <MentorProfileForm
           categories={categories}
           skills={skills}
-          approved={false}
+          status={mentor.status}
           initial={{
             headline: mentor.headline,
             bio: mentor.bio,
             experience: mentor.experience,
-            rateCents: mentor.rateCents,
-            currency: mentor.currency,
             sessionLength: mentor.sessionLength,
             responseTimeHrs: mentor.responseTimeHrs,
+            timezone: mentor.timezone,
             acceptingBookings: mentor.acceptingBookings,
             achievements: mentor.achievements,
             portfolio: mentor.portfolio,

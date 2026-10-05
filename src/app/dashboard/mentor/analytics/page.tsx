@@ -5,7 +5,7 @@ import { Stat } from "@/components/dashboard/stat";
 import { AnalyticsChart } from "@/components/dashboard/analytics-chart";
 
 export default async function MentorAnalyticsPage() {
-  const user = await requireRole(["MENTOR", "ADMIN"]);
+  const user = await requireRole("MENTOR");
   const mentor = await db.mentorProfile.findUnique({ where: { userId: user.id } });
   if (!mentor) return <p className="text-sm text-muted-foreground">Finish onboarding first.</p>;
 
@@ -38,7 +38,6 @@ export default async function MentorAnalyticsPage() {
     if (b.status === "COMPLETED") row.revenue += b.amountCents;
   }
 
-  const completed30 = bookings30d.filter((b) => b.status === "COMPLETED").length;
   const growth = bookings60 === 0 ? 100 : Math.round(((bookings30 - bookings60) / bookings60) * 100);
 
   return (
@@ -49,7 +48,7 @@ export default async function MentorAnalyticsPage() {
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <Stat label="Bookings" value={bookings30} trend={{ value: growth }} />
-        <Stat label="Completed sessions" value={completed30} hint="Payments are not live yet" />
+        <Stat label="Completed" value={bookings30d.filter((b) => b.status === "COMPLETED").length} hint="Last 30 days" />
         <Stat label="Avg rating" value={mentor.averageRating.toFixed(2)} hint={`${mentor.totalReviews} reviews`} />
       </div>
       <Card>

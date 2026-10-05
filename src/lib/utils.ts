@@ -57,3 +57,13 @@ export function clampNumber(n: number, min: number, max: number) {
 export function toMinutes(d: Date) {
   return d.getHours() * 60 + d.getMinutes();
 }
+
+/**
+ * Only same-site relative paths are allowed as post-login redirects. Anything
+ * else (absolute URLs, `//host`, `/\host`) falls back, which closes the open
+ * redirect that a user-controlled `?next=` would otherwise create.
+ */
+export function safeNextPath(next: string | null | undefined, fallback = "/dashboard") {
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.includes("\\")) return fallback;
+  return next;
+}

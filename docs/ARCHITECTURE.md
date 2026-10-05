@@ -37,33 +37,26 @@ UI (components/) ─▶ Features (features/) ─▶ Services (services/)
 
 The booking engine is the heart of the product.
 
-1. **Availability** — mentors store weekly windows in `Availability` (weekday + start/end minutes).
-2. **Slot generation** — `features/bookings/slots.ts` expands the next N days of availability, subtracts active bookings, and returns ISO slot ranges.
-3. **Create booking** — `features/bookings/actions.ts#createBooking` runs a double-booking check (`overlap` query inside a transaction), then creates the row and fires notifications.
-4. **Cancel / reschedule** — reschedule creates a new booking linked via `rescheduledFromId` and cancels the old one atomically.
-5. **Meeting URL** — created by `services/calendar`, which picks the right adapter based on the mentor's `CalendarConnection`.
+1. **Availability** — mentors store weekly windows in `Availability` (weekday + start/end minutes) in their own timezone (`MentorProfile.timezone`).
+2. **Slot generation** — `lib/booking-rules.ts#generateSlots` (pure, DST-aware) expands the next N days, subtracts active bookings and the 1-hour notice window; `features/bookings/slots.ts` feeds it from the database.
+3. **Create booking** — `features/bookings/service.ts#createBooking` runs in a transaction behind per-mentor and per-student advisory locks, re-validates that the start is a genuinely offered slot, checks overlaps, then inserts. The `Booking_no_overlap` constraint is the backstop.
+4. **Cancel / reschedule / complete** — same service. Reschedule cancels the old booking and creates a linked new one in one transaction. Only the mentor can mark a finished session completed, which unlocks the review.
+5. **Meeting URL** — `services/calendar#resolveMeeting` returns the mentor's validated link or a generated Jitsi room. No network call, so it can't fail.
 
 ## Payments-ready contract
 
-Bookings carry `amountCents`, `currency`, `paymentIntentId`, `paymentStatus`. Checkout is not implemented yet: bookings confirm immediately, `amountCents` is `0`, and `PAYMENTS_ENABLED` in `src/lib/pricing.ts` is `false`. Mentors can already store an INR price (in paise) for later. To add Stripe:
-
-```ts
-// src/services/payments/index.ts
-export const payments: PaymentsAdapter = new StripePayments(env.STRIPE_SECRET_KEY);
-```
-
-…and wire a `payments.createIntent(...)` call into `createBooking` right before the DB write. No schema change.
+There is no payment provider: Mentio is a free beta. `services/payments` exports a guard that refuses any priced booking (HTTP 402), mentors cannot set a price, and the database rejects a priced `CONFIRMED` booking that isn't `PAID`. See [`PRODUCTION.md`](PRODUCTION.md) before adding a provider.
 
 ## RBAC
 
 ```
 Public:   /, /mentors, /mentors/[slug], /categories
 Student:  /dashboard/student/**
-Mentor:   /dashboard/mentor/**  (ADMIN also allowed)
+Mentor:   /dashboard/mentor/**
 Admin:    /dashboard/admin/**
 ```
 
-Protected server actions re-check role on every call. The middleware is a UX convenience, not the security boundary.
+Every page, route handler and server action re-reads the user's role from the database (`lib/auth/guards.ts`). The edge middleware only checks "signed in" and blocks cross-site writes; it is not the authorization boundary, because a JWT role can be stale.
 
 ## Error handling
 

@@ -7,31 +7,36 @@ import { DiscoveryFilters } from "@/components/mentor/discovery-filters";
 import { Empty } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
-import { Search, Users } from "lucide-react";
+import { Search } from "lucide-react";
+import { discoverySchema } from "@/lib/validators";
 
 export const metadata = { title: "Browse mentors" };
-// Reads the database on each request so `next build` never needs a database connection.
-export const dynamic = "force-dynamic";
 
 export default async function MentorsPage({
-  searchParams: searchParamsPromise,
+  searchParams: rawSearchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; skill?: string; sort?: any; page?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const searchParams = await searchParamsPromise;
-  const page = Number(searchParams.page ?? 1);
+  const raw = await rawSearchParams;
+  const flat = Object.fromEntries(
+    Object.entries(raw).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]),
+  );
+  // Invalid values fall back to defaults instead of reaching the query layer.
+  const parsed = discoverySchema.safeParse(flat);
+  const searchParams = parsed.success ? parsed.data : discoverySchema.parse({});
+  const page = searchParams.page;
   const [{ mentors, total, pageCount }, categories, skills] = await Promise.all([
-    listMentors({ ...searchParams, page }),
+    listMentors(searchParams),
     db.category.findMany({ orderBy: { order: "asc" } }),
     db.skill.findMany({ orderBy: { name: "asc" } }),
   ]);
 
-  const hasFilters = Boolean(searchParams.q || searchParams.category || searchParams.skill);
-
   const qs = (patch: Record<string, string | number | undefined>) => {
     const url = new URLSearchParams();
     for (const [k, v] of Object.entries({ ...searchParams, ...patch })) {
-      if (v !== undefined && v !== "" && v !== null) url.set(k, String(v));
+      if (k === "perPage" || v === undefined || v === "" || v === null) continue;
+      if ((k === "page" && Number(v) === 1) || (k === "sort" && v === "recommended")) continue;
+      url.set(k, String(v));
     }
     const s = url.toString();
     return s ? `?${s}` : "";
@@ -48,20 +53,12 @@ export default async function MentorsPage({
               ? categories.find((c) => c.slug === searchParams.category)?.name ?? "Mentors"
               : "Find your mentor"}
           </h1>
-          {total > 0 ? <p className="text-sm text-muted-foreground">{total.toLocaleString()} {total === 1 ? "mentor" : "mentors"} available.</p> : null}
+          <p className="text-sm text-muted-foreground">{total.toLocaleString()} mentors ready to help.</p>
         </div>
 
-        <DiscoveryFilters categories={categories} skills={skills} initial={searchParams} />
+        <DiscoveryFilters categories={categories} skills={skills} initial={{ q: searchParams.q, category: searchParams.category, skill: searchParams.skill, sort: searchParams.sort }} />
 
-        {mentors.length === 0 && !hasFilters ? (
-          <Empty
-            icon={<Users className="h-5 w-5" />}
-            title="Our first mentors are joining soon"
-            description="Mentio is in early access and every mentor is reviewed by hand. Check back shortly, or apply to become one."
-            action={<Button asChild variant="brand"><Link href="/sign-up?role=MENTOR">Apply to become a mentor</Link></Button>}
-            className="mt-10"
-          />
-        ) : mentors.length === 0 ? (
+        {mentors.length === 0 ? (
           <Empty
             icon={<Search className="h-5 w-5" />}
             title="No mentors match that yet"

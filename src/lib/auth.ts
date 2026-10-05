@@ -1,49 +1,28 @@
-import NextAuth, { type DefaultSession } from "next-auth";
+import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import bcrypt from "bcryptjs";
-import { z } from "zod";
 
-import { authConfig } from "@/lib/auth.config";
+import { authConfig } from "@/auth.config";
 import { db } from "@/lib/db";
 import { env, isGoogleOAuthEnabled } from "@/lib/env";
-import type { Role } from "@prisma/client";
-
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      role: Role;
-    } & DefaultSession["user"];
-  }
-  interface User {
-    role?: Role;
-  }
-}
-
-declare module "@auth/core/jwt" {
-  interface JWT {
-    id: string;
-    role: Role;
-  }
-}
-
-const credentialsSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-});
+import { authorizeCredentials } from "@/lib/auth/credentials";
+import type { PrismaClient } from "@prisma/client";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(db),
   ...authConfig,
+  // The adapter only needs the standard model API; it never reads passwordHash.
+  adapter: PrismaAdapter(db as unknown as PrismaClient),
+  secret: env.AUTH_SECRET,
   providers: [
     ...(isGoogleOAuthEnabled
       ? [
           Google({
             clientId: env.AUTH_GOOGLE_ID!,
             clientSecret: env.AUTH_GOOGLE_SECRET!,
-            allowDangerousEmailAccountLinking: true,
+            // Deliberately NOT allowing automatic linking by email: with it, anyone
+            // could pre-register a victim's email with their own password and then
+            // inherit the victim's Google login.
           }),
         ]
       : []),
@@ -53,64 +32,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      authorize: async (credentials) => {
-        const parsed = credentialsSchema.safeParse(credentials);
-        if (!parsed.success) return null;
-        const user = await db.user.findUnique({
-          where: { email: parsed.data.email.toLowerCase() },
-        });
-        if (!user?.passwordHash) return null;
-        const ok = await bcrypt.compare(parsed.data.password, user.passwordHash);
-        if (!ok) return null;
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-          role: user.role,
-        };
-      },
+      authorize: (credentials, request) => authorizeCredentials(credentials, request.headers),
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user, trigger }) {
-      if (user) {
-        token.id = user.id as string;
-        token.role = (user.role ?? "STUDENT") as Role;
+      const base = authConfig.callbacks.jwt({ token, user } as Parameters<typeof authConfig.callbacks.jwt>[0]);
+      const t = base ?? token;
+      if (trigger === "update" && t.id) {
+        const fresh = await db.user.findUnique({ where: { id: t.id as string }, select: { role: true } });
+        if (fresh) t.role = fresh.role;
       }
-      // keep role fresh if session updated
-      if (trigger === "update" && token.id) {
-        const fresh = await db.user.findUnique({ where: { id: token.id }, select: { role: true } });
-        if (fresh) token.role = fresh.role;
-      }
-      return token;
+      return t;
     },
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-      }
-      return session;
-    },
-    async signIn({ user, account }) {
-      // ensure a Profile exists for every user
-      if (user?.id) {
-        await db.profile.upsert({
-          where: { userId: user.id },
-          update: {},
-          create: { userId: user.id },
-        });
-      }
-      // Google logins should land as STUDENT by default
-      if (account?.provider === "google" && user?.email) {
-        await db.user.update({
-          where: { email: user.email },
-          data: {
-            emailVerified: new Date(),
-          },
-        });
-      }
+    // Runs BEFORE the user row exists on a first-time OAuth login, so it may only
+    // accept or reject. Database writes belong in `events.signIn` below.
+    signIn({ account, profile }) {
+      // Only accept Google identities whose email Google itself has verified.
+      if (account?.provider === "google" && !profile?.email_verified) return false;
       return true;
+    },
+  },
+  events: {
+    async signIn({ user, account }) {
+      if (!user.id) return;
+      await db.profile.upsert({ where: { userId: user.id }, update: {}, create: { userId: user.id } });
+      if (account?.provider === "google") {
+        await db.user.updateMany({ where: { id: user.id, emailVerified: null }, data: { emailVerified: new Date() } });
+      }
     },
   },
 });

@@ -8,12 +8,12 @@ export function SiteFooter() {
         <div>
           <Logo />
           <p className="mt-3 max-w-xs text-sm text-muted-foreground">
-            Learn from vetted mentors. Mentio is in early access.
+            A direct line to the people you aspire to become. Book 1:1 mentorship calls — no cold DMs, no gatekeepers.
           </p>
         </div>
         {[
           { title: "Product", links: [["Browse mentors", "/mentors"], ["Categories", "/categories"]] },
-          { title: "For mentors", links: [["Apply to become a mentor", "/sign-up?role=MENTOR"], ["Mentor dashboard", "/dashboard/mentor"]] },
+          { title: "For mentors", links: [["Become a mentor", "/sign-up?role=MENTOR"], ["Mentor dashboard", "/dashboard/mentor"]] },
         ].map((col) => (
           <div key={col.title}>
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{col.title}</div>
@@ -28,8 +28,7 @@ export function SiteFooter() {
       <div className="border-t">
         <div className="container flex flex-col items-start justify-between gap-2 py-6 text-xs text-muted-foreground md:flex-row md:items-center">
           <span>© {new Date().getFullYear()} Mentio. All rights reserved.</span>
-          <span>Early access</span>
-        </div>
+                  </div>
       </div>
     </footer>
   );

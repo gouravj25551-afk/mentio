@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
+import { publicUser } from "@/lib/public-select";
 
 export type DiscoveryParams = {
   q?: string;
@@ -15,15 +16,16 @@ export async function listMentors(params: DiscoveryParams) {
   const perPage = Math.min(Math.max(params.perPage ?? 12, 1), 48);
   const page = Math.max(params.page ?? 1, 1);
 
+  const q = params.q?.trim().slice(0, 100);
   const where: Prisma.MentorProfileWhereInput = {
     status: "APPROVED",
     acceptingBookings: true,
-    ...(params.q
+    ...(q
       ? {
           OR: [
-            { headline: { contains: params.q, mode: "insensitive" } },
-            { bio: { contains: params.q, mode: "insensitive" } },
-            { user: { name: { contains: params.q, mode: "insensitive" } } },
+            { headline: { contains: q, mode: "insensitive" } },
+            { bio: { contains: q, mode: "insensitive" } },
+            { user: { name: { contains: q, mode: "insensitive" } } },
           ],
         }
       : {}),
@@ -47,7 +49,7 @@ export async function listMentors(params: DiscoveryParams) {
       where,
       orderBy,
       include: {
-        user: true,
+        user: { select: publicUser },
         categories: { include: { category: true } },
         skills: { include: { skill: true } },
       },
@@ -60,17 +62,18 @@ export async function listMentors(params: DiscoveryParams) {
   return { mentors, total, page, perPage, pageCount: Math.max(1, Math.ceil(total / perPage)) };
 }
 
-/** Public lookup: only approved mentors are visible. Pending, rejected and suspended profiles return null. */
+/** A mentor's public profile. Only public user fields are loaded: never email or credentials. */
 export async function getMentorBySlug(slug: string) {
-  return db.mentorProfile.findFirst({
-    where: { slug, status: "APPROVED" },
+  return db.mentorProfile.findUnique({
+    where: { slug },
     include: {
-      user: { include: { profile: true } },
+      user: {
+        select: { ...publicUser, profile: { select: { twitter: true, linkedin: true, github: true, website: true, location: true, languages: true } } },
+      },
       categories: { include: { category: true } },
       skills: { include: { skill: true } },
-      availability: true,
       reviews: {
-        include: { author: true },
+        include: { author: { select: publicUser } },
         orderBy: { createdAt: "desc" },
         take: 25,
       },

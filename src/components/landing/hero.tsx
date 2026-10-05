@@ -17,11 +17,11 @@ export function Hero() {
           className="mx-auto max-w-3xl text-center"
         >
           <Link
-            href="/sign-up?role=MENTOR"
+            href="/mentors"
             className="group inline-flex items-center gap-2 rounded-full border bg-background/70 px-3 py-1 text-xs backdrop-blur transition hover:bg-background"
           >
             <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
-            <span>Early access — mentor applications are open</span>
+            <span>New: GSoC & LFX mentor cohort — now accepting bookings</span>
             <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
           </Link>
           <h1 className="mt-6 font-display text-5xl font-semibold tracking-tight sm:text-6xl md:text-7xl">
@@ -29,17 +29,19 @@ export function Hero() {
             <span className="brand-text">aspire to become.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted-foreground">
-            Learn from vetted mentors. Book a 1:1 call with someone who has done what you want to do.
+            Book 1:1 calls with GSoC mentors, LFX contributors, Google and Microsoft interns,
+            founders, PMs, designers and senior engineers. No cold DMs, no gatekeepers.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild variant="brand" size="xl">
               <Link href="/mentors">Browse mentors<ArrowRight className="h-4 w-4" /></Link>
             </Button>
             <Button asChild variant="outline" size="xl">
-              <Link href="/sign-up?role=MENTOR">Apply to become a mentor</Link>
+              <Link href="/sign-up?role=MENTOR">Become a mentor</Link>
             </Button>
           </div>
-                </motion.div>
+          <p className="mt-8 text-center text-xs text-muted-foreground">Free during the beta. No credit card.</p>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -47,17 +49,23 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mx-auto mt-16 max-w-5xl"
         >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {[
-              { title: "Open source", desc: "Get unstuck on proposals, first contributions and program applications." },
-              { title: "Interview prep", desc: "Practice with people who have been on the other side of the table." },
-              { title: "Career moves", desc: "Switch stacks, roles or cities with a plan." },
-            ].map((c) => (
-              <div key={c.title} className="rounded-lg border bg-background p-4">
-                <h3 className="font-medium">{c.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{c.desc}</p>
+          <div className="relative rounded-2xl border bg-background/40 p-2 shadow-soft backdrop-blur">
+            <div className="rounded-xl border bg-gradient-to-br from-background to-muted/30 p-6">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                {[
+                  { title: "Open Source", desc: "GSoC, LFX, CNCF mentors who've been in your seat." },
+                  { title: "Interview Prep", desc: "FAANG & startup interviews with people who ship." },
+                  { title: "Career Pivots", desc: "Switch stacks, roles, cities — with a plan." },
+                ].map((c) => (
+                  <div key={c.title} className="rounded-lg border bg-background p-4">
+                    <div className="flex items-baseline justify-between">
+                      <h3 className="font-medium">{c.title}</h3>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">{c.desc}</p>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </motion.div>
       </div>

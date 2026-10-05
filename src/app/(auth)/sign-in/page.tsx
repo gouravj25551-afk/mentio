@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { SignInForm } from "@/features/auth/sign-in-form";
 import { isGoogleOAuthEnabled } from "@/lib/env";
@@ -15,7 +16,9 @@ export default function SignInPage() {
         </p>
       </div>
       <div className="mt-8">
-        <SignInForm googleEnabled={isGoogleOAuthEnabled} />
+        <Suspense>
+          <SignInForm googleEnabled={isGoogleOAuthEnabled} />
+        </Suspense>
       </div>
     </>
   );

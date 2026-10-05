@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, BadgeCheck, Clock, Globe, Linkedin, Star, Twitter } from "lucide-react";
@@ -14,19 +15,50 @@ import { getMentorBySlug, getRatingDistribution } from "@/features/mentors/queri
 import { getAvailableSlots } from "@/features/bookings/slots";
 import { BookingPanel } from "@/components/booking/booking-panel";
 import { SaveMentorButton } from "@/components/mentor/save-button";
-import { auth } from "@/lib/auth";
+import { optionalUser } from "@/lib/auth/guards";
+import { db } from "@/lib/db";
+import { safeTimezone } from "@/lib/time";
 
-export const revalidate = 30;
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const mentor = await getMentorBySlug(slug);
+  if (!mentor || mentor.status !== "APPROVED") return { title: "Mentor not found", robots: { index: false } };
+  const title = `${mentor.user.name} — ${mentor.headline}`;
+  const description = mentor.bio.replace(/\s+/g, " ").slice(0, 160);
+  return {
+    title,
+    description,
+    alternates: { canonical: `/mentors/${mentor.slug}` },
+    openGraph: { title, description, type: "profile", images: mentor.user.image ? [mentor.user.image] : undefined },
+  };
+}
 
 export default async function MentorPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const mentor = await getMentorBySlug(slug);
-  if (!mentor) notFound();
-  const [slots, dist, session] = await Promise.all([
-    getAvailableSlots({ mentorProfileId: mentor.id, days: 14, sessionLength: mentor.sessionLength }),
+  const [mentor, viewer] = await Promise.all([getMentorBySlug(slug), optionalUser()]);
+  // Unapproved profiles are only visible to their owner and to admins (a preview).
+  const canPreview = viewer && mentor && (viewer.id === mentor.userId || viewer.role === "ADMIN");
+  if (!mentor || (mentor.status !== "APPROVED" && !canPreview)) notFound();
+
+  const isStudent = viewer?.role === "STUDENT";
+  const [slots, dist, saved] = await Promise.all([
+    getAvailableSlots({ ...mentor, days: 14 }),
     getRatingDistribution(mentor.id),
-    auth(),
+    isStudent
+      ? db.savedMentor.findUnique({ where: { userId_mentorProfileId: { userId: viewer.id, mentorProfileId: mentor.id } }, select: { id: true } })
+      : null,
   ]);
+  const mentorTimezone = safeTimezone(mentor.timezone);
+  const blockedReason =
+    mentor.status !== "APPROVED"
+      ? "This profile isn't public yet, so it can't be booked."
+      : !mentor.acceptingBookings
+        ? "This mentor isn't accepting new bookings right now."
+        : mentor.rateCents > 0
+          ? "Paid sessions aren't available yet. Mentio is free during the beta."
+          : viewer?.id === mentor.userId
+            ? "This is your own profile."
+            : null;
   const total = Object.values(dist).reduce((a, b) => a + b, 0);
 
   return (
@@ -52,25 +84,23 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
                 </div>
                 <p className="mt-1 text-lg text-muted-foreground">{mentor.headline}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                  {mentor.totalReviews > 0 ? (
-                    <>
-                      <span className="inline-flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                        <strong className="text-foreground">{mentor.averageRating.toFixed(1)}</strong>
-                        <span>({mentor.totalReviews} reviews)</span>
-                      </span>
-                      <span>·</span>
-                    </>
-                  ) : null}
+                  <span className="inline-flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                    <strong className="text-foreground">{mentor.averageRating.toFixed(1)}</strong>
+                    <span>({mentor.totalReviews} reviews)</span>
+                  </span>
+                  <span>·</span>
+                  <span>{mentor.totalSessions} sessions</span>
+                  <span>·</span>
                   <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />Responds in {mentor.responseTimeHrs}h</span>
                   <span>·</span>
-                  <span className="inline-flex items-center gap-1"><Globe className="h-3.5 w-3.5" />{mentor.user.profile?.timezone ?? "UTC"}</span>
+                  <span className="inline-flex items-center gap-1"><Globe className="h-3.5 w-3.5" />{mentorTimezone}</span>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-1.5">
                   {mentor.categories.map((c) => <Badge key={c.categoryId} variant="brand">{c.category.name}</Badge>)}
                 </div>
                 <div className="mt-4 flex items-center gap-2">
-                  {session?.user ? <SaveMentorButton mentorProfileId={mentor.id} /> : null}
+                  {isStudent ? <SaveMentorButton mentorProfileId={mentor.id} initialSaved={Boolean(saved)} /> : null}
                   {mentor.user.profile?.twitter ? <Button asChild variant="outline" size="icon"><a href={`https://twitter.com/${mentor.user.profile.twitter}`} aria-label="Twitter"><Twitter className="h-4 w-4" /></a></Button> : null}
                   {mentor.user.profile?.linkedin ? <Button asChild variant="outline" size="icon"><a href={`https://linkedin.com/in/${mentor.user.profile.linkedin}`} aria-label="LinkedIn"><Linkedin className="h-4 w-4" /></a></Button> : null}
                 </div>
@@ -110,7 +140,7 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
                   <div className="mt-4 space-y-2">
                     <div className="text-sm font-medium">Portfolio</div>
                     <ul className="space-y-1 text-sm">
-                      {mentor.portfolio.map((p) => <li key={p}><a href={p} target="_blank" rel="noreferrer noopener" className="text-indigo-500 underline-offset-4 hover:underline">{p}</a></li>)}
+                      {mentor.portfolio.filter((p) => p.startsWith("https://")).map((p) => <li key={p}><a href={p} target="_blank" rel="noreferrer noopener" className="text-indigo-500 underline-offset-4 hover:underline">{p}</a></li>)}
                     </ul>
                   </div>
                 ) : null}
@@ -171,7 +201,12 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
           </div>
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <BookingPanel mentor={{ id: mentor.id, name: mentor.user.name ?? "Mentor", sessionLength: mentor.sessionLength, rateCents: mentor.rateCents, currency: mentor.currency }} slots={slots} authenticated={Boolean(session?.user)} />
+            <BookingPanel
+              mentor={{ id: mentor.id, slug: mentor.slug, name: mentor.user.name ?? "Mentor", sessionLength: mentor.sessionLength, timezone: mentorTimezone }}
+              slots={slots}
+              viewer={viewer ? { role: viewer.role } : null}
+              blockedReason={blockedReason}
+            />
           </aside>
         </div>
       </main>

@@ -1,6 +1,6 @@
 "use client";
-import { useFormState, useFormStatus } from "react-dom";
-import { useEffect } from "react";
+import { useFormStatus } from "react-dom";
+import { useActionState, useEffect } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -11,10 +11,10 @@ import { Label } from "@/components/ui/label";
 import { forgotPasswordAction } from "@/features/auth/actions";
 
 export default function ForgotPasswordPage() {
-  const [state, action] = useFormState(forgotPasswordAction, null);
+  const [state, action] = useActionState(forgotPasswordAction, null);
   useEffect(() => {
     if (state?.ok) {
-      toast.success("If that email exists, we've sent a reset link.");
+      toast.success(state.message ?? "Check your email.");
     } else if (state && !state.ok) {
       toast.error(state.error);
     }

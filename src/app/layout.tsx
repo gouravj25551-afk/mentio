@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swa
 const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", display: "swap" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: {
     default: "Mentio — Learn from vetted mentors",
     template: "%s · Mentio",
@@ -19,7 +20,9 @@ export const metadata: Metadata = {
     title: "Mentio",
     description: "Learn from vetted mentors. Early access.",
     type: "website",
+    siteName: "Mentio",
   },
+  twitter: { card: "summary", title: "Mentio", description: "Book 1:1 mentorship calls with people you aspire to become." },
   icons: { icon: "/favicon.ico" },
 };
 

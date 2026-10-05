@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
 
+export const metadata = { robots: { index: false, follow: false } };
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative flex min-h-screen">
@@ -8,9 +10,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <Logo />
         <div className="relative">
           <p className="max-w-md font-display text-2xl font-semibold tracking-tight">
-            Learn from vetted mentors.
+            A direct line to the people you aspire to become.
           </p>
-          <p className="mt-4 text-sm text-muted-foreground">Mentio is in early access.</p>
         </div>
         <div className="absolute inset-0 -z-10 grid-bg [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" aria-hidden />
       </div>

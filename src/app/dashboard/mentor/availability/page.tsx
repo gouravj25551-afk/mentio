@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { AvailabilityEditor } from "@/components/dashboard/availability-editor";
 
 export default async function AvailabilityPage() {
-  const user = await requireRole(["MENTOR", "ADMIN"]);
+  const user = await requireRole("MENTOR");
   const mentor = await db.mentorProfile.findUnique({
     where: { userId: user.id },
     include: { availability: true },
@@ -31,6 +31,7 @@ export default async function AvailabilityPage() {
         <p className="text-sm text-muted-foreground">We&apos;ll surface slots inside this window on your mentor page.</p>
       </div>
       <AvailabilityEditor
+        timezone={mentor.timezone}
         initial={mentor.availability.map((a) => ({ weekday: a.weekday, startMinutes: a.startMinutes, endMinutes: a.endMinutes }))}
       />
     </div>

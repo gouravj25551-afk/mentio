@@ -5,22 +5,23 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: read
-
 jobs:
-  check:
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: mentio
+          POSTGRES_PASSWORD: mentio
+          POSTGRES_DB: mentio_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U mentio" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      # Placeholders so the production build can validate its environment.
-      # The build never connects to a database; these are not real credentials.
-      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
-      DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
-      AUTH_SECRET: ci-placeholder-secret-ci-placeholder-secret
-      NEXT_PUBLIC_APP_URL: https://ci.example.com
-      EMAIL_FROM: Mentio <ci@example.com>
-      RESEND_API_KEY: re_ci_placeholder
+      TEST_DATABASE_URL: postgresql://mentio:mentio@localhost:5432/mentio_test?schema=public
+      DATABASE_URL: postgresql://mentio:mentio@localhost:5432/mentio_test?schema=public
+      AUTH_SECRET: ci-only-secret-ci-only-secret-ci-only-1234
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,5 +31,6 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      # Applies the real migrations to the empty test DB, then runs the suite.
       - run: npm test
       - run: npm run build

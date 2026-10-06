@@ -28,7 +28,11 @@ export function SiteFooter() {
       <div className="border-t">
         <div className="container flex flex-col items-start justify-between gap-2 py-6 text-xs text-muted-foreground md:flex-row md:items-center">
           <span>© {new Date().getFullYear()} Mentio. All rights reserved.</span>
-                  </div>
+          <div className="flex gap-4">
+            <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
+            <Link href="/terms" className="hover:text-foreground">Terms</Link>
+          </div>
+        </div>
       </div>
     </footer>
   );

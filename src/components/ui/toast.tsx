@@ -4,12 +4,13 @@ import { Toaster as Sonner } from "sonner";
 export function Toaster() {
   return (
     <Sonner
-      theme="system"
+      theme="light"
       position="top-right"
       toastOptions={{
         classNames: {
-          toast: "border rounded-lg shadow-soft bg-background",
-          description: "text-muted-foreground",
+          toast: "border border-slate-200 rounded-xl shadow-lg bg-white text-slate-900",
+          title: "text-slate-950 font-semibold",
+          description: "text-slate-600",
         },
       }}
     />

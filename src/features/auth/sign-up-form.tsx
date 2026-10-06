@@ -59,7 +59,7 @@ export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { default
               role === r ? "border-foreground bg-background shadow-soft" : "border-border bg-muted/30 hover:bg-background"
             )}
           >
-            <div className="font-medium">{r === "STUDENT" ? "I&apos;m learning" : "I&apos;m mentoring"}</div>
+            <div className="font-medium">{r === "STUDENT" ? "I'm learning" : "I'm mentoring"}</div>
             <div className="text-xs text-muted-foreground">
               {r === "STUDENT" ? "Book calls, grow fast" : "Share your journey, get discovered"}
             </div>

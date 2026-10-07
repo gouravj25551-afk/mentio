@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
+import { AuthVisual } from "@/components/auth/auth-visual";
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -7,7 +8,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="relative flex min-h-screen">
       <div className="relative hidden overflow-hidden bg-slate-950 p-10 text-white lg:flex lg:w-1/2 flex-col justify-between">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(129,92,246,0.45),transparent_38%),radial-gradient(circle_at_90%_80%,rgba(25,202,220,0.28),transparent_35%)]" aria-hidden />
+        <AuthVisual />
         <div className="absolute inset-0 opacity-20 grid-bg" aria-hidden />
         <div className="relative z-10"><Logo /></div>
         <div className="relative z-10 max-w-lg">

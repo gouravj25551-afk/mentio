@@ -25,6 +25,10 @@ type State = {
   portfolio: string[];
   categoryIds: string[];
   skillIds: string[];
+  twitter: string;
+  instagram: string;
+  linkedin: string;
+  github: string;
 };
 
 const STATUS_NOTE: Record<MentorStatus, { text: string; tone: string } | null> = {
@@ -151,6 +155,17 @@ export function MentorProfileForm({
       <Field id="achievements" label="Achievements" hint="One per line">
         <Textarea id="achievements" rows={3} defaultValue={s.achievements.join("\n")} onChange={(e) => update("achievements", lines(e.target.value))} />
       </Field>
+
+      <fieldset className="space-y-3 rounded-xl border bg-muted/30 p-4">
+        <legend className="px-1 text-sm font-medium">Social proof <span className="font-normal text-muted-foreground">(optional)</span></legend>
+        <p className="text-xs text-muted-foreground">Add handles where students can see your work and achievements. Enter handles only, not full links.</p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field id="twitter" label="X / Twitter"><Input id="twitter" value={s.twitter} onChange={(e) => update("twitter", e.target.value)} placeholder="your-handle" /></Field>
+          <Field id="instagram" label="Instagram"><Input id="instagram" value={s.instagram} onChange={(e) => update("instagram", e.target.value)} placeholder="your-handle" /></Field>
+          <Field id="linkedin" label="LinkedIn"><Input id="linkedin" value={s.linkedin} onChange={(e) => update("linkedin", e.target.value)} placeholder="your-handle" /></Field>
+          <Field id="github" label="GitHub"><Input id="github" value={s.github} onChange={(e) => update("github", e.target.value)} placeholder="your-handle" /></Field>
+        </div>
+      </fieldset>
 
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
       <Button type="submit" variant="brand" disabled={pending}>

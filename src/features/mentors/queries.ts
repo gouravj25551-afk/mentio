@@ -49,7 +49,7 @@ export async function listMentors(params: DiscoveryParams) {
       where,
       orderBy,
       include: {
-        user: { select: publicUser },
+        user: { select: { ...publicUser, profile: { select: { twitter: true, instagram: true, linkedin: true, github: true } } } },
         categories: { include: { category: true } },
         skills: { include: { skill: true } },
       },
@@ -68,7 +68,7 @@ export async function getMentorBySlug(slug: string) {
     where: { slug },
     include: {
       user: {
-        select: { ...publicUser, profile: { select: { twitter: true, linkedin: true, github: true, website: true, location: true, languages: true } } },
+        select: { ...publicUser, profile: { select: { twitter: true, instagram: true, linkedin: true, github: true, website: true, location: true, languages: true } } },
       },
       categories: { include: { category: true } },
       skills: { include: { skill: true } },

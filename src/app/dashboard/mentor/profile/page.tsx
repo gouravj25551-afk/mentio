@@ -4,13 +4,14 @@ import { MentorProfileForm } from "@/components/dashboard/mentor-profile-form";
 
 export default async function MentorProfilePage() {
   const user = await requireRole("MENTOR");
-  const [mentor, categories, skills] = await Promise.all([
+  const [mentor, categories, skills, profile] = await Promise.all([
     db.mentorProfile.findUnique({
       where: { userId: user.id },
       include: { categories: true, skills: true },
     }),
     db.category.findMany({ orderBy: { order: "asc" } }),
     db.skill.findMany({ orderBy: { name: "asc" } }),
+    db.profile.findUnique({ where: { userId: user.id }, select: { twitter: true, instagram: true, linkedin: true, github: true } }),
   ]);
   if (!mentor) return <p className="text-sm text-muted-foreground">Finish onboarding first.</p>;
 
@@ -36,6 +37,10 @@ export default async function MentorProfilePage() {
           portfolio: mentor.portfolio,
           categoryIds: mentor.categories.map((c) => c.categoryId),
           skillIds: mentor.skills.map((s) => s.skillId),
+          twitter: profile?.twitter ?? "",
+          instagram: profile?.instagram ?? "",
+          linkedin: profile?.linkedin ?? "",
+          github: profile?.github ?? "",
         }}
       />
     </div>

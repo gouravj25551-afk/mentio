@@ -11,10 +11,13 @@ export const metadata = { title: "Mentor onboarding", robots: { index: false } }
 
 export default async function MentorOnboarding() {
   const user = await requireRole(["STUDENT", "MENTOR"]);
-  const mentor = await db.mentorProfile.findUnique({
+  const [mentor, profile] = await Promise.all([
+    db.mentorProfile.findUnique({
     where: { userId: user.id },
     include: { categories: true, skills: true },
-  });
+    }),
+    db.profile.findUnique({ where: { userId: user.id }, select: { twitter: true, instagram: true, linkedin: true, github: true } }),
+  ]);
 
   if (!mentor) {
     return (
@@ -57,6 +60,10 @@ export default async function MentorOnboarding() {
             portfolio: mentor.portfolio,
             categoryIds: mentor.categories.map((c) => c.categoryId),
             skillIds: mentor.skills.map((s) => s.skillId),
+            twitter: profile?.twitter ?? "",
+            instagram: profile?.instagram ?? "",
+            linkedin: profile?.linkedin ?? "",
+            github: profile?.github ?? "",
           }}
         />
       </Card>

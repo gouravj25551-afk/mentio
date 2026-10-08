@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { Github, Instagram, Linkedin, Star, Twitter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,15 @@ export function MentorCard({ mentor }: { mentor: any }) {
             <Badge key={c.categoryId} variant="secondary" className="text-[11px]">{c.category.name}</Badge>
           ))}
         </div>
+        {(mentor.user.profile?.twitter || mentor.user.profile?.instagram || mentor.user.profile?.linkedin || mentor.user.profile?.github) ? (
+          <div className="mt-4 flex items-center gap-2 text-muted-foreground" aria-label="Social links">
+            {mentor.user.profile.twitter ? <Twitter className="h-4 w-4" /> : null}
+            {mentor.user.profile.instagram ? <Instagram className="h-4 w-4" /> : null}
+            {mentor.user.profile.linkedin ? <Linkedin className="h-4 w-4" /> : null}
+            {mentor.user.profile.github ? <Github className="h-4 w-4" /> : null}
+            <span className="text-xs">View experience &amp; work</span>
+          </div>
+        ) : null}
         <div className="mt-5 flex items-center justify-between border-t pt-4">
           {mentor.totalReviews > 0 ? (
             <div className="flex items-center gap-1 text-sm">

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, BadgeCheck, Clock, Globe, Linkedin, Star, Twitter } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Clock, Github, Globe, Instagram, Linkedin, Star, Twitter } from "lucide-react";
 
 import { SiteHeader } from "@/components/shared/site-header";
 import { SiteFooter } from "@/components/shared/site-footer";
@@ -102,7 +102,9 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
                 <div className="mt-4 flex items-center gap-2">
                   {isStudent ? <SaveMentorButton mentorProfileId={mentor.id} initialSaved={Boolean(saved)} /> : null}
                   {mentor.user.profile?.twitter ? <Button asChild variant="outline" size="icon"><a href={`https://twitter.com/${mentor.user.profile.twitter}`} aria-label="Twitter"><Twitter className="h-4 w-4" /></a></Button> : null}
+                  {mentor.user.profile?.instagram ? <Button asChild variant="outline" size="icon"><a href={`https://instagram.com/${mentor.user.profile.instagram}`} aria-label="Instagram"><Instagram className="h-4 w-4" /></a></Button> : null}
                   {mentor.user.profile?.linkedin ? <Button asChild variant="outline" size="icon"><a href={`https://linkedin.com/in/${mentor.user.profile.linkedin}`} aria-label="LinkedIn"><Linkedin className="h-4 w-4" /></a></Button> : null}
+                  {mentor.user.profile?.github ? <Button asChild variant="outline" size="icon"><a href={`https://github.com/${mentor.user.profile.github}`} aria-label="GitHub"><Github className="h-4 w-4" /></a></Button> : null}
                 </div>
               </div>
             </div>

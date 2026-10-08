@@ -56,6 +56,7 @@ export const profileSchema = z.object({
   // https only: a stored `javascript:` URL would run in a visitor's browser.
   website: httpsUrl.or(z.literal("")).optional(),
   twitter: handle(60).optional(),
+  instagram: handle(60).optional(),
   linkedin: handle(80).optional(),
   github: handle(60).optional(),
 });
@@ -75,6 +76,10 @@ export const mentorProfileSchema = z.object({
   achievements: z.array(z.string().trim().min(1).max(200)).max(10).default([]),
   portfolio: z.array(httpsUrl).max(10).default([]),
   acceptingBookings: z.boolean().default(true),
+  twitter: handle(60).optional().default(""),
+  instagram: handle(60).optional().default(""),
+  linkedin: handle(80).optional().default(""),
+  github: handle(60).optional().default(""),
 });
 
 export const meetingLinkSchema = z.object({

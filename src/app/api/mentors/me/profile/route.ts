@@ -46,6 +46,11 @@ export async function PUT(req: Request) {
         select: { id: true, slug: true, status: true },
       });
     });
+    await db.profile.upsert({
+      where: { userId: user.id },
+      create: { userId: user.id, twitter: data.twitter || null, instagram: data.instagram || null, linkedin: data.linkedin || null, github: data.github || null },
+      update: { twitter: data.twitter || null, instagram: data.instagram || null, linkedin: data.linkedin || null, github: data.github || null },
+    });
     return apiOk(updated);
   } catch (err) {
     return apiCatch(err);

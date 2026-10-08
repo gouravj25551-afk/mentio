@@ -16,6 +16,7 @@ type Profile = {
   location?: string;
   timezone?: string;
   twitter?: string;
+  instagram?: string;
   linkedin?: string;
   github?: string;
   website?: string;
@@ -74,6 +75,7 @@ export function ProfileForm({ initial }: { initial: Profile }) {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Twitter handle"><Input value={state.twitter ?? ""} onChange={(e) => update("twitter", e.target.value)} placeholder="your-handle" /></Field>
+        <Field label="Instagram handle"><Input value={state.instagram ?? ""} onChange={(e) => update("instagram", e.target.value)} placeholder="your-handle" /></Field>
         <Field label="LinkedIn handle"><Input value={state.linkedin ?? ""} onChange={(e) => update("linkedin", e.target.value)} /></Field>
         <Field label="GitHub handle"><Input value={state.github ?? ""} onChange={(e) => update("github", e.target.value)} /></Field>
         <Field label="Website"><Input value={state.website ?? ""} onChange={(e) => update("website", e.target.value)} placeholder="https://" type="url" /></Field>

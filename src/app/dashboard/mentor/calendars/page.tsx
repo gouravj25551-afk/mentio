@@ -4,8 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MeetingLinkForm } from "@/components/dashboard/meeting-link-form";
+import { SchedulingModeForm } from "@/components/dashboard/scheduling-mode-form";
 import { ALLOWED_MEETING_HOSTS } from "@/lib/meeting-links";
 import { connectionHealth, PROVIDERS, type ProviderSlug } from "@/services/calendar/oauth";
+import { env } from "@/lib/env";
 
 export const metadata = { title: "Meeting link" };
 
@@ -19,7 +21,7 @@ const MESSAGES: Record<string, string> = {
 
 export default async function CalendarsPage({ searchParams }: { searchParams: Promise<{ error?: string; connected?: string }> }) {
   const user = await requireRole("MENTOR");
-  const { error, connected } = await searchParams;
+  const { error, connected: connectionCreated } = await searchParams;
   const mentor = await db.mentorProfile.findUnique({ where: { userId: user.id }, include: { calendars: true } });
   if (!mentor) return <p className="text-sm text-muted-foreground">Finish onboarding first.</p>;
 
@@ -32,18 +34,28 @@ export default async function CalendarsPage({ searchParams }: { searchParams: Pr
         return { slug, name: p.name, health: conn ? await connectionHealth(conn) : null };
       }),
   );
+  const connected = {
+    CAL_COM: mentor.calendars.some((c) => c.provider === "CAL_COM" && c.active),
+    CALENDLY: mentor.calendars.some((c) => c.provider === "CALENDLY" && c.active),
+  };
+  const selectedConnection = mentor.schedulingMode === "INTERNAL" ? null : mentor.calendars.find((c) => c.provider === mentor.schedulingMode);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Meeting link</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">Scheduling</h1>
         <p className="text-sm text-muted-foreground">
-          By default each booking gets a private Mentio video room. Add your own link to use it instead.
+          Choose Mentio availability or an attached Cal.com / Calendly booking page.
         </p>
       </div>
 
       {error ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{MESSAGES[error] ?? "Something went wrong."}</p> : null}
-      {connected ? <p role="status" className="rounded-md bg-muted p-3 text-sm">Connected.</p> : null}
+      {connectionCreated ? <p role="status" className="rounded-md bg-muted p-3 text-sm">Connected.</p> : null}
+
+      <Card>
+        <CardHeader><CardTitle>How students book you</CardTitle></CardHeader>
+        <CardContent><SchedulingModeForm initialMode={mentor.schedulingMode} initialUrl={selectedConnection?.eventTypeUrl ?? ""} connected={connected} /></CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -55,7 +67,7 @@ export default async function CalendarsPage({ searchParams }: { searchParams: Pr
         <CardContent className="space-y-3">
           <MeetingLinkForm initial={mentor.meetingLink ?? ""} hosts={ALLOWED_MEETING_HOSTS} />
           <p className="text-xs text-muted-foreground">
-            This is the link students see for Join. Mentio doesn&apos;t add anything to your calendar.
+            This is the private Join link for Mentio bookings. Mentio doesn&apos;t add anything to your calendar.
           </p>
         </CardContent>
       </Card>
@@ -69,7 +81,8 @@ export default async function CalendarsPage({ searchParams }: { searchParams: Pr
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">Account link only: Mentio does not create {p.name} events from bookings.</p>
+            <p className="text-sm text-muted-foreground">Connect your account, then choose its booking page above. Provider webhooks keep occupied times hidden in Mentio.</p>
+            {p.health === "connected" ? <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">Webhook URL: {env.NEXT_PUBLIC_APP_URL}/api/webhooks/calendars/{p.slug}. Add it to {p.name} using the app signing secret configured for Mentio.</p> : null}
             {p.health ? (
               <form action={`/api/calendars/${p.slug}/disconnect`} method="post">
                 <Button variant="outline" type="submit">Disconnect</Button>

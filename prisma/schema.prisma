@@ -158,6 +158,10 @@ model MentorProfile {
   averageRating     Float        @default(0)
   totalReviews      Int          @default(0)
   acceptingBookings Boolean      @default(true)
+  // Mentors either publish slots in Mentio or send students to one connected
+  // scheduling provider. External events are imported as CalendarBlocks so
+  // they still hide matching Mentio slots.
+  schedulingMode   SchedulingMode @default(INTERNAL)
   approvedAt        DateTime?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
@@ -256,6 +260,12 @@ enum BookingStatus {
 }
 
 enum BookingSource {
+  INTERNAL
+  CAL_COM
+  CALENDLY
+}
+
+enum SchedulingMode {
   INTERNAL
   CAL_COM
   CALENDLY
@@ -395,9 +405,29 @@ model CalendarConnection {
   updatedAt       DateTime         @updatedAt
 
   mentorProfile MentorProfile @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  blocks        CalendarBlock[]
 
   @@unique([mentorProfileId, provider])
   @@index([provider])
+}
+
+// Busy time imported from a scheduling provider. It deliberately is not a
+// Booking: an external attendee may not have a Mentio account, but their time
+// must still be unavailable to everyone else.
+model CalendarBlock {
+  id                   String   @id @default(cuid())
+  calendarConnectionId String
+  externalEventId      String
+  startsAt             DateTime
+  endsAt               DateTime
+  cancelledAt          DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  calendarConnection CalendarConnection @relation(fields: [calendarConnectionId], references: [id], onDelete: Cascade)
+
+  @@unique([calendarConnectionId, externalEventId])
+  @@index([calendarConnectionId, startsAt])
 }
 
 // ========== Admin ==========

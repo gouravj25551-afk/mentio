@@ -19,6 +19,8 @@ export function BookingPanel({
   slots,
   viewer,
   blockedReason,
+  externalBookingUrl,
+  externalProvider,
 }: {
   mentor: { id: string; slug: string; name: string; sessionLength: number; timezone: string };
   slots: Slot[];
@@ -26,6 +28,8 @@ export function BookingPanel({
   viewer: { role: "STUDENT" | "MENTOR" | "ADMIN" } | null;
   /** Set by the server when this mentor can't be booked at all (not accepting, paid, not public...). */
   blockedReason: string | null;
+  externalBookingUrl?: string | null;
+  externalProvider?: "Cal.com" | "Calendly" | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -88,6 +92,11 @@ export function BookingPanel({
       <CardContent className="space-y-5 p-6">
         {blockedReason ? (
           <p role="status" className="rounded-md bg-muted p-3 text-sm text-muted-foreground">{blockedReason}</p>
+        ) : externalBookingUrl ? (
+          <>
+            <p className="text-sm text-muted-foreground">This mentor manages availability with {externalProvider}. Available times are shown on their secure booking page.</p>
+            <Button asChild className="w-full" variant="brand"><a href={externalBookingUrl} target="_blank" rel="noreferrer noopener">Choose a time with {externalProvider}</a></Button>
+          </>
         ) : (
           <>
             <SlotPicker slots={slots} selected={selected?.startsAt} onSelect={pick} />
@@ -96,12 +105,12 @@ export function BookingPanel({
             </p>
           </>
         )}
-        {!viewer && !blockedReason ? (
+        {!viewer && !blockedReason && !externalBookingUrl ? (
           <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
             <Link href={`/sign-in?next=${encodeURIComponent(`/mentors/${mentor.slug}`)}`} className="font-medium underline-offset-4 hover:underline">Sign in</Link> to book this mentor.
           </p>
         ) : null}
-        {viewer && viewer.role !== "STUDENT" && !blockedReason ? (
+        {viewer && viewer.role !== "STUDENT" && !blockedReason && !externalBookingUrl ? (
           <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">Only student accounts can book sessions.</p>
         ) : null}
       </CardContent>

@@ -41,19 +41,23 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
   if (!mentor || (mentor.status !== "APPROVED" && !canPreview)) notFound();
 
   const isStudent = viewer?.role === "STUDENT";
-  const [slots, dist, saved] = await Promise.all([
+  const [slots, dist, saved, externalConnection] = await Promise.all([
     getAvailableSlots({ ...mentor, days: 14 }),
     getRatingDistribution(mentor.id),
     isStudent
       ? db.savedMentor.findUnique({ where: { userId_mentorProfileId: { userId: viewer.id, mentorProfileId: mentor.id } }, select: { id: true } })
       : null,
+    mentor.schedulingMode === "INTERNAL" ? null : db.calendarConnection.findFirst({ where: { mentorProfileId: mentor.id, provider: mentor.schedulingMode, active: true }, select: { eventTypeUrl: true } }),
   ]);
   const mentorTimezone = safeTimezone(mentor.timezone);
+  const externalUnavailable = mentor.schedulingMode !== "INTERNAL" && !externalConnection?.eventTypeUrl;
   const blockedReason =
     mentor.status !== "APPROVED"
       ? "This profile isn't public yet, so it can't be booked."
       : !mentor.acceptingBookings
         ? "This mentor isn't accepting new bookings right now."
+        : externalUnavailable
+          ? "This mentor's booking page is temporarily unavailable."
         : mentor.rateCents > 0
           ? "Paid sessions aren't available yet. Mentio is free during the beta."
           : viewer?.id === mentor.userId
@@ -208,6 +212,8 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
               slots={slots}
               viewer={viewer ? { role: viewer.role } : null}
               blockedReason={blockedReason}
+              externalBookingUrl={externalConnection?.eventTypeUrl}
+              externalProvider={mentor.schedulingMode === "CAL_COM" ? "Cal.com" : mentor.schedulingMode === "CALENDLY" ? "Calendly" : null}
             />
           </aside>
         </div>

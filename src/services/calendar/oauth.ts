@@ -2,9 +2,8 @@
 //
 // This stores a mentor's connection and keeps it healthy (state check, encrypted
 // tokens, refresh). It does NOT create events: nothing in Mentio calls the
-// providers' booking APIs, so a connected account changes no booking behaviour.
-// The request/response shapes below are written from the providers' public docs
-// and have not been exercised against live accounts. Verify them before enabling.
+// A connection authorizes a mentor's external booking page. Provider webhooks
+// are verified separately and imported as CalendarBlocks.
 import "server-only";
 import crypto from "node:crypto";
 import type { CalendarConnection, CalendarProvider } from "@prisma/client";
@@ -78,6 +77,9 @@ export function authorizeUrl(slug: ProviderSlug, state: string): string {
   url.searchParams.set("redirect_uri", redirectUri(slug));
   url.searchParams.set("response_type", "code");
   url.searchParams.set("state", state);
+  // Least privilege required to identify the account and maintain booking
+  // webhook subscriptions. Providers ignore scopes they do not support.
+  url.searchParams.set("scope", slug === "calendly" ? "users:read scheduled_events:read webhooks:write" : "BOOKING_READ PROFILE_READ");
   return url.toString();
 }
 
@@ -110,11 +112,16 @@ const expiry = (expiresIn?: number) => (expiresIn ? new Date(Date.now() + expire
 export async function connectWithCode(slug: ProviderSlug, mentorProfileId: string, code: string) {
   const p = PROVIDERS[slug];
   const t = await requestToken(slug, { grant_type: "authorization_code", code, redirect_uri: redirectUri(slug) });
+  // Calendly returns an owner URI for OAuth; Cal.com returns a numeric/string
+  // owner. Store only the final identifier so incoming webhook organizers use
+  // the same key in both cases.
+  const owner = t.owner ?? t.user?.id ?? "unknown";
+  const externalId = String(owner).replace(/\/$/, "").split("/").pop() ?? "unknown";
   const data = {
     accessToken: encryptSecret(t.access_token),
     refreshToken: t.refresh_token ? encryptSecret(t.refresh_token) : null,
     expiresAt: expiry(t.expires_in),
-    externalId: String(t.owner ?? t.user?.id ?? "unknown"),
+    externalId,
     active: true,
   };
   await db.calendarConnection.upsert({

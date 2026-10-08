@@ -18,7 +18,7 @@ export async function getAvailableSlots(mentor: {
   const days = mentor.days ?? 14;
   const now = new Date();
 
-  const [windows, bookings] = await Promise.all([
+  const [windows, bookings, calendarBlocks] = await Promise.all([
     db.availability.findMany({
       where: { mentorProfileId: mentor.id },
       select: { weekday: true, startMinutes: true, endMinutes: true },
@@ -32,13 +32,22 @@ export async function getAvailableSlots(mentor: {
       },
       select: { startsAt: true, endsAt: true },
     }),
+    db.calendarBlock.findMany({
+      where: {
+        calendarConnection: { mentorProfileId: mentor.id, active: true },
+        cancelledAt: null,
+        endsAt: { gt: now },
+        startsAt: { lt: new Date(now.getTime() + (days + 2) * 86_400_000) },
+      },
+      select: { startsAt: true, endsAt: true },
+    }),
   ]);
 
   return generateSlots({
     windows,
     timezone: safeTimezone(mentor.timezone),
     sessionLength: mentor.sessionLength,
-    busy: bookings,
+    busy: [...bookings, ...calendarBlocks],
     now,
     days,
   });

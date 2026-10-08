@@ -24,6 +24,9 @@ const EnvSchema = z.object({
   CAL_COM_CLIENT_SECRET: optional(z.string()),
   CALENDLY_CLIENT_ID: optional(z.string()),
   CALENDLY_CLIENT_SECRET: optional(z.string()),
+  // Secrets used to authenticate booking webhooks before they can block time.
+  CAL_COM_WEBHOOK_SECRET: optional(z.string()),
+  CALENDLY_WEBHOOK_SIGNING_KEY: optional(z.string()),
   // 32 bytes, base64. Encrypts stored calendar OAuth tokens.
   TOKEN_ENCRYPTION_KEY: optional(z.string()),
 });
@@ -50,6 +53,8 @@ export function productionProblems(e: Env): string[] {
     if (!((e.CAL_COM_CLIENT_ID && e.CAL_COM_CLIENT_SECRET) || (e.CALENDLY_CLIENT_ID && e.CALENDLY_CLIENT_SECRET))) {
       problems.push("CALENDAR_OAUTH_ENABLED=true but no Cal.com or Calendly credentials are set");
     }
+    if (e.CAL_COM_CLIENT_ID && !e.CAL_COM_WEBHOOK_SECRET) problems.push("CAL_COM_WEBHOOK_SECRET is required when Cal.com is enabled");
+    if (e.CALENDLY_CLIENT_ID && !e.CALENDLY_WEBHOOK_SIGNING_KEY) problems.push("CALENDLY_WEBHOOK_SIGNING_KEY is required when Calendly is enabled");
   }
   return problems;
 }

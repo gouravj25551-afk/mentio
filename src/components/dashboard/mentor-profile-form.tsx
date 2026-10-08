@@ -23,6 +23,7 @@ type State = {
   acceptingBookings: boolean;
   achievements: string[];
   portfolio: string[];
+  verificationUrl: string;
   categoryIds: string[];
   skillIds: string[];
   twitter: string;
@@ -151,6 +152,9 @@ export function MentorProfileForm({
 
       <Field id="portfolio" label="Portfolio links" hint="One https:// link per line">
         <Textarea id="portfolio" rows={3} defaultValue={s.portfolio.join("\n")} onChange={(e) => update("portfolio", lines(e.target.value))} placeholder="https://github.com/you" />
+      </Field>
+      <Field id="verificationUrl" label="Public profile for verification" hint="Required — one public X, Instagram, LinkedIn, GitHub, or other profile URL">
+        <Input id="verificationUrl" type="url" required value={s.verificationUrl} onChange={(e) => update("verificationUrl", e.target.value)} placeholder="https://www.linkedin.com/in/you" />
       </Field>
       <Field id="achievements" label="Achievements" hint="One per line">
         <Textarea id="achievements" rows={3} defaultValue={s.achievements.join("\n")} onChange={(e) => update("achievements", lines(e.target.value))} />

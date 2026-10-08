@@ -140,6 +140,7 @@ model MentorProfile {
   experience        String       @db.Text
   achievements      String[]     @default([])
   portfolio         String[]     @default([])
+  verificationUrl   String?
   featured          Boolean      @default(false)
   status            MentorStatus @default(PENDING)
   // Pricing — zero means free (payments arrive in a future phase)

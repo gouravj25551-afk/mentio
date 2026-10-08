@@ -75,6 +75,7 @@ export const mentorProfileSchema = z.object({
   skillIds: z.array(z.string().min(1)).max(20).default([]),
   achievements: z.array(z.string().trim().min(1).max(200)).max(10).default([]),
   portfolio: z.array(httpsUrl).max(10).default([]),
+  verificationUrl: httpsUrl,
   acceptingBookings: z.boolean().default(true),
   twitter: handle(60).optional().default(""),
   instagram: handle(60).optional().default(""),

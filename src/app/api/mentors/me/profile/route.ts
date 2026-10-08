@@ -36,6 +36,7 @@ export async function PUT(req: Request) {
           timezone: data.timezone,
           achievements: data.achievements,
           portfolio: data.portfolio,
+          verificationUrl: data.verificationUrl,
           acceptingBookings: data.acceptingBookings,
           // A rejected mentor who edits their profile is resubmitting it for review.
           // (A suspended mentor stays suspended: only an admin lifts that.)

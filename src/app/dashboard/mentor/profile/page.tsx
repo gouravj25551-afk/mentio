@@ -35,6 +35,7 @@ export default async function MentorProfilePage() {
           acceptingBookings: mentor.acceptingBookings,
           achievements: mentor.achievements,
           portfolio: mentor.portfolio,
+          verificationUrl: mentor.verificationUrl ?? "",
           categoryIds: mentor.categories.map((c) => c.categoryId),
           skillIds: mentor.skills.map((s) => s.skillId),
           twitter: profile?.twitter ?? "",

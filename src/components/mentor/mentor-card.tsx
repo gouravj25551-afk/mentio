@@ -8,10 +8,11 @@ import { displayPrice } from "@/lib/pricing";
 
 export function MentorCard({ mentor }: { mentor: any }) {
   return (
-    <Link href={`/mentors/${mentor.slug}`} className="block h-full">
-      <Card className="group h-full p-5 transition hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-lg">
+    <Link href={`/mentors/${mentor.slug}`} className="block h-full rounded-xl">
+      <Card className="lift group relative h-full overflow-hidden p-5">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px brand-gradient opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
         <div className="flex items-start gap-3">
-          <Avatar className="h-14 w-14">
+          <Avatar className="h-14 w-14 ring-2 ring-background shadow-soft">
             <AvatarImage src={mentor.user.image ?? undefined} alt={mentor.user.name ?? ""} />
             <AvatarFallback>{initials(mentor.user.name)}</AvatarFallback>
           </Avatar>
@@ -29,7 +30,7 @@ export function MentorCard({ mentor }: { mentor: any }) {
           ))}
         </div>
         {(mentor.user.profile?.twitter || mentor.user.profile?.instagram || mentor.user.profile?.linkedin || mentor.user.profile?.github) ? (
-          <div className="mt-4 flex items-center gap-2 text-muted-foreground" aria-label="Social links">
+          <div className="mt-4 flex items-center gap-2 text-muted-foreground">
             {mentor.user.profile.twitter ? <Twitter className="h-4 w-4" /> : null}
             {mentor.user.profile.instagram ? <Instagram className="h-4 w-4" /> : null}
             {mentor.user.profile.linkedin ? <Linkedin className="h-4 w-4" /> : null}

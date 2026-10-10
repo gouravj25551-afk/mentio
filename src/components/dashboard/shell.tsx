@@ -72,8 +72,8 @@ export function DashboardShell({
                 href={it.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group flex items-center justify-between rounded-md px-3 py-2 text-sm transition",
-                  active ? "bg-foreground text-background" : "text-foreground/80 hover:bg-muted hover:text-foreground"
+                  "group flex min-h-11 items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
+                  active ? "bg-foreground text-background shadow-soft" : "text-foreground/80 hover:bg-muted hover:text-foreground"
                 )}
               >
                 <span className="inline-flex items-center gap-2">
@@ -96,15 +96,15 @@ export function DashboardShell({
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-5 backdrop-blur md:px-10">
           <div className="md:hidden"><Logo /></div>
           <div className="ml-auto flex items-center gap-3">
-            <Link href="/dashboard/student/notifications" className="relative inline-flex h-9 w-9 items-center justify-center rounded-md border bg-background hover:bg-muted">
+            <Link href="/dashboard/student/notifications" className="relative inline-flex h-11 w-11 items-center justify-center rounded-lg border bg-background transition-colors hover:bg-muted">
               <Bell className="h-4 w-4" aria-hidden />
               <span className="sr-only">Notifications</span>
-              {unread > 0 ? <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-500 px-1 text-[10px] text-white">{unread}</span> : null}
+              {unread > 0 ? <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] text-white">{unread}</span> : null}
             </Link>
             <UserMenu user={user} />
           </div>
         </header>
-        <nav aria-label="Dashboard" className="flex gap-1 overflow-x-auto border-b bg-background px-3 py-2 md:hidden">
+        <nav aria-label="Dashboard sections" className="flex gap-1 overflow-x-auto border-b bg-background px-3 py-2 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
           {items.map((it) => {
             const active = path === it.href || path.startsWith(`${it.href}/`);
             return (
@@ -113,7 +113,7 @@ export function DashboardShell({
                 href={it.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm",
+                  "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-colors",
                   active ? "bg-foreground text-background" : "text-foreground/80 hover:bg-muted",
                 )}
               >
@@ -123,7 +123,7 @@ export function DashboardShell({
             );
           })}
         </nav>
-        <main className="px-5 py-8 md:px-10">{children}</main>
+        <main id="main-content" tabIndex={-1} className="px-5 py-8 outline-none md:px-10">{children}</main>
       </div>
     </div>
   );

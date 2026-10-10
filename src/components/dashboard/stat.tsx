@@ -12,12 +12,12 @@ export function Stat({
   className?: string;
 }) {
   return (
-    <Card className={cn("p-5", className)}>
+    <Card className={cn("lift hairline p-5", className)}>
       <div className="flex items-center justify-between">
         <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
         {icon}
       </div>
-      <div className="mt-2 font-display text-3xl font-semibold">{value}</div>
+      <div className="mt-2 font-display text-3xl font-semibold tabular-nums">{value}</div>
       {hint ? <div className="mt-1 text-xs text-muted-foreground">{hint}</div> : null}
       {trend ? (
         <div className={cn("mt-1 text-xs", trend.value >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive")}>

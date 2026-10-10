@@ -15,7 +15,7 @@
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted-foreground: 240 4% 40%;
     --accent: 240 4.8% 95.9%;
     --accent-foreground: 240 5.9% 10%;
     --destructive: 0 72% 51%;
@@ -30,6 +30,10 @@
     --brand-500: 263 76% 56%;
     --brand-600: 263 76% 48%;
     --brand-700: 263 68% 40%;
+
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
   }
 
   .dark {
@@ -60,15 +64,28 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
   }
   html { scroll-behavior: smooth; }
+  h1, h2, h3 { text-wrap: balance; }
+  :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+  ::selection { background: hsl(263 85% 70% / 0.35); }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer utilities {
   .brand-gradient {
-    background-image: linear-gradient(135deg, hsl(263 90% 65%), hsl(220 90% 60%), hsl(185 90% 55%));
+    background-image: linear-gradient(135deg, hsl(263 76% 52%), hsl(238 78% 54%), hsl(214 86% 46%));
   }
   .brand-text {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(263 90% 65%), hsl(220 90% 60%));
+    background-image: linear-gradient(135deg, hsl(263 76% 52%), hsl(220 85% 50%));
   }
   .glass {
     @apply bg-background/70 backdrop-blur-xl border border-border/60;
@@ -82,9 +99,40 @@
       linear-gradient(to bottom, hsl(var(--border) / 0.4) 1px, transparent 1px);
     background-size: 48px 48px;
   }
+  .dark .brand-text { background-image: linear-gradient(135deg, hsl(263 90% 74%), hsl(205 92% 68%)); }
   .shimmer {
     background: linear-gradient(90deg, transparent, hsl(var(--muted)) 50%, transparent);
     background-size: 200% 100%;
     animation: shimmer 2s linear infinite;
+  }
+  .font-serif-accent {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  /* Layered light behind hero and auth surfaces. Decorative only. */
+  .aurora {
+    background:
+      radial-gradient(60% 50% at 50% 0%, hsl(263 90% 66% / 0.22), transparent 70%),
+      radial-gradient(40% 40% at 85% 15%, hsl(200 95% 60% / 0.16), transparent 70%),
+      radial-gradient(40% 40% at 10% 25%, hsl(330 90% 65% / 0.10), transparent 70%);
+  }
+  .dark .aurora {
+    background:
+      radial-gradient(60% 50% at 50% 0%, hsl(263 90% 66% / 0.30), transparent 70%),
+      radial-gradient(40% 40% at 85% 15%, hsl(200 95% 60% / 0.20), transparent 70%),
+      radial-gradient(40% 40% at 10% 25%, hsl(330 90% 65% / 0.12), transparent 70%);
+  }
+  .hairline { box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.5); }
+  .dark .hairline { box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.06); }
+  .lift {
+    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .lift:hover { transform: translateY(-3px); box-shadow: 0 2px 4px rgba(16, 24, 40, 0.05), 0 18px 40px -12px rgba(76, 29, 149, 0.22); }
+  .page-enter { animation: page-enter 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  @keyframes page-enter {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
   }
 }

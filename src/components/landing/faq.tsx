@@ -26,12 +26,12 @@ export function FAQ() {
               <div key={it.q} className="px-6 py-5">
                 <button
                   type="button"
-                  className="flex w-full items-start justify-between gap-6 text-left"
+                  className="flex min-h-11 w-full items-start justify-between gap-6 rounded-md text-left"
                   aria-expanded={isOpen}
                   aria-controls={`faq-${i}`}
                   onClick={() => setOpen(isOpen ? null : i)}
                 >
-                  <span className="font-medium">{it.q}</span>
+                  <span className="py-2.5 font-medium">{it.q}</span>
                   {isOpen ? <Minus className="mt-1 h-4 w-4" /> : <Plus className="mt-1 h-4 w-4" />}
                 </button>
                 {isOpen ? <p id={`faq-${i}`} className="mt-3 text-sm text-muted-foreground">{it.a}</p> : null}

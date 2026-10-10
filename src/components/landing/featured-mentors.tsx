@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { ArrowRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,7 +18,7 @@ export function FeaturedMentors({ mentors }: { mentors: Row[] }) {
   if (!mentors.length) return null;
   return (
     <section className="container py-20">
-      <div className="flex items-end justify-between">
+      <Reveal className="flex items-end justify-between">
         <div>
           <div className="text-xs uppercase tracking-widest text-muted-foreground">Featured mentors</div>
           <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight md:text-4xl">
@@ -27,11 +28,12 @@ export function FeaturedMentors({ mentors }: { mentors: Row[] }) {
         <Button asChild variant="ghost">
           <Link href="/mentors">View all<ArrowRight className="h-4 w-4" /></Link>
         </Button>
-      </div>
-      <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      </Reveal>
+      <Stagger className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {mentors.map((m) => (
-          <Link key={m.id} href={`/mentors/${m.slug}`}>
-            <Card className="group h-full p-5 transition hover:border-foreground/20 hover:shadow-lg">
+          <StaggerItem key={m.id}>
+          <Link href={`/mentors/${m.slug}`} className="block h-full rounded-xl">
+            <Card className="lift group h-full p-5">
               <div className="flex items-start gap-3">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={m.user.image ?? undefined} alt={m.user.name ?? ""} />
@@ -59,8 +61,9 @@ export function FeaturedMentors({ mentors }: { mentors: Row[] }) {
               </div>
             </Card>
           </Link>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
     </section>
   );
 }

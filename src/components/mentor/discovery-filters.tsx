@@ -49,26 +49,26 @@ export function DiscoveryFilters({
         }}
         className="relative"
       >
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input name="q" defaultValue={params.get("q") ?? ""} placeholder="Search mentors by name, headline, or skill" className="h-12 pl-10 pr-28" />
+        <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input name="q" type="search" aria-label="Search mentors" defaultValue={params.get("q") ?? ""} placeholder="Search mentors by name, headline, or skill" className="h-12 pl-10 pr-28 text-base sm:text-sm" />
         <Button type="submit" size="sm" variant="brand" className="absolute right-2 top-1/2 -translate-y-1/2">Search</Button>
       </form>
 
-      <div className="flex flex-wrap items-center gap-2 overflow-x-auto">
+      <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden" role="group" aria-label="Filter by category">
         <Chip label="All" active={!activeCat} onClick={() => push({ category: undefined })} />
         {categories.map((c) => (
           <Chip key={c.id} label={c.name} active={activeCat === c.slug} onClick={() => push({ category: c.slug })} />
         ))}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:ml-auto">
           <Select value={activeSkill} onValueChange={(v) => push({ skill: v || undefined })}>
-            <SelectTrigger className="w-48"><SelectValue placeholder="Any skill" /></SelectTrigger>
+            <SelectTrigger aria-label="Filter by skill" className="w-48"><SelectValue placeholder="Any skill" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="">Any skill</SelectItem>
               {skillOptions.map((s) => <SelectItem key={s.id} value={s.slug}>{s.name}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={activeSort} onValueChange={(v) => push({ sort: v })}>
-            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Sort mentors" className="w-44"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="recommended">Recommended</SelectItem>
               <SelectItem value="rating">Top rated</SelectItem>
@@ -87,9 +87,10 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={
-        "whitespace-nowrap rounded-full border px-3 py-1 text-xs transition " +
-        (active ? "border-foreground bg-foreground text-background" : "border-border bg-background hover:bg-muted")
+        "min-h-10 whitespace-nowrap rounded-full border px-4 py-2 text-sm transition-colors sm:min-h-9 sm:px-3.5 sm:py-1.5 sm:text-xs " +
+        (active ? "border-foreground bg-foreground text-background shadow-soft" : "border-border bg-background hover:border-foreground/30 hover:bg-muted")
       }
     >
       {label}

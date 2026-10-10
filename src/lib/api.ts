@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
 import { HttpError } from "@/lib/errors";
+import { logError } from "@/lib/log";
 
 export function apiError(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
@@ -19,7 +20,7 @@ export function apiOk<T>(data: T, status = 200) {
 export function apiCatch(err: unknown) {
   if (err instanceof HttpError) return apiError(err.message, err.status);
   if (err instanceof ZodError) return apiError(err.issues[0]?.message ?? "Invalid request", 422);
-  console.error("Unhandled API error:", err);
+  logError("api.unhandled", err);
   return apiError("Something went wrong. Please try again.", 500);
 }
 

@@ -12,6 +12,7 @@ import { z } from "zod";
 import { decryptSecret, encryptSecret } from "@/lib/crypto";
 import { db } from "@/lib/db";
 import { env, isCalComEnabled, isCalendlyEnabled } from "@/lib/env";
+import { logError } from "@/lib/log";
 
 export type ProviderSlug = "cal-com" | "calendly";
 
@@ -159,7 +160,7 @@ export async function getAccessToken(conn: CalendarConnection, now = new Date())
       });
       return t.access_token;
     } catch (err) {
-      console.error("calendar token refresh failed:", err instanceof Error ? err.message : err);
+      logError("calendar.token_refresh_failed", err);
     }
   }
   await db.calendarConnection.update({ where: { id: conn.id }, data: { active: false } });

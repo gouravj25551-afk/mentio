@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
+import { logError } from "@/lib/log";
 
 // Rendered per request (and cached by Next) so new mentors appear without a rebuild.
 export const revalidate = 3600;
@@ -19,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ...mentors.map((m) => ({ url: `${base}/mentors/${m.slug}`, lastModified: m.updatedAt, changeFrequency: "weekly" as const, priority: 0.8 })),
     ];
   } catch (err) {
-    console.error("sitemap: mentor list unavailable:", err instanceof Error ? err.message : err);
+    logError("sitemap.mentors_unavailable", err);
     return pages;
   }
 }

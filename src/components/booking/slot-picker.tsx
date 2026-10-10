@@ -85,7 +85,7 @@ export function SlotPicker({
           })}
         </div>
         {todays.length === 0 && firstWithSlots ? (
-          <button type="button" onClick={() => setDay(firstWithSlots)} className="mt-2 text-xs text-muted-foreground underline underline-offset-4">
+          <button type="button" onClick={() => setDay(firstWithSlots)} className="mt-2 inline-flex min-h-11 items-center text-xs text-muted-foreground underline underline-offset-4">
             Jump to next available day
           </button>
         ) : null}

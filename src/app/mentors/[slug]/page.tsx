@@ -68,22 +68,23 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
   return (
     <>
       <SiteHeader />
-      <main className="container pb-20 pt-10">
-        <Link href="/mentors" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <main id="main-content" tabIndex={-1} className="container pb-20 pt-10 outline-none">
+        <Link href="/mentors" className="inline-flex min-h-11 items-center gap-1 rounded-md text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> All mentors
         </Link>
 
-        <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_380px]">
+        <div className="relative mt-2 grid gap-10 lg:grid-cols-[1fr_380px]">
+          <div className="aurora pointer-events-none absolute inset-x-0 -top-24 -z-10 h-64 opacity-70" aria-hidden />
           <div>
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-              <Avatar className="h-24 w-24">
+              <Avatar className="h-24 w-24 ring-4 ring-background shadow-soft">
                 <AvatarImage src={mentor.user.image ?? undefined} alt={mentor.user.name ?? ""} />
                 <AvatarFallback className="text-xl">{initials(mentor.user.name)}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="font-display text-3xl font-semibold tracking-tight">{mentor.user.name}</h1>
-                  <BadgeCheck className="h-5 w-5 text-indigo-500" />
+                  <BadgeCheck className="h-5 w-5 text-violet-600" aria-label="Approved mentor" role="img" />
                   {mentor.featured ? <Badge variant="brand">Featured</Badge> : null}
                 </div>
                 <p className="mt-1 text-lg text-muted-foreground">{mentor.headline}</p>
@@ -146,7 +147,7 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
                   <div className="mt-4 space-y-2">
                     <div className="text-sm font-medium">Portfolio</div>
                     <ul className="space-y-1 text-sm">
-                      {mentor.portfolio.filter((p) => p.startsWith("https://")).map((p) => <li key={p}><a href={p} target="_blank" rel="noreferrer noopener" className="text-indigo-500 underline-offset-4 hover:underline">{p}</a></li>)}
+                      {mentor.portfolio.filter((p) => p.startsWith("https://")).map((p) => <li key={p}><a href={p} target="_blank" rel="noreferrer noopener" className="text-violet-700 underline-offset-4 dark:text-violet-300 hover:underline">{p}</a></li>)}
                     </ul>
                   </div>
                 ) : null}

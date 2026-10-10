@@ -45,7 +45,7 @@ export default async function MentorsPage({
   return (
     <>
       <SiteHeader />
-      <main className="container pb-20 pt-10">
+      <main id="main-content" tabIndex={-1} className="container pb-20 pt-10 outline-none">
         <div className="flex flex-col gap-2">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">Mentors</div>
           <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">

@@ -46,10 +46,11 @@ export default auth((req) => {
       "/forgot-password", "/reset-password", "/privacy", "/terms",
     ]);
 
-    if (path.startsWith("/api/") && !path.startsWith("/api/auth/") && path !== "/api/health" && path !== "/api/ready") {
+    const publicApi = path === "/api/auth" || path.startsWith("/api/auth/") || path === "/api/health" || path === "/api/ready";
+    if (path.startsWith("/api/") && !publicApi) {
       return NextResponse.json({ error: "Mentio is launching soon." }, { status: 503 });
     }
-    if (!available.has(path)) {
+    if (!path.startsWith("/api/") && !available.has(path)) {
       return NextResponse.redirect(new URL("/waitlist", nextUrl));
     }
     if (signedIn && (path === "/sign-in" || path === "/sign-up")) {

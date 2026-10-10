@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { forbidden, unauthenticated } from "@/lib/errors";
 import { safeTimezone } from "@/lib/time";
+import { waitlistMode } from "@/lib/waitlist";
 import type { Role } from "@prisma/client";
 
 export type CurrentUser = {
@@ -59,6 +60,7 @@ export async function optionalUser() {
 export async function requireApiUser(role?: Role | Role[]) {
   const user = await getCurrentUser();
   if (!user) throw unauthenticated();
+  if (waitlistMode && user.role !== "ADMIN") throw forbidden("Mentio is launching soon.");
   if (role) {
     const allowed = Array.isArray(role) ? role : [role];
     if (!allowed.includes(user.role)) throw forbidden();

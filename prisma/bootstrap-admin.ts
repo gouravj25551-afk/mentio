@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 // Creates or updates exactly one account (ADMIN_EMAIL) as an ADMIN.
 // Run with: npm run admin:bootstrap
 // There is deliberately no browser-based admin registration.

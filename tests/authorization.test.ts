@@ -212,6 +212,7 @@ describe("mentor profile input validation", () => {
     skillIds: [] as string[],
     achievements: ["Spoke at PyCon"],
     portfolio: ["https://github.com/example"],
+    verificationUrl: "https://www.linkedin.com/in/example",
     acceptingBookings: true,
   };
 

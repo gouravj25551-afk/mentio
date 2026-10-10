@@ -5,8 +5,16 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -29,6 +37,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Fails only on critical production advisories; the full report is in the log.
+      # High/moderate findings that need a major upgrade are tracked in docs/SECURITY-DEPENDENCIES.md.
+      - run: npm audit --omit=dev --audit-level=critical
       - run: npm run typecheck
       - run: npm run lint
       # Applies the real migrations to the empty test DB, then runs the suite.

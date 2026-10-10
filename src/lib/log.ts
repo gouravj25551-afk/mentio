@@ -18,9 +18,9 @@ export function redact(value: unknown): string {
   return maskEmail(raw).replace(TOKEN_PARAM, "$1[redacted]").replace(LONG_SECRET, "[redacted]").slice(0, 300);
 }
 
-type Fields = Record<string, string | number | boolean | null | undefined | Error>;
+type EventFields = Record<string, string | number | boolean | null | undefined | Error>;
 
-export function logEvent(scope: "auth" | "email" | "rate-limit", event: string, fields: Fields = {}) {
+export function logEvent(scope: "auth" | "email" | "rate-limit", event: string, fields: EventFields = {}) {
   const safe: Record<string, string | number | boolean | null> = {};
   for (const [key, value] of Object.entries(fields)) {
     if (value === undefined) continue;

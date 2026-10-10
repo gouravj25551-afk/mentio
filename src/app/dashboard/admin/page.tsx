@@ -3,13 +3,15 @@ import { db } from "@/lib/db";
 import { Stat } from "@/components/dashboard/stat";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Users, UserCheck, Calendar, Star } from "lucide-react";
+import Link from "next/link";
+import { countAffectedBookings } from "@/features/bookings/attention";
 import { AnalyticsChart } from "@/components/dashboard/analytics-chart";
 
 export default async function AdminOverview() {
   await requireRole("ADMIN");
   const now = new Date();
   const thirty = new Date(now.getTime() - 30 * 86400000);
-  const [users, , approvedMentors, pendingMentors, bookings, bookings30d, avgRating] = await Promise.all([
+  const [users, , approvedMentors, pendingMentors, bookings, bookings30d, avgRating, affected] = await Promise.all([
     db.user.count(),
     db.user.count({ where: { role: "MENTOR" } }),
     db.mentorProfile.count({ where: { status: "APPROVED" } }),
@@ -17,6 +19,7 @@ export default async function AdminOverview() {
     db.booking.count(),
     db.booking.findMany({ where: { createdAt: { gte: thirty } }, select: { createdAt: true } }),
     db.mentorProfile.aggregate({ _avg: { averageRating: true } }),
+    countAffectedBookings(),
   ]);
   const bins: { day: string; bookings: number; revenue: number }[] = [];
   for (let i = 29; i >= 0; i--) {
@@ -35,6 +38,11 @@ export default async function AdminOverview() {
         <h1 className="font-display text-2xl font-semibold tracking-tight">Admin overview</h1>
         <p className="text-sm text-muted-foreground">Platform health at a glance.</p>
       </div>
+      {affected > 0 ? (
+        <Link href="/dashboard/admin/bookings" className="block rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 focus-visible:outline focus-visible:outline-2">
+          {affected} upcoming {affected === 1 ? "session is" : "sessions are"} booked with a rejected or suspended mentor. Review {affected === 1 ? "it" : "them"}.
+        </Link>
+      ) : null}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Users" value={users.toLocaleString()} icon={<Users className="h-4 w-4 text-indigo-500" />} />
         <Stat label="Approved mentors" value={approvedMentors} hint={`${pendingMentors} pending`} icon={<UserCheck className="h-4 w-4 text-indigo-500" />} />

@@ -4,7 +4,8 @@ import { apiCatch, apiOk, readJson } from "@/lib/api";
 import { requireApiUser } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { conflict, notFound } from "@/lib/errors";
-import { createNotification } from "@/features/notifications/service";
+import { countAffectedBookings } from "@/features/bookings/attention";
+import { notifySafely } from "@/features/notifications/service";
 import type { AdminActionType, MentorStatus, Prisma } from "@prisma/client";
 
 const bodySchema = z.object({
@@ -57,7 +58,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
         REJECTED: "not approved",
         SUSPENDED: "suspended",
       };
-      await createNotification({
+      await notifySafely({
         userId: mentor.userId,
         type: spec.notifyType,
         title: `Your mentor profile is ${statusText[updated.status]}`,
@@ -65,7 +66,10 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
         link: "/dashboard/mentor",
       });
     }
-    return apiOk(updated);
+    // Rejecting or suspending never touches existing bookings. Report how many are
+    // still live so the admin can decide what to do with them.
+    const affectedBookings = action === "REJECT" || action === "SUSPEND" ? await countAffectedBookings(id) : 0;
+    return apiOk({ ...updated, affectedBookings });
   } catch (err) {
     return apiCatch(err);
   }

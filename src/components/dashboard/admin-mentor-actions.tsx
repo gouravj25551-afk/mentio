@@ -18,6 +18,13 @@ export function AdminMentorActions({ mentorProfileId, featured, status }: { ment
         toast.error(b?.error ?? "Failed");
         return;
       }
+      const body = await res.json().catch(() => ({}));
+      const affected = Number(body?.affectedBookings ?? 0);
+      if (affected > 0) {
+        toast.warning(`Updated. ${affected} upcoming ${affected === 1 ? "session is" : "sessions are"} still booked with this mentor. Review them under Bookings.`);
+        setTimeout(() => window.location.reload(), 2500);
+        return;
+      }
       toast.success("Updated");
       window.location.reload();
     });

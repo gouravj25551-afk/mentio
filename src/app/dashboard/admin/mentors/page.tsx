@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { initials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { AdminMentorActions } from "@/components/dashboard/admin-mentor-actions";
+import { countAffectedBookings } from "@/features/bookings/attention";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const EMPTY_COPY = {
@@ -23,15 +24,17 @@ async function Section({ status }: { status: "PENDING" | "APPROVED" | "REJECTED"
     take: 50,
   });
   if (!rows.length) return <p className="p-6 text-sm text-muted-foreground">{EMPTY_COPY[status]}</p>;
+  const counts = status === "REJECTED" || status === "SUSPENDED" ? await Promise.all(rows.map((m) => countAffectedBookings(m.id))) : [];
   return (
     <Card className="divide-y">
-      {rows.map((m) => (
+      {rows.map((m, i) => (
         <div key={m.id} className="flex flex-wrap items-center gap-4 p-4">
           <Avatar className="h-10 w-10"><AvatarImage src={m.user.image ?? undefined} /><AvatarFallback>{initials(m.user.name)}</AvatarFallback></Avatar>
           <div className="min-w-0 flex-1">
             <div className="truncate font-medium"><Link href={`/mentors/${m.slug}`} className="underline-offset-4 hover:underline">{m.user.name}</Link></div>
             <div className="truncate text-xs text-muted-foreground">{m.headline}</div>
             <a href={m.verificationUrl ?? undefined} target="_blank" rel="noreferrer noopener" className="mt-1 block truncate text-xs text-indigo-600 underline">{m.verificationUrl ? `Verify public profile: ${m.verificationUrl}` : "Public profile not submitted"}</a>
+            {counts[i] ? <Link href="/dashboard/admin/bookings" className="mt-1 block text-xs font-medium text-amber-700 underline">{counts[i]} upcoming {counts[i] === 1 ? "session" : "sessions"} still booked</Link> : null}
             <div className="mt-1 flex flex-wrap gap-1.5">
               {m.categories.map((c) => <Badge key={c.categoryId} variant="secondary" className="text-[10px]">{c.category.name}</Badge>)}
             </div>

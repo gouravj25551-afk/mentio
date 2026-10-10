@@ -65,10 +65,10 @@ Grid of all categories, deep-linking into discovery.
 ## Services
 
 ### Meeting links (`services/calendar`)
-Each booking gets either a freshly generated, unguessable Jitsi room (`INTERNAL_ROOM`) or the mentor's own link (`EXTERNAL_LINK`: https only, allow-listed Zoom/Meet/Teams/Whereby/Jitsi/Cal.com/Calendly hosts). The booking page says which. **Mentio does not create events in Cal.com or Calendly.** Optional OAuth account linking exists behind `CALENDAR_OAUTH_ENABLED` (off; state-checked, tokens encrypted) but nothing uses a linked account.
+Each booking gets either a freshly generated, unguessable Jitsi room (`INTERNAL_ROOM`) or the mentor's own link (`EXTERNAL_LINK`: https only, allow-listed Zoom/Meet/Teams/Whereby/Jitsi/Cal.com/Calendly hosts). The booking page says which. **Mentio does not create events in Cal.com or Calendly.** Mentors can set `schedulingMode` to `CAL_COM` or `CALENDLY`; events arriving through signature-verified webhooks are stored as `CalendarBlock`s and hide matching Mentio slots. Account linking sits behind `CALENDAR_OAUTH_ENABLED` (off by default; state-checked, tokens encrypted) and has never been run against live provider accounts.
 
 ### Email (`services/email`)
-Resend in production (required; the app won't boot without it), console in development. Delivery failure never fails the action that triggered it.
+Resend in production (required; the app won't boot without it), console in development. Delivery failure never fails the action that triggered it. In-app notifications are created after the change commits and are best effort too.
 
 ### Payments (`services/payments`)
 None. Free beta: mentors can't set a price and a priced booking is refused (HTTP 402). The database also rejects a priced booking that is confirmed but unpaid.

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { connectWithCode, providerFromSlug, stateMatches, STATE_COOKIE, type ProviderSlug } from "@/services/calendar/oauth";
+import { logError } from "@/lib/log";
 
 export async function GET(req: Request, ctx: { params: Promise<{ provider: string }> }) {
   const { provider: slug } = await ctx.params;
@@ -34,7 +35,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
     await connectWithCode(slug as ProviderSlug, mentor.id, code);
   } catch (err) {
     // Message only: the error never contains the code or tokens.
-    console.error("calendar connect failed:", err instanceof Error ? err.message : err);
+    logError("calendar.connect_failed", err);
     return back("error=token");
   }
   return back(`connected=${slug}`);

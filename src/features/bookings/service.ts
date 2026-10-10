@@ -16,6 +16,7 @@ import {
   type AvailabilityWindow,
 } from "@/lib/booking-rules";
 import { conflict, forbidden, HttpError, notFound, tooMany } from "@/lib/errors";
+import { logError } from "@/lib/log";
 import { allowed, limiters } from "@/lib/rate-limit";
 import { formatInZone, safeTimezone } from "@/lib/time";
 import {
@@ -27,7 +28,7 @@ import {
   savedMentorSchema,
 } from "@/lib/validators";
 import type { CurrentUser } from "@/lib/auth/guards";
-import { createNotification } from "@/features/notifications/service";
+import { notifySafely } from "@/features/notifications/service";
 import { resolveMeeting } from "@/services/calendar";
 import { assertBookable } from "@/services/payments";
 
@@ -84,9 +85,15 @@ function assertStartAllowed(
   if (!offered) throw conflict("That time isn't in this mentor's availability.");
 }
 
+/** Only used for wording after a commit, so a lookup failure falls back to UTC instead of failing the request. */
 async function timezonesFor(userIds: string[]) {
-  const rows = await db.profile.findMany({ where: { userId: { in: userIds } }, select: { userId: true, timezone: true } });
-  return new Map(rows.map((r) => [r.userId, safeTimezone(r.timezone)]));
+  try {
+    const rows = await db.profile.findMany({ where: { userId: { in: userIds } }, select: { userId: true, timezone: true } });
+    return new Map(rows.map((r) => [r.userId, safeTimezone(r.timezone)]));
+  } catch (err) {
+    logError("booking.timezone_lookup_failed", err);
+    return new Map<string, string>();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -150,14 +157,14 @@ export async function createBooking(actor: CurrentUser, input: unknown): Promise
 
   const tzs = await timezonesFor([actor.id]);
   await Promise.all([
-    createNotification({
+    notifySafely({
       userId: mentorUserId,
       type: "BOOKING_CREATED",
       title: `New booking from ${actor.name ?? "a student"}`,
       body: `${formatInZone(booking.startsAt, mentorTz)} — ${booking.topic}`,
       link: `/dashboard/mentor/bookings/${booking.id}`,
     }),
-    createNotification({
+    notifySafely({
       userId: actor.id,
       type: "BOOKING_CONFIRMED",
       title: `Booking with ${mentorName ?? "your mentor"} confirmed`,
@@ -190,7 +197,7 @@ export async function cancelBooking(actor: CurrentUser, bookingId: string, input
 
   // Conditional update: if a concurrent request changed the status first, count is 0.
   const result = await db.booking.updateMany({
-    where: { id: booking.id, status: { in: ACTIVE_STATUSES } },
+    where: { id: booking.id, status: { in: ACTIVE_STATUSES }, startsAt: { gt: new Date() } },
     data: { status: "CANCELLED", cancelReason: reason || null, cancelledAt: new Date() },
   });
   if (result.count !== 1) throw conflict("This booking was just updated. Refresh and try again.");
@@ -205,7 +212,7 @@ export async function cancelBooking(actor: CurrentUser, bookingId: string, input
   if (!byMentor) notify.push({ userId: booking.mentorProfile.userId, link: `/dashboard/mentor/bookings/${booking.id}` });
   await Promise.all(
     notify.map((n) =>
-      createNotification({
+      notifySafely({
         userId: n.userId,
         type: "BOOKING_CANCELLED",
         title: "A booking was cancelled",
@@ -282,14 +289,14 @@ export async function rescheduleBooking(actor: CurrentUser, bookingId: string, i
 
   const tzs = await timezonesFor([booking.studentId, booking.mentorProfile.userId]);
   await Promise.all([
-    createNotification({
+    notifySafely({
       userId: booking.mentorProfile.userId,
       type: "BOOKING_RESCHEDULED",
       title: "A booking was rescheduled",
       body: `New time: ${formatInZone(next.startsAt, tzs.get(booking.mentorProfile.userId) ?? "UTC")}`,
       link: `/dashboard/mentor/bookings/${next.id}`,
     }),
-    createNotification({
+    notifySafely({
       userId: booking.studentId,
       type: "BOOKING_RESCHEDULED",
       title: "Booking rescheduled",
@@ -324,7 +331,7 @@ export async function completeBooking(actor: CurrentUser, bookingId: string, inp
   });
 
   if (outcome === "COMPLETED") {
-    await createNotification({
+    await notifySafely({
       userId: booking.studentId,
       type: "SYSTEM",
       title: "How was your session?",
@@ -374,7 +381,7 @@ export async function leaveReview(actor: CurrentUser, input: unknown) {
   });
 
   if (created) {
-    await createNotification({
+    await notifySafely({
       userId: booking.mentorProfile.userId,
       type: "REVIEW_LEFT",
       title: `New ${data.rating}★ review`,

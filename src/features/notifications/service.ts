@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import type { NotificationType } from "@prisma/client";
+import { logError } from "@/lib/log";
 import { appUrl, sendEmailSafely } from "@/services/email";
 
 export async function createNotification(input: {
@@ -21,6 +22,19 @@ export async function createNotification(input: {
     });
   }
   return notif;
+}
+
+/**
+ * For use AFTER the business change is committed. A failed notification must not
+ * turn an already-saved booking or moderation into an error response (the user
+ * would retry and hit "slot taken"), so failures are logged and swallowed.
+ */
+export async function notifySafely(input: Parameters<typeof createNotification>[0]) {
+  try {
+    await createNotification(input);
+  } catch (err) {
+    logError("notification.failed", err, { userId: input.userId, code: input.type });
+  }
 }
 
 export async function listNotifications(userId: string, opts?: { unreadOnly?: boolean; take?: number }) {

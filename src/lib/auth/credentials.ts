@@ -3,7 +3,7 @@ import { CredentialsSignin } from "next-auth";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { allowed, clientIp, limiters } from "@/lib/rate-limit";
+import { checkLimits, clientIp, limiters } from "@/lib/rate-limit";
 
 /** Thrown only after the password was verified, so it reveals nothing to a guesser. */
 export class EmailNotVerified extends CredentialsSignin {
@@ -11,6 +11,10 @@ export class EmailNotVerified extends CredentialsSignin {
 }
 export class RateLimited extends CredentialsSignin {
   code = "rate_limited";
+}
+
+export class RateLimiterUnavailable extends CredentialsSignin {
+  code = "rate_limiter_unavailable";
 }
 
 const credentialsSchema = z.object({
@@ -33,8 +37,9 @@ export async function authorizeCredentials(credentials: unknown, headers: Header
   if (!parsed.success) return null;
   const email = parsed.data.email.trim().toLowerCase();
 
-  const ok = await allowed([limiters.signIn.check(email), limiters.signInIp.check(clientIp(headers))]);
-  if (!ok) throw new RateLimited();
+  const status = await checkLimits([limiters.signIn.check(email), limiters.signInIp.check(clientIp(headers))]);
+  if (status === "limited") throw new RateLimited();
+  if (status === "unavailable") throw new RateLimiterUnavailable();
 
   const user = await db.user.findUnique({ where: { email }, omit: { passwordHash: false } });
   const matches = await bcrypt.compare(parsed.data.password, user?.passwordHash ?? getDummyHash());

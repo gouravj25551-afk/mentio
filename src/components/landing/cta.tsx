@@ -1,18 +1,19 @@
 import Link from "next/link";
+import { Reveal } from "@/components/motion/reveal";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function CTA() {
   return (
     <section className="container pb-24">
-      <div className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-indigo-500 via-violet-500 to-sky-500 p-10 text-white md:p-16">
+      <Reveal className="hairline relative overflow-hidden rounded-3xl border bg-gradient-to-br from-indigo-700 via-violet-700 to-blue-700 p-8 text-white sm:p-10 md:p-16">
         <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" aria-hidden />
         <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-black/10 blur-3xl" aria-hidden />
         <div className="relative max-w-2xl">
           <h2 className="font-display text-3xl font-semibold tracking-tight md:text-5xl">
-            Stop sending cold DMs.
+            Stop sending <span className="font-serif-accent">cold DMs.</span>
           </h2>
-          <p className="mt-4 max-w-xl text-base text-white/80 md:text-lg">
+          <p className="mt-4 max-w-xl text-base text-white/85 md:text-lg">
             Learn from people who have done what you want to do. Booking a call takes under a minute.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -24,7 +25,7 @@ export function CTA() {
             </Button>
           </div>
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }

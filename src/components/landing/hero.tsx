@@ -1,68 +1,96 @@
 "use client";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const ease = [0.2, 0.7, 0.2, 1] as const;
+const group = { hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } } };
+const rise = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.55, ease } } };
+
+const cards = [
+  { title: "Open Source", desc: "GSoC, LFX, CNCF mentors who've been in your seat." },
+  { title: "Interview Prep", desc: "FAANG & startup interviews with people who ship." },
+  { title: "Career Pivots", desc: "Switch stacks, roles, cities — with a plan." },
+];
+
 export function Hero() {
+  const reduce = useReducedMotion();
   return (
-    <section className="relative overflow-hidden">
-      <div className="absolute inset-0 grid-bg [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" aria-hidden />
-      <div className="absolute left-1/2 top-0 -z-10 h-[720px] w-[1200px] -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,hsl(263_90%_65%_/_0.25),transparent_60%)]" aria-hidden />
-      <div className="container relative pt-20 pb-24 md:pt-28 md:pb-32">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mx-auto max-w-3xl text-center"
-        >
-          <Link
-            href="/mentors"
-            className="group inline-flex items-center gap-2 rounded-full border bg-background/70 px-3 py-1 text-xs backdrop-blur transition hover:bg-background"
+    <section className="relative isolate overflow-hidden">
+      <div className="aurora absolute inset-0 -z-10" aria-hidden />
+      <div
+        className="absolute inset-0 -z-10 grid-bg [mask-image:radial-gradient(ellipse_at_top,black_20%,transparent_70%)]"
+        aria-hidden
+      />
+      <motion.div
+        aria-hidden
+        className="absolute left-1/2 top-24 -z-10 h-64 w-64 -translate-x-1/2 rounded-full bg-violet-500/20 blur-3xl"
+        animate={reduce ? undefined : { scale: [1, 1.12, 1], opacity: [0.6, 0.9, 0.6] }}
+        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      <div className="container relative pb-24 pt-16 md:pb-32 md:pt-28">
+        <motion.div variants={group} initial="hidden" animate="show" className="mx-auto max-w-4xl text-center">
+          <motion.div variants={rise}>
+            <Link
+              href="/mentors"
+              className="group inline-flex min-h-9 items-center gap-2 rounded-full border bg-background/80 px-3.5 py-1.5 text-xs shadow-soft backdrop-blur transition hover:border-foreground/25"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-violet-600" aria-hidden />
+              <span>New: GSoC & LFX mentor cohort — now accepting bookings</span>
+              <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" aria-hidden />
+            </Link>
+          </motion.div>
+          <motion.h1
+            variants={rise}
+            className="mt-7 font-display text-[2.75rem] font-semibold leading-[1.02] tracking-tight sm:text-6xl md:text-7xl lg:text-[5.5rem]"
           >
-            <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
-            <span>New: GSoC & LFX mentor cohort — now accepting bookings</span>
-            <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
-          </Link>
-          <h1 className="mt-6 font-display text-5xl font-semibold tracking-tight sm:text-6xl md:text-7xl">
             A direct line to the people you{" "}
-            <span className="brand-text">aspire to become.</span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted-foreground">
+            <span className="font-serif-accent brand-text">aspire to become.</span>
+          </motion.h1>
+          <motion.p variants={rise} className="mx-auto mt-7 max-w-2xl text-balance text-base text-muted-foreground sm:text-lg">
             Book 1:1 calls with GSoC mentors, LFX contributors, Google and Microsoft interns,
             founders, PMs, designers and senior engineers. No cold DMs, no gatekeepers.
-          </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          </motion.p>
+          <motion.div variants={rise} className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <Button asChild variant="brand" size="xl">
-              <Link href="/mentors">Browse mentors<ArrowRight className="h-4 w-4" /></Link>
+              <Link href="/mentors">Browse mentors<ArrowRight className="h-4 w-4" aria-hidden /></Link>
             </Button>
             <Button asChild variant="outline" size="xl">
               <Link href="/sign-up?role=MENTOR">Become a mentor</Link>
             </Button>
-          </div>
-          <p className="mt-8 text-center text-xs text-muted-foreground">Free during the beta. No credit card.</p>
+          </motion.div>
+          <motion.p variants={rise} className="mt-6 text-center text-xs text-muted-foreground">
+            Free during the beta. No credit card.
+          </motion.p>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 36 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mx-auto mt-16 max-w-5xl"
+          transition={{ duration: 0.7, delay: 0.35, ease }}
+          className="relative mx-auto mt-16 max-w-5xl md:mt-20"
         >
-          <div className="relative rounded-2xl border bg-background/40 p-2 shadow-soft backdrop-blur">
-            <div className="rounded-xl border bg-gradient-to-br from-background to-muted/30 p-6">
+          <div className="absolute -inset-x-6 -bottom-10 top-10 -z-10 rounded-[2rem] bg-gradient-to-b from-violet-500/10 to-transparent blur-2xl" aria-hidden />
+          <div className="hairline rounded-3xl border bg-background/60 p-2 shadow-[0_30px_80px_-30px_rgba(76,29,149,0.35)] backdrop-blur">
+            <div className="rounded-2xl border bg-gradient-to-br from-background to-muted/40 p-4 sm:p-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                {[
-                  { title: "Open Source", desc: "GSoC, LFX, CNCF mentors who've been in your seat." },
-                  { title: "Interview Prep", desc: "FAANG & startup interviews with people who ship." },
-                  { title: "Career Pivots", desc: "Switch stacks, roles, cities — with a plan." },
-                ].map((c) => (
-                  <div key={c.title} className="rounded-lg border bg-background p-4">
-                    <div className="flex items-baseline justify-between">
-                      <h3 className="font-medium">{c.title}</h3>
+                {cards.map((c, i) => (
+                  <motion.div
+                    key={c.title}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.55 + i * 0.09, ease }}
+                    className="lift hairline rounded-xl border bg-background p-5"
+                  >
+                    <div className="mb-3 flex items-center gap-2" aria-hidden>
+                      <span className="h-1.5 w-8 rounded-full brand-gradient" />
+                      <span className="h-1.5 w-3 rounded-full bg-muted" />
                     </div>
+                    <h2 className="font-medium">{c.title}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{c.desc}</p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>

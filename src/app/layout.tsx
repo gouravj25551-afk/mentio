@@ -26,6 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans">
+        <nav aria-label="Skip links">
+          <a href="#main-content" className="sr-only z-[100] rounded-md bg-background px-4 py-2 text-sm font-medium shadow-soft focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to content</a>
+        </nav>
         <Providers>{children}</Providers>
       </body>
     </html>

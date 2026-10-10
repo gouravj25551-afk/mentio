@@ -10,13 +10,13 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-40 w-full">
       <div className="glass border-b border-border/60">
         <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-6">
             <Logo />
-            <nav aria-label="Main" className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-              <Link href="/mentors" className="hover:text-foreground">Browse mentors</Link>
-              <Link href="/categories" className="hover:text-foreground">Categories</Link>
-              <Link href="/#how-it-works" className="hover:text-foreground">How it works</Link>
-              <Link href="/#faq" className="hover:text-foreground">FAQ</Link>
+            <nav aria-label="Main" className="hidden items-center gap-1 text-sm text-muted-foreground md:flex">
+              <Link href="/mentors" className="rounded-md px-3 py-2 transition-colors hover:bg-muted hover:text-foreground">Browse mentors</Link>
+              <Link href="/categories" className="rounded-md px-3 py-2 transition-colors hover:bg-muted hover:text-foreground">Categories</Link>
+              <Link href="/#how-it-works" className="rounded-md px-3 py-2 transition-colors hover:bg-muted hover:text-foreground">How it works</Link>
+              <Link href="/#faq" className="rounded-md px-3 py-2 transition-colors hover:bg-muted hover:text-foreground">FAQ</Link>
             </nav>
           </div>
           <div className="flex items-center gap-2">

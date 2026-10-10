@@ -1,21 +1,22 @@
 import Link from "next/link";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import type { Category } from "@prisma/client";
 
 export function Categories({ categories }: { categories: Category[] }) {
   return (
     <section className="container py-20">
-      <div className="flex items-end justify-between">
+      <Reveal className="flex items-end justify-between">
         <div>
           <div className="text-xs uppercase tracking-widest text-muted-foreground">Categories</div>
-          <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight md:text-4xl">Find your path.</h2>
+          <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight md:text-4xl">Find your <span className="font-serif-accent">path.</span></h2>
         </div>
-      </div>
-      <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      </Reveal>
+      <Stagger className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {categories.map((c) => (
+          <StaggerItem key={c.id}>
           <Link
-            key={c.id}
             href={`/mentors?category=${c.slug}`}
-            className="group relative overflow-hidden rounded-xl border bg-card p-5 transition hover:shadow-soft"
+            className="lift group relative block h-full overflow-hidden rounded-2xl border bg-card p-5"
           >
             <div
               aria-hidden
@@ -28,8 +29,9 @@ export function Categories({ categories }: { categories: Category[] }) {
               <div className="mt-1 line-clamp-2 text-xs text-muted-foreground">{c.description}</div>
             </div>
           </Link>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
     </section>
   );
 }

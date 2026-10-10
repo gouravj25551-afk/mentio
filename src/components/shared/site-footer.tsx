@@ -19,7 +19,7 @@ export function SiteFooter() {
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{col.title}</div>
             <ul className="mt-3 space-y-2 text-sm">
               {col.links.map(([label, href]) => (
-                <li key={label}><Link href={href} className="text-foreground/80 hover:text-foreground">{label}</Link></li>
+                <li key={label}><Link href={href} className="inline-flex min-h-9 items-center rounded-sm text-foreground/80 transition-colors hover:text-foreground">{label}</Link></li>
               ))}
             </ul>
           </div>
@@ -29,8 +29,8 @@ export function SiteFooter() {
         <div className="container flex flex-col items-start justify-between gap-2 py-6 text-xs text-muted-foreground md:flex-row md:items-center">
           <span>© {new Date().getFullYear()} Mentio. All rights reserved.</span>
           <div className="flex gap-4">
-            <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
-            <Link href="/terms" className="hover:text-foreground">Terms</Link>
+            <Link href="/privacy" className="inline-flex min-h-9 items-center hover:text-foreground">Privacy</Link>
+            <Link href="/terms" className="inline-flex min-h-9 items-center hover:text-foreground">Terms</Link>
           </div>
         </div>
       </div>

@@ -40,6 +40,7 @@ vi.mock("@/services/email", async () => {
   return {
     mailer: { send },
     sendEmailSafely: async (msg: { to: string; subject: string; text: string }) => {
+      if (testState.emailFails) return false;
       await send(msg);
       return true;
     },
@@ -51,6 +52,7 @@ beforeEach(async () => {
   const { testState } = await import("./helpers/state");
   testState.userId = null;
   testState.outbox.length = 0;
+  testState.emailFails = false;
   testState.headers = new Headers({ "x-forwarded-for": "203.0.113.10" });
 });
 

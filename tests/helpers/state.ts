@@ -5,6 +5,8 @@ export const testState = {
   /** Request headers returned by next/headers. */
   headers: new Headers({ "x-forwarded-for": "203.0.113.10" }),
   /** Every email the app tried to send. */
+  /** When true the mocked mailer reports a delivery failure. */
+  emailFails: false,
   outbox: [] as { to: string; subject: string; text: string }[],
 };
 

@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js **20+**
+- Node.js **20+** (CI runs 22)
 - PostgreSQL **14+** with the `btree_gist` extension (Neon, Supabase, RDS, Vercel Postgres and a stock Postgres install all have it)
 
 ## Local development
@@ -11,7 +11,7 @@
 npm install
 cp .env.example .env     # then fill in DATABASE_URL and AUTH_SECRET
 npx prisma migrate deploy   # applies prisma/migrations
-npm run db:seed             # dev-only demo data (see below)
+npm run db:taxonomy        # categories and skills (no users or mentors)
 npm run dev
 ```
 

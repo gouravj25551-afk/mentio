@@ -12,10 +12,11 @@ A Next.js application with real auth, a real database, a transactional booking e
 - **Auth** — NextAuth v5 (email + password with email verification, optional Google), bcrypt, forgot/reset flow with hashed single-use tokens, no user enumeration, database-backed rate limits.
 - **Booking engine** — mentor-timezone availability → generated slots → transactional, double-booking-proof booking (advisory locks plus a database exclusion constraint) → cancel / reschedule / complete / review.
 - **Free beta, honestly** — no payment provider exists, so every session is free and paid bookings are impossible rather than faked. See [`docs/PRODUCTION.md`](docs/PRODUCTION.md).
-- **Meeting links** — an unguessable Jitsi room per booking, or the mentor's own validated link. Mentio does not create events in Cal.com or Calendly.
+- **Meeting links** — an unguessable Jitsi room per booking, or the mentor's own validated link. Mentors can switch scheduling to Cal.com or Calendly (`schedulingMode`); busy times imported by verified webhooks hide matching slots. Mentio itself does not create events in those tools.
 - **Notifications + email** — persisted notifications plus Resend email (required in production; console in development).
 - **Admin dashboard** — mentor approval queue (complete profiles only), moderation, users, bookings, analytics.
-- **Tests** — 128 unit/integration tests against a real Postgres and a 33-check browser smoke test.
+- **Tests** — integration tests against a real Postgres (`npm test`) and a browser smoke test (`npm run test:e2e`).
+- **Operations** — `GET /api/health` (liveness) and `GET /api/ready` (database check) return only `{"status": ...}`. Logs are structured and never contain emails, tokens or error messages (`src/lib/log.ts`).
 
 ---
 
@@ -38,6 +39,7 @@ There are no demo accounts or seeded mentors. Create the admin with `npm run adm
 ## Docs
 
 - [`docs/SETUP.md`](docs/SETUP.md) — local setup and environment
+- [`docs/OWNER_DECISIONS.md`](docs/OWNER_DECISIONS.md) — open decisions only the owner can make
 - [`docs/PRODUCTION.md`](docs/PRODUCTION.md) — production checklist, migrations, rollback, QA, known issues
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — layering, directory structure, where to put what
 - [`docs/DATABASE.md`](docs/DATABASE.md) — schema, indexes, invariants, payments-ready contract
@@ -50,7 +52,7 @@ There are no demo accounts or seeded mentors. Create the admin with `npm run adm
 - `npm run dev` — Next.js in dev
 - `npm run build` — production build (runs `prisma generate` first)
 - `npm run start` — serve the built app
-- `npm run lint` — ESLint
+- `npm run lint` — ESLint (flat config in `eslint.config.mjs`)
 - `npm run typecheck` — strict TypeScript
 - `npm run db:migrate` — create and apply a migration (development)
 - `npm run db:taxonomy` — idempotently load categories and skills (no users or mentors)

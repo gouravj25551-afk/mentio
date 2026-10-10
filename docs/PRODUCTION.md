@@ -81,7 +81,9 @@ What works for meetings: each booking gets an unguessable Jitsi room, or the men
 9. After the session time, the mentor marks it completed; the student can then leave exactly one review.
 10. Visit `/dashboard/admin` as a student and call `/api/admin/mentors/x/moderate`: redirected / 403.
 11. `curl -I` the site: security headers present. Check `/robots.txt` and `/sitemap.xml`.
-12. Google sign-in (if enabled), including an existing password account using the same email (it must refuse to merge).
+12. Suspend a mentor with an upcoming booking: the moderation toast warns about it, the booking is still CONFIRMED, and it is listed under "Needs attention" for admins.
+13. `GET /api/health` and `GET /api/ready` both return `{"status":"ok"}`; they must not show any other field.
+14. Google sign-in (if enabled), including an existing password account using the same email (it must refuse to merge).
 
 ## 6. Rate limiting on serverless
 
@@ -89,13 +91,21 @@ Counters live in Postgres (`RateLimitBucket`) and are updated with one atomic up
 
 ## 7. Remaining known issues
 
-* **Legal pages:** there is no Privacy Policy or Terms of Service. Required before collecting real users' data.
+* **Legal pages:** `/privacy` and `/terms` exist but the copy has not been reviewed by the owner or a lawyer, and they point to a "support address listed on the site" that does not exist yet. See `docs/OWNER_DECISIONS.md`.
 * **No script CSP.** Security headers cover framing, sniffing, referrer and HSTS, but a strict `script-src` needs nonce plumbing with Next.js.
-* **Dependencies:** `npm audit --omit=dev` still reports 7 findings, all in build-time tooling (Tailwind 3's `braces`/`micromatch`/`fast-glob`/`chokidar`, and PostCSS bundled in Next). They process this repo's own CSS at build time. Fixing them needs Tailwind 4 / Next 16.
-* **Suspended or rejected mentors keep their existing future bookings.** They only stop receiving new ones.
+* **Dependencies:** see `docs/SECURITY-DEPENDENCIES.md` for the current `npm audit --omit=dev` result and the plan for the findings that need Tailwind 4 / Next 16.
+* **Suspended or rejected mentors keep their existing future bookings.** They only stop receiving new ones. Nothing is cancelled automatically (no cancellation or refund policy has been decided). Admins see these under "Needs attention" on the overview and Bookings pages and can cancel each one deliberately, which notifies both people. The student is not told anything until an admin acts.
 * **No reminder emails or background jobs.** Bookings are not auto-completed; the mentor marks them.
 * **JWT sessions can't be revoked individually** (up to 7 days). Role and existence are re-checked against the database on every authorization, so demotion and deletion take effect immediately, but a password reset does not log out other devices.
 * **Google sign-in cannot link to an existing password account** (deliberately, to prevent account takeover).
 * **Student-facing times on the dashboard use the timezone saved on the profile** (default UTC), not the browser's. Prompt new users to set it.
 * **Free-text fields** (bio, topic, notes) are rendered as text by React, not HTML, but are not moderated or length-limited beyond the schema.
 * Build prints a harmless Edge-runtime warning from `jose` (bundled by next-auth); it is never executed there.
+
+## 8. Logging and error handling
+
+* Server logs are single-line JSON from `src/lib/log.ts`. Only an allowlist of fields (ids, status, codes, counts) and the error's class name and code are written. Error messages are dropped because database and mail errors can echo emails, tokens or query values. Do not add `console.log` of request bodies, emails or tokens.
+* `apiCatch` returns a generic 500 for anything unexpected and logs `api.unhandled`.
+* Notifications are best effort after a change is committed: a notification or email failure is logged as `notification.failed` and never turns a saved booking into an error.
+* UI errors show a reference (the Next.js digest) and recovery buttons, never a stack trace. Boundaries: `src/app/error.tsx`, `src/app/dashboard/error.tsx`, `src/app/global-error.tsx`.
+* Monitor `GET /api/ready` (503 `degraded` means the database is unreachable). `GET /api/health` only proves the process is up.

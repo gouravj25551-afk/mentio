@@ -8,6 +8,7 @@
 // If the check itself fails (DB down, table missing) it THROWS: callers must
 // treat that as "limited" rather than silently allowing unlimited attempts.
 import { db } from "@/lib/db";
+import { logEvent } from "@/lib/log";
 
 export type LimitResult = { ok: boolean; remaining: number; reset: number };
 
@@ -64,13 +65,23 @@ export function clientIp(headers: Headers): string {
   return fwd || headers.get("x-real-ip") || "unknown";
 }
 
-/** Run several limiters; returns true only if all allow the request. Fails closed. */
-export async function allowed(checks: Promise<LimitResult>[]): Promise<boolean> {
+export type LimitStatus = "ok" | "limited" | "unavailable";
+
+/**
+ * Run several limiters. "unavailable" means the limiter itself failed (database
+ * down, table missing); callers must still deny, but can say so honestly.
+ */
+export async function checkLimits(checks: Promise<LimitResult>[]): Promise<LimitStatus> {
   try {
     const results = await Promise.all(checks);
-    return results.every((r) => r.ok);
+    return results.every((r) => r.ok) ? "ok" : "limited";
   } catch (err) {
-    console.error("rate limiter unavailable, denying request", err instanceof Error ? err.message : err);
-    return false;
+    logEvent("rate-limit", "limiter_unavailable", { error: err instanceof Error ? err : "unknown" });
+    return "unavailable";
   }
+}
+
+/** True only if all limiters allow the request. Fails closed. */
+export async function allowed(checks: Promise<LimitResult>[]): Promise<boolean> {
+  return (await checkLimits(checks)) === "ok";
 }

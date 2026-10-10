@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 // Baseline categories and skills. Idempotent and safe to run in production:
 // it only upserts taxonomy rows and never creates users, bookings or reviews.
 import { PrismaClient } from "@prisma/client";

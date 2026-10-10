@@ -162,7 +162,7 @@ describe("payments (free beta)", () => {
     const { mentorProfileSchema } = await import("@/lib/validators");
     const base = {
       headline: "Senior engineer and mentor", bio: "x".repeat(50), experience: "y".repeat(30),
-      categoryIds: ["c1"], timezone: "UTC",
+      categoryIds: ["c1"], timezone: "UTC", verificationUrl: "https://www.linkedin.com/in/example",
     };
     expect(mentorProfileSchema.safeParse({ ...base, rateCents: 0 }).success).toBe(true);
     expect(mentorProfileSchema.safeParse({ ...base, rateCents: 5000 }).success).toBe(false);

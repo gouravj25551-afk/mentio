@@ -1,6 +1,7 @@
 // Mailer abstraction. Production requires Resend (enforced in src/lib/env.ts);
 // development and tests log to the console.
 import { env, isResendEnabled } from "@/lib/env";
+import { logEvent } from "@/lib/log";
 
 export interface MailMessage {
   to: string;
@@ -16,6 +17,8 @@ export interface Mailer {
 class ConsoleMailer implements Mailer {
   async send(msg: MailMessage) {
     // Development only: prints links (including one-time tokens) so flows can be tested locally.
+    // Refuse in production so a missing key can never write tokens into the logs.
+    if (process.env.NODE_ENV === "production") throw new Error("No email provider configured");
     console.log(`[email] to=${msg.to} subject="${msg.subject}"\n${msg.text}`);
     return { id: `console-${Date.now()}` };
   }
@@ -53,7 +56,7 @@ export async function sendEmailSafely(msg: MailMessage): Promise<boolean> {
     await mailer.send(msg);
     return true;
   } catch (err) {
-    console.error("email delivery failed:", err instanceof Error ? err.message : err);
+    logEvent("email", "delivery_failed", { error: err instanceof Error ? err : "unknown" });
     return false;
   }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import NextAuth from "next-auth";
 
 import { authConfig } from "@/auth.config";
+import { waitlistMode } from "@/lib/waitlist";
 
 // Edge-safe: this only decodes the JWT. It is a first line of defence for
 // "are you signed in" and CSRF; every page, route handler and server action
@@ -38,6 +39,24 @@ export default auth((req) => {
   const { nextUrl } = req;
   const path = nextUrl.pathname;
   const signedIn = Boolean(req.auth?.user);
+
+  if (waitlistMode && req.auth?.user?.role !== "ADMIN") {
+    const available = new Set([
+      "/waitlist", "/sign-in", "/sign-up", "/verify-email",
+      "/forgot-password", "/reset-password", "/privacy", "/terms",
+    ]);
+
+    const publicApi = path === "/api/auth" || path.startsWith("/api/auth/") || path === "/api/health" || path === "/api/ready";
+    if (path.startsWith("/api/") && !publicApi) {
+      return NextResponse.json({ error: "Mentio is launching soon." }, { status: 503 });
+    }
+    if (!path.startsWith("/api/") && !available.has(path)) {
+      return NextResponse.redirect(new URL("/waitlist", nextUrl));
+    }
+    if (signedIn && (path === "/sign-in" || path === "/sign-up")) {
+      return NextResponse.redirect(new URL("/waitlist", nextUrl));
+    }
+  }
 
   if (path.startsWith("/api/") && !path.startsWith("/api/auth") && MUTATING.has(req.method) && isCrossSiteWrite(req)) {
     return NextResponse.json({ error: "Cross-site request blocked." }, { status: 403 });

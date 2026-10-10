@@ -23,10 +23,10 @@ export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { default
 
   if (state?.ok) {
     return (
-      <div role="status" className="rounded-lg border bg-muted/40 p-6 text-sm">
-        <div className="font-medium">Check your email</div>
+      <div role="status" className="rounded-2xl border border-violet-200 bg-violet-50/70 p-6 text-sm">
+        <div className="font-display text-xl font-semibold">Launching soon</div>
         <p className="mt-1 text-muted-foreground">{state.message}</p>
-        <Link href="/sign-in" className="mt-4 inline-block underline underline-offset-4">Go to sign in</Link>
+        <Link href="/waitlist" className="mt-4 inline-block font-medium text-violet-700 underline underline-offset-4">See the waitlist page</Link>
       </div>
     );
   }
@@ -61,7 +61,7 @@ export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { default
           >
             <div className="font-medium">{r === "STUDENT" ? "I'm learning" : "I'm mentoring"}</div>
             <div className="text-xs text-muted-foreground">
-              {r === "STUDENT" ? "Book calls, grow fast" : "Share your journey, get discovered"}
+              {r === "STUDENT" ? "Be first to meet mentors" : "Be first to mentor others"}
             </div>
           </button>
         ))}
@@ -92,7 +92,7 @@ function Submit() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" variant="brand" size="lg" className="w-full" disabled={pending}>
-      {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Create account
+      {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Join the waitlist
     </Button>
   );
 }

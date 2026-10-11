@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -53,6 +54,8 @@ export function DashboardShell({
 }) {
   const path = usePathname();
   const items = user.role === "ADMIN" ? adminNav : user.role === "MENTOR" ? mentorNav : studentNav;
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const navigating = pendingHref !== null && pendingHref !== path;
 
   return (
     <div className="flex min-h-screen bg-muted/20">
@@ -70,6 +73,7 @@ export function DashboardShell({
               <Link
                 key={it.href}
                 href={it.href}
+                onNavigate={() => setPendingHref(it.href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "group flex min-h-11 items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
@@ -104,6 +108,11 @@ export function DashboardShell({
             <UserMenu user={user} />
           </div>
         </header>
+        {navigating ? (
+          <div role="status" aria-live="polite" className="border-b border-violet-200 bg-violet-50 px-5 py-2 text-sm text-violet-900 md:px-10">
+            Loading {items.find((item) => item.href === pendingHref)?.label ?? "page"}…
+          </div>
+        ) : null}
         <nav aria-label="Dashboard sections" className="flex gap-1 overflow-x-auto border-b bg-background px-3 py-2 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
           {items.map((it) => {
             const active = path === it.href || path.startsWith(`${it.href}/`);
@@ -111,6 +120,7 @@ export function DashboardShell({
               <Link
                 key={it.href}
                 href={it.href}
+                onNavigate={() => setPendingHref(it.href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-colors",

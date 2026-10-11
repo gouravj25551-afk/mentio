@@ -19,7 +19,13 @@ const EMPTY_COPY = {
 async function Section({ status }: { status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED" }) {
   const rows = await db.mentorProfile.findMany({
     where: { status },
-    include: { user: { select: { id: true, name: true, image: true } }, categories: { include: { category: true } } },
+    // Select only what this list renders. A full model selection also reads
+    // schedulingMode, which older production schemas do not have yet.
+    select: {
+      id: true, slug: true, headline: true, verificationUrl: true, featured: true,
+      user: { select: { id: true, name: true, image: true } },
+      categories: { include: { category: true } },
+    },
     orderBy: { createdAt: "desc" },
     take: 50,
   });

@@ -66,8 +66,8 @@ export async function signInWithPassword(_prev: unknown, formData: FormData): Pr
  * Creates an account and emails a verification link.
  *
  * The response is identical whether or not the email is already registered, so
- * this form cannot be used to discover who has an account. (A duplicate gets a
- * "you already have an account" email instead.)
+ * this form cannot be used to discover who has an account. An unverified
+ * duplicate gets a fresh verification link, subject to resend limits.
  */
 export async function signUpAction(_prev: unknown, formData: FormData): Promise<ActionResult> {
   const parsed = signUpSchema.safeParse({
@@ -85,15 +85,21 @@ export async function signUpAction(_prev: unknown, formData: FormData): Promise<
   const generic: ActionResult = {
     ok: true,
     message: waitlistMode
-      ? "If this is a new email, check your inbox to verify it and confirm your place on the Mentio waitlist."
+      ? "Thanks for joining Mentio. We're launching soon! If this email needs verification, check your inbox for a link to confirm your place on the waitlist."
       : "Check your email for a link to verify your account.",
   };
 
   // Hash before branching so existing and new addresses take the same time.
   const passwordHash = await hashPassword(parsed.data.password);
 
-  const existing = await db.user.findUnique({ where: { email }, select: { id: true } });
+  const existing = await db.user.findUnique({ where: { email }, select: { id: true, emailVerified: true } });
   if (existing) {
+    if (!existing.emailVerified) {
+      // Reuse the public resend flow so duplicate signups cannot bypass its
+      // per-address and per-IP limits. Keep the same response for every email.
+      await resendVerificationAction(null, formData);
+      return generic;
+    }
     const sent = await sendEmailSafely({
       to: email,
       subject: "You already have a Mentio account",

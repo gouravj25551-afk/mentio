@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays, LockKeyhole, Sparkles, Users } from "lucide-react";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 import { Logo } from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/features/auth/actions";
 import { auth } from "@/lib/auth";
 import { waitlistMode } from "@/lib/waitlist";
+import { readWaitlistConfirmation, WAITLIST_CONFIRMATION_COOKIE } from "@/lib/waitlist-confirmation";
 
 export const metadata = {
   title: "Join the waitlist",
@@ -17,7 +19,8 @@ export default async function WaitlistPage() {
   if (!waitlistMode) redirect("/sign-up");
 
   const session = await auth();
-  const joined = Boolean(session?.user);
+  const confirmedEmail = readWaitlistConfirmation((await cookies()).get(WAITLIST_CONFIRMATION_COOKIE)?.value);
+  const joined = Boolean(session?.user || confirmedEmail);
   const firstName = session?.user?.name?.trim().split(/\s+/)[0];
 
   if (joined) return (
@@ -26,7 +29,7 @@ export default async function WaitlistPage() {
       <div className="pointer-events-none absolute inset-0 opacity-[0.12] grid-bg" aria-hidden />
       <div className="launch-orbit pointer-events-none absolute left-1/2 top-[43%] h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-violet-200/15" aria-hidden />
       <div className="launch-orbit-reverse pointer-events-none absolute left-1/2 top-[43%] h-[23rem] w-[23rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/15" aria-hidden />
-      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-7 sm:px-10"><Logo href="/waitlist" className="text-white" /><form action={signOutAction}><button type="submit" className="text-sm text-white/65 transition hover:text-white">Sign out</button></form></header>
+      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-7 sm:px-10"><Logo href="/waitlist" className="text-white" />{session?.user ? <form action={signOutAction}><button type="submit" className="text-sm text-white/65 transition hover:text-white">Sign out</button></form> : <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">Mentio early access</span>}</header>
       <section className="relative z-10 mx-auto flex min-h-[calc(100vh-150px)] max-w-7xl flex-col items-center justify-center px-6 pb-24 pt-12 text-center">
         <div className="launch-reveal mb-8 inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-200/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-300" /> Your spot is confirmed</div>
         <p className="launch-reveal text-sm font-medium uppercase tracking-[0.45em] text-violet-200/75" style={{ animationDelay: "100ms" }}>Thank you{firstName ? `, ${firstName}` : ""}</p>

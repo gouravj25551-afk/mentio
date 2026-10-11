@@ -13,11 +13,8 @@ export default async function SignUpPage({ searchParams }: { searchParams: Promi
     <>
       <div>
         <h1 className="font-display text-3xl font-semibold tracking-tight">Join the Mentio waitlist</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{waitlistMode ? "Verify your email here, create your account, and claim your spot before launch." : "Create your Mentio account."}</p>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Already have one?{" "}
-          <Link href="/sign-in" className="font-medium underline-offset-4 hover:underline">Sign in</Link>
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">{waitlistMode ? "Add your email, verify the code right here, and you’re on the list." : "Create your Mentio account."}</p>
+        {!waitlistMode ? <p className="mt-3 text-sm text-muted-foreground">Already have an account?{" "}<Link href="/sign-in" className="font-medium underline-offset-4 hover:underline">Sign in</Link></p> : null}
       </div>
       <div className="mt-8">
         {waitlistMode ? <WaitlistSignupFlow defaultRole={defaultRole} /> : <SignUpForm defaultRole={defaultRole} googleEnabled={isGoogleOAuthEnabled} />}

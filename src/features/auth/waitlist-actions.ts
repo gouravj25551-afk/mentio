@@ -1,20 +1,17 @@
 "use server";
 
-import { headers } from "next/headers";
-import { AuthError } from "next-auth";
-import { Prisma, Role } from "@prisma/client";
+import { headers, cookies } from "next/headers";
+import { Prisma } from "@prisma/client";
 
-import { signIn } from "@/lib/auth";
-import { hashPassword } from "@/lib/auth/password";
 import { db } from "@/lib/db";
 import { checkLimits, clientIp, limiters, type LimitResult } from "@/lib/rate-limit";
 import { generateSignupCode, hashSignupCode } from "@/lib/signup-code";
-import { generateToken, hashToken } from "@/lib/tokens";
-import { emailSchema, signUpSchema } from "@/lib/validators";
+import { emailSchema } from "@/lib/validators";
+import { createWaitlistConfirmation, WAITLIST_CONFIRMATION_COOKIE } from "@/lib/waitlist-confirmation";
 import { waitlistMode } from "@/lib/waitlist";
 import { sendEmailSafely } from "@/services/email";
 
-type Result = { ok: true; grant?: string; signedIn?: boolean } | { ok: false; error: string };
+type Result = { ok: true } | { ok: false; error: string };
 const invalid = "That code is incorrect or expired. Request a new code and try again.";
 
 async function gate(checks: Promise<LimitResult>[]): Promise<Result | null> {
@@ -42,7 +39,7 @@ export async function requestWaitlistCode(emailInput: string): Promise<Result> {
   const sent = await sendEmailSafely({
     to: email,
     subject: "Your Mentio verification code",
-    text: `Your Mentio verification code is ${code}.\n\nEnter it on the signup page. It expires in 10 minutes. If you didn't request this, ignore this email.`,
+    text: `Your Mentio verification code is ${code}.\n\nEnter it on the waitlist page. It expires in 10 minutes. If you didn't request this, ignore this email.`,
   });
   if (!sent) {
     await db.verificationToken.deleteMany({ where: { token } });
@@ -51,58 +48,33 @@ export async function requestWaitlistCode(emailInput: string): Promise<Result> {
   return { ok: true };
 }
 
-export async function verifyWaitlistCode(emailInput: string, codeInput: string): Promise<Result> {
+export async function verifyWaitlistCode(emailInput: string, codeInput: string, roleInput: string): Promise<Result> {
   if (!waitlistMode) return { ok: false, error: "Waitlist signup is closed." };
   const parsed = emailSchema.safeParse(emailInput);
   if (!parsed.success || !/^\d{6}$/.test(codeInput)) return { ok: false, error: invalid };
+  if (roleInput !== "STUDENT" && roleInput !== "MENTOR") return { ok: false, error: "Choose how you want to join." };
   const email = parsed.data;
   const blocked = await gate([limiters.signupCodeVerify.check(email), limiters.signupCodeVerifyIp.check(await requestIp())]);
   if (blocked) return blocked;
   const token = hashSignupCode(email, codeInput);
-  const grant = generateToken();
   const claimed = await db.$transaction(async (tx) => {
     const consumed = await tx.verificationToken.deleteMany({ where: { identifier: `signup-code:${email}`, token, userId: null, expires: { gt: new Date() } } });
     if (consumed.count !== 1) return false;
-    await tx.verificationToken.deleteMany({ where: { identifier: `signup-grant:${email}` } });
-    await tx.verificationToken.create({ data: { identifier: `signup-grant:${email}`, token: grant.hash, expires: new Date(Date.now() + 15 * 60_000) } });
+    const existing = await tx.user.findUnique({ where: { email }, select: { id: true, emailVerified: true } });
+    if (existing) {
+      if (!existing.emailVerified) await tx.user.update({ where: { id: existing.id }, data: { emailVerified: new Date() } });
+    } else {
+      await tx.user.create({ data: { email, role: roleInput, emailVerified: new Date() } });
+    }
     return true;
+  }).catch((error: unknown) => {
+    // The transaction rolls back code consumption after a unique-email race.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") return false;
+    throw error;
   });
   if (!claimed) return { ok: false, error: invalid };
-  return { ok: true, grant: grant.token };
-}
-
-export async function completeWaitlistSignup(input: { email: string; name: string; role: string; password: string; grant: string }): Promise<Result> {
-  if (!waitlistMode) return { ok: false, error: "Waitlist signup is closed." };
-  const parsed = signUpSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Check your details and try again." };
-  if (!/^[A-Za-z0-9_-]{40,60}$/.test(input.grant)) return { ok: false, error: "Verification expired. Request a new code." };
-  const { email, name, role, password } = parsed.data;
-  const blocked = await gate([limiters.signUp.check(await requestIp())]);
-  if (blocked) return blocked;
-  const passwordHash = await hashPassword(password);
-  const done = await db.$transaction(async (tx) => {
-    const claimed = await tx.verificationToken.deleteMany({ where: { identifier: `signup-grant:${email}`, token: hashToken(input.grant), userId: null, expires: { gt: new Date() } } });
-    if (claimed.count !== 1) return "expired";
-    const existing = await tx.user.findUnique({ where: { email }, select: { id: true, emailVerified: true, role: true } });
-    if (existing?.emailVerified || existing?.role === "ADMIN") return "existing";
-    if (existing) {
-      await tx.user.update({ where: { id: existing.id }, data: { name, role: role as Role, passwordHash, emailVerified: new Date() } });
-      await tx.verificationToken.deleteMany({ where: { identifier: email, userId: existing.id } });
-    } else {
-      await tx.user.create({ data: { email, name, role: role as Role, passwordHash, emailVerified: new Date() } });
-    }
-    return "created";
-  }).catch((error: unknown) => {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") return "existing" as const;
-    throw error;
+  (await cookies()).set(WAITLIST_CONFIRMATION_COOKIE, createWaitlistConfirmation(email), {
+    httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/waitlist", maxAge: 7 * 24 * 60 * 60,
   });
-  if (done === "expired") return { ok: false, error: "Verification expired. Request a new code." };
-  if (done === "existing") return { ok: false, error: "This email already has an account. Please sign in instead." };
-  try {
-    await signIn("credentials", { email, password, redirect: false });
-    return { ok: true, signedIn: true };
-  } catch (error) {
-    if (error instanceof AuthError) return { ok: true, signedIn: false };
-    throw error;
-  }
+  return { ok: true };
 }

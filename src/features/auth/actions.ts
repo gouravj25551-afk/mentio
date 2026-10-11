@@ -70,6 +70,7 @@ export async function signInWithPassword(_prev: unknown, formData: FormData): Pr
  * duplicate gets a fresh verification link, subject to resend limits.
  */
 export async function signUpAction(_prev: unknown, formData: FormData): Promise<ActionResult> {
+  if (waitlistMode) return { ok: false, error: "Use the email-code waitlist signup flow." };
   const parsed = signUpSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),

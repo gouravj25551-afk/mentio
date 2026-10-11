@@ -20,6 +20,31 @@ export default async function WaitlistPage() {
   const joined = Boolean(session?.user);
   const firstName = session?.user?.name?.trim().split(/\s+/)[0];
 
+  if (joined) return (
+    <main className="launch-scene relative isolate min-h-screen overflow-hidden bg-[#070916] text-white">
+      <div className="launch-halo pointer-events-none absolute left-1/2 top-[36%] h-[46rem] w-[46rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-500/20 blur-[110px]" aria-hidden />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.12] grid-bg" aria-hidden />
+      <div className="launch-orbit pointer-events-none absolute left-1/2 top-[43%] h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-violet-200/15" aria-hidden />
+      <div className="launch-orbit-reverse pointer-events-none absolute left-1/2 top-[43%] h-[23rem] w-[23rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/15" aria-hidden />
+      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-7 sm:px-10"><Logo href="/waitlist" className="text-white" /><form action={signOutAction}><button type="submit" className="text-sm text-white/65 transition hover:text-white">Sign out</button></form></header>
+      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-150px)] max-w-7xl flex-col items-center justify-center px-6 pb-24 pt-12 text-center">
+        <div className="launch-reveal mb-8 inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-200/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-300" /> Your spot is confirmed</div>
+        <p className="launch-reveal text-sm font-medium uppercase tracking-[0.45em] text-violet-200/75" style={{ animationDelay: "100ms" }}>Thank you{firstName ? `, ${firstName}` : ""}</p>
+        <h1 className="launch-reveal mt-5 max-w-5xl font-display text-[clamp(4.2rem,11vw,10rem)] font-bold leading-[0.88] tracking-[-0.09em]" style={{ animationDelay: "180ms" }}>Launching <span className="launch-gradient block pb-4">soon.</span></h1>
+        <p className="launch-reveal mx-auto mt-5 max-w-2xl text-lg leading-8 text-white/65 sm:text-xl" style={{ animationDelay: "260ms" }}>Your email is verified. You’re on the Mentio waitlist, and we’ll email you when the doors open. No more steps today.</p>
+        <div className="launch-reveal mt-10 h-px w-40 bg-gradient-to-r from-transparent via-violet-300/80 to-transparent" style={{ animationDelay: "340ms" }} />
+        <p className="launch-reveal mt-8 max-w-xl text-base leading-7 text-white/75" style={{ animationDelay: "400ms" }}>Mentio brings you closer to people who’ve been where you want to go. Find the right mentor, have a focused 1:1 conversation, and turn a question into your next move.</p>
+        <div className="launch-reveal mt-12 grid w-full max-w-4xl gap-3 text-left sm:grid-cols-3" style={{ animationDelay: "480ms" }}>
+          <div className="launch-card rounded-3xl border border-white/15 bg-white/[0.05] p-6 backdrop-blur-xl"><Users className="h-6 w-6 text-violet-300" /><h2 className="mt-7 font-display text-lg font-semibold">People, not profiles.</h2><p className="mt-2 text-sm leading-6 text-white/55">Learn from real experience and the stories behind it.</p></div>
+          <div className="launch-card rounded-3xl border border-white/15 bg-white/[0.05] p-6 backdrop-blur-xl"><CalendarDays className="h-6 w-6 text-cyan-300" /><h2 className="mt-7 font-display text-lg font-semibold">A conversation that counts.</h2><p className="mt-2 text-sm leading-6 text-white/55">Focused time to ask the questions that matter most.</p></div>
+          <div className="launch-card rounded-3xl border border-white/15 bg-white/[0.05] p-6 backdrop-blur-xl"><Sparkles className="h-6 w-6 text-pink-300" /><h2 className="mt-7 font-display text-lg font-semibold">Your next move starts here.</h2><p className="mt-2 text-sm leading-6 text-white/55">Leave with clarity, confidence, and a way forward.</p></div>
+        </div>
+        <p className="mt-10 text-xs uppercase tracking-[0.24em] text-white/35">The future of mentorship is warming up</p>
+      </section>
+      <footer className="relative z-10 mx-auto flex max-w-7xl items-center justify-between gap-3 border-t border-white/10 px-6 py-6 text-xs text-white/40 sm:px-10"><span>© {new Date().getFullYear()} Mentio</span><div className="flex gap-5"><Link href="/privacy" className="hover:text-white">Privacy</Link><Link href="/terms" className="hover:text-white">Terms</Link></div></footer>
+    </main>
+  );
+
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#09091b] text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(111,66,231,0.28),transparent_37%),radial-gradient(circle_at_80%_80%,rgba(27,173,194,0.14),transparent_35%)]" aria-hidden />

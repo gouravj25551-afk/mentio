@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes launch-appear { from { opacity: 0; transform: translateY(24px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes launch-breathe { 50% { opacity: .65; transform: translate(-50%, -50%) scale(1.12); } }
+@keyframes launch-turn { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.launch-reveal { animation: launch-appear .85s both cubic-bezier(.2,.8,.2,1); }
+.launch-halo { animation: launch-breathe 8s ease-in-out infinite; }
+.launch-orbit { animation: launch-turn 50s linear infinite; }
+.launch-orbit-reverse { animation: launch-turn 65s linear infinite reverse; }
+.launch-gradient { background: linear-gradient(105deg,#ffffff 5%,#c2a8ff 37%,#72d9f0 68%,#e7c9ff 92%); background-clip: text; color: transparent; }
+.launch-card { transition: transform .3s ease, background-color .3s ease, border-color .3s ease; }
+.launch-card:hover { transform: translateY(-6px); background-color: rgb(255 255 255 / .09); border-color: rgb(196 181 253 / .4); }
+@media (prefers-reduced-motion: reduce) { .launch-reveal, .launch-halo, .launch-orbit, .launch-orbit-reverse { animation: none !important; } .launch-card { transition: none; } }
+
 @layer base {
   :root {
     --background: 0 0% 100%;

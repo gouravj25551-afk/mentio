@@ -4,14 +4,19 @@
 - [ ] Production Supabase project created; pooled and direct URLs copied.
 - [ ] Resend domain verified; API key created.
 - [ ] Vercel env set: `DATABASE_URL` (pooled), `AUTH_SECRET`, `NEXT_PUBLIC_APP_URL` (https), `EMAIL_FROM`, `RESEND_API_KEY`.
-- [ ] `npx prisma migrate deploy` run against production. **Blocked until the duplicate init migration is resolved, see `docs/OWNER_DECISIONS.md`.**
+- [ ] Take and restore-test a production database backup. Supabase showed no backups on 2026-10-12.
+- [ ] Reconcile the live schema with the migration history on a copy, baseline applied migrations, then deploy missing ones. Production currently has no `_prisma_migrations` table and is partially upgraded; see `docs/OWNER_DECISIONS.md`.
 - [ ] `npm run db:taxonomy` run against production.
 - [ ] `npm run admin:bootstrap` run once; admin can sign in.
 - [ ] CI green on the PR (typecheck, lint, tests, build).
+- [ ] Vercel preview deployment succeeds for the reviewed commit; CI success alone does not prove Vercel Git access.
+- [ ] Tell email-only waitlist members to use the existing password-reset flow to set their first password at launch; test that journey in the live environment before sending invitations.
 - [ ] `/privacy` and `/terms` exist, but the owner must review the wording and publish the support address they refer to (`docs/OWNER_DECISIONS.md`).
 - [ ] `GET /api/ready` returns `{"status":"ok"}` on the live URL.
 
 **Smoke test on the live URL**
+- [ ] While `WAITLIST_MODE=true`: request an email code, enter it on the same signup page, reach the launching-soon page, and verify a replayed or expired code cannot join.
+- [ ] Keep the launch gate on until the account-claim path, schema, policies, and payment work are approved.
 - [ ] Student signs up, signs in, signs out.
 - [ ] Forgot password: email arrives, link opens `/reset-password` on the real domain, new password works.
 - [ ] Mentor signs up: status is PENDING, not on `/mentors`, `/mentors/<slug>` is 404, not in `/sitemap.xml`.

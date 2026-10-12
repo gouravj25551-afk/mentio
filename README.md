@@ -25,12 +25,16 @@ A Next.js application with real auth, a real database, a transactional booking e
 ```bash
 npm install
 cp .env.example .env        # set DATABASE_URL and AUTH_SECRET (openssl rand -base64 32)
-npx prisma migrate deploy   # needs Postgres with btree_gist
+npx prisma migrate status   # inspect only; migration history needs reconciliation
 npm run db:taxonomy         # idempotently load public categories and skills
 npm run dev
 ```
 
 Open <http://localhost:3000>. In development, emails (verification and reset links) are printed to the server console.
+
+The repository currently has duplicate initial migrations, so `migrate deploy` is blocked even on a fresh database. See [the production migration stop sign](docs/PRODUCTION.md#2-database-migrations-historical-reference-blocked-until-reconciled) before setting up or changing any database.
+
+The prelaunch waitlist is enabled by default. Visitors see `/waitlist` with a blurred preview, sign up and verify their email, then return to their waitlist status when signed in. The rest of the app and its API are closed to non-admin users. Set `WAITLIST_MODE=false` and redeploy when the product launches.
 
 There are no demo accounts or seeded mentors. Create the admin with `npm run admin:bootstrap` and add real mentors through the normal sign-up/onboarding and admin approval flow.
 

@@ -11,11 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { signInWithGoogle, signUpAction } from "@/features/auth/actions";
+import { resendVerificationAction, signInWithGoogle, signUpAction } from "@/features/auth/actions";
 
 export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { defaultRole?: "STUDENT" | "MENTOR"; googleEnabled: boolean }) {
   const [state, action] = useActionState(signUpAction, null);
+  const [resent, resend] = useActionState(resendVerificationAction, null);
   const [role, setRole] = useState<"STUDENT" | "MENTOR">(defaultRole);
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
     if (state && !state.ok) toast.error(state.error);
@@ -23,10 +25,16 @@ export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { default
 
   if (state?.ok) {
     return (
-      <div role="status" className="rounded-lg border bg-muted/40 p-6 text-sm">
-        <div className="font-medium">Check your email</div>
+      <div role="status" className="rounded-2xl border border-violet-200 bg-violet-50/70 p-6 text-sm">
+        <div className="font-display text-xl font-semibold">Thanks for joining — launching soon!</div>
         <p className="mt-1 text-muted-foreground">{state.message}</p>
-        <Link href="/sign-in" className="mt-4 inline-block underline underline-offset-4">Go to sign in</Link>
+        <p className="mt-4 text-muted-foreground">No verification email? Check spam, then request another link below.</p>
+        <form action={resend} className="mt-3">
+          <input type="hidden" name="email" value={email} />
+          <ResendButton />
+        </form>
+        {resent ? <p role="status" className="mt-2 text-muted-foreground">{resent.ok ? resent.message : resent.error}</p> : null}
+        <Link href="/waitlist" className="mt-4 inline-block font-medium text-violet-700 underline underline-offset-4">See the waitlist page</Link>
       </div>
     );
   }
@@ -61,13 +69,13 @@ export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { default
           >
             <div className="font-medium">{r === "STUDENT" ? "I'm learning" : "I'm mentoring"}</div>
             <div className="text-xs text-muted-foreground">
-              {r === "STUDENT" ? "Book calls, grow fast" : "Share your journey, get discovered"}
+              {r === "STUDENT" ? "Be first to meet mentors" : "Be first to mentor others"}
             </div>
           </button>
         ))}
       </div>
 
-      <form action={action} className="space-y-4">
+      <form action={action} onSubmit={(event) => setEmail(String(new FormData(event.currentTarget).get("email") ?? ""))} className="space-y-4">
         <input type="hidden" name="role" value={role} />
         <div className="space-y-2">
           <Label htmlFor="name">Full name</Label>
@@ -75,7 +83,7 @@ export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { default
         </div>
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" autoComplete="email" required />
+          <Input id="email" name="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
@@ -92,7 +100,16 @@ function Submit() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" variant="brand" size="lg" className="w-full" disabled={pending}>
-      {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Create account
+      {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Join the waitlist
+    </Button>
+  );
+}
+
+function ResendButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" variant="outline" disabled={pending}>
+      {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Resend verification email
     </Button>
   );
 }

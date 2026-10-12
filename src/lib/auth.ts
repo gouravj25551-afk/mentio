@@ -7,6 +7,7 @@ import { authConfig } from "@/auth.config";
 import { db } from "@/lib/db";
 import { env, isGoogleOAuthEnabled } from "@/lib/env";
 import { authorizeCredentials } from "@/lib/auth/credentials";
+import { waitlistMode } from "@/lib/waitlist";
 import type { PrismaClient } from "@prisma/client";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -57,7 +58,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   events: {
     async signIn({ user, account }) {
       if (!user.id) return;
-      await db.profile.upsert({ where: { userId: user.id }, update: {}, create: { userId: user.id } });
+      if (!waitlistMode) {
+        await db.profile.upsert({ where: { userId: user.id }, update: {}, create: { userId: user.id } });
+      }
       if (account?.provider === "google") {
         await db.user.updateMany({ where: { id: user.id, emailVerified: null }, data: { emailVerified: new Date() } });
       }

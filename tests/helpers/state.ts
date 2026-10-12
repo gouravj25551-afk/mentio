@@ -8,6 +8,7 @@ export const testState = {
   /** When true the mocked mailer reports a delivery failure. */
   emailFails: false,
   outbox: [] as { to: string; subject: string; text: string }[],
+  cookies: new Map<string, string>(),
 };
 
 export function signInAs(userId: string | null) {

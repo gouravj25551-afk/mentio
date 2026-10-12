@@ -1,12 +1,12 @@
 # Decisions only the owner can make
 
-Nothing here has been decided in code. Each item lists what is blocked and what the code does today.
+These are the remaining owner and operational decisions. The migration history finding below has been resolved in the repository, but production still needs a safe baseline.
 
-## 1. Which init migration is applied in production (blocks CI and fresh databases)
+## 1. Production schema baseline and backup (blocks opening the app)
 
-`prisma/migrations/20260101000000_init` and `prisma/migrations/20261005000000_init` both create the same enum types (`Role`, ...) and tables. They differ only in the `currency` default (`USD` vs `INR`). A fresh database fails with `type "Role" already exists`, so `npm test` and CI are red on `main` and a new environment cannot be created.
+On 2026-10-12 the Supabase production project had `User`, `MentorProfile`, and `RateLimitBucket`, but **no `_prisma_migrations` table**. Neither init migration was recorded. The duplicate `20261005000000_init` has therefore been removed from the repo so fresh databases and CI can migrate cleanly. No production schema or data was changed.
 
-Migration history has not been touched. To decide: run `select migration_name from _prisma_migrations order by started_at;` on production. At most one of the two can have been applied. The one that was not applied can be removed from the repo. If neither is recorded, tell the developer before deploying anything.
+Production still lacks at least `MentorProfile.schedulingMode` (observed in live build logs). The project overview reported no backups. Before enabling the full app: arrange a recoverable backup, compare the live schema against each migration, baseline only changes already present, then apply the remaining migrations in order and confirm `/api/ready` is healthy. Do not run `prisma migrate deploy` blindly against this untracked, partially upgraded database.
 
 ## 2. Support address
 `/privacy`, `/terms` and error pages refer to a "support address listed on the site". None exists. Pick one and add it.

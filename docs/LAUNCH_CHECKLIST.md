@@ -9,6 +9,7 @@
 - [ ] `npm run db:taxonomy` run against production.
 - [ ] `npm run admin:bootstrap` run once; admin can sign in.
 - [ ] CI green on the PR (typecheck, lint, tests, build).
+- [ ] Vercel preview deployment succeeds for the reviewed commit; CI success alone does not prove Vercel Git access.
 - [ ] Tell email-only waitlist members to use the existing password-reset flow to set their first password at launch; test that journey in the live environment before sending invitations.
 - [ ] `/privacy` and `/terms` exist, but the owner must review the wording and publish the support address they refer to (`docs/OWNER_DECISIONS.md`).
 - [ ] `GET /api/ready` returns `{"status":"ok"}` on the live URL.

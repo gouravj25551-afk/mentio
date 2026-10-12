@@ -79,4 +79,22 @@ describe("prelaunch waitlist email verification", () => {
     expect(await requestWaitlistCode("fail@example.com")).toMatchObject({ ok: false, error: expect.stringMatching(/couldn't send/i) });
     expect(await db.verificationToken.count({ where: { identifier: "signup-code:fail@example.com" } })).toBe(0);
   });
+
+  it("lets a verified email-only member set a password at launch", async () => {
+    const { requestWaitlistCode, verifyWaitlistCode } = await actions();
+    expect(await requestWaitlistCode(email)).toEqual({ ok: true });
+    expect(await verifyWaitlistCode(email, codeFromEmail(), "STUDENT")).toEqual({ ok: true });
+
+    const { forgotPasswordAction, resetPasswordAction } = await import("@/features/auth/actions");
+    const request = new FormData();
+    request.set("email", email);
+    expect((await forgotPasswordAction(null, request)).ok).toBe(true);
+    const link = state.outbox.at(-1)?.text.match(/reset-password\?token=([A-Za-z0-9_-]+)/)?.[1];
+    expect(link).toBeTruthy();
+    const reset = new FormData();
+    reset.set("token", link!);
+    reset.set("password", "StrongPassw0rd1");
+    expect((await resetPasswordAction(null, reset)).ok).toBe(true);
+    expect((await db.user.findUniqueOrThrow({ where: { email }, select: { passwordHash: true } })).passwordHash).toBeTruthy();
+  });
 });

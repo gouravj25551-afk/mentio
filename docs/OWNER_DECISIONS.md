@@ -8,6 +8,8 @@ On 2026-10-12 the Supabase production project had `User`, `MentorProfile`, and `
 
 Production still lacks at least `MentorProfile.schedulingMode` (observed in live build logs). The project overview reported no backups. Before enabling the full app: arrange a recoverable backup, compare the live schema against each migration, baseline only changes already present, then apply the remaining migrations in order and confirm `/api/ready` is healthy. Do not run `prisma migrate deploy` blindly against this untracked, partially upgraded database.
 
+Email-only waitlist members have no password. The existing forgot/reset-password flow lets them set one using their verified inbox. At launch, provide a clear link and instructions in the launch email; the code path is covered by an integration test, but a real-inbox smoke test is still needed.
+
 ## 2. Support address
 `/privacy`, `/terms` and error pages refer to a "support address listed on the site". None exists. Pick one and add it.
 

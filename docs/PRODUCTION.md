@@ -1,6 +1,8 @@
 # Production guide
 
-Mentio is **ready for a controlled free beta**, not for charging money. This page is the checklist for getting there safely.
+Mentio is in **waitlist mode**, not ready to open the full product or charge money. Do not turn off `WAITLIST_MODE` until the release gates below pass.
+
+> **Migration stop sign (October 2026):** The repository contains two migrations that both create the initial schema: `20260101000000_init` and `20261005000000_init`. A fresh database cannot apply both. The live database also appears to lack the later `MentorProfile.schedulingMode` column. The migration instructions below are historical, **not a safe runbook for the current production database**. Before changing production data, inspect its `_prisma_migrations` table and schema with the real production connection, back it up, reconcile the duplicate migration in a tested copy, and verify `npx prisma migrate status`. Do not run `migrate deploy`, `migrate resolve`, or `db push` against production blindly.
 
 ## 1. Environment (set in your host's secret manager)
 
@@ -16,20 +18,21 @@ Mentio is **ready for a controlled free beta**, not for charging money. This pag
 
 Do not set `SEED_*` variables in production.
 
-## 2. Database migrations
+## 2. Database migrations (historical reference; blocked until reconciled)
 
 Migrations live in `prisma/migrations`. They are applied with `prisma migrate deploy`, never `db push`.
 
-* `20260101000000_init` is the **original** schema.
+* `20260101000000_init` is the **original** schema. `20261005000000_init` duplicates it and must be reconciled before a fresh deployment.
 * `20261005000000_production_hardening` is additive: new columns with defaults, the `RateLimitBucket` table, `CHECK` constraints (added `NOT VALID`, so legacy rows can't block the deploy), the booking no-overlap exclusion constraint, and `ON DELETE RESTRICT` on booking foreign keys. It drops no table or column and loses no data.
+* Subsequent migrations add Instagram, external scheduling (including `schedulingMode`), and mentor verification URLs. The production database must be checked against all of them.
 
-### A. Brand-new database
+### A. Brand-new database (do not run until the duplicate init is fixed)
 
 ```bash
 npx prisma migrate deploy
 ```
 
-### B. Existing database that was created with `prisma db push`
+### B. Existing database that was created with `prisma db push` (outdated; do not run as-is)
 
 1. **Back up first.**
 2. Check for overlapping active bookings (the old code could create them under concurrency). This must return no rows:
@@ -89,9 +92,9 @@ Counters live in Postgres (`RateLimitBucket`) and are updated with one atomic up
 
 ## 7. Remaining known issues
 
-* **Legal pages:** there is no Privacy Policy or Terms of Service. Required before collecting real users' data.
+* **Legal pages:** Privacy and Terms pages exist, but their wording, support contact, and operational promises need owner/legal review before a public launch.
 * **No script CSP.** Security headers cover framing, sniffing, referrer and HSTS, but a strict `script-src` needs nonce plumbing with Next.js.
-* **Dependencies:** `npm audit --omit=dev` still reports 7 findings, all in build-time tooling (Tailwind 3's `braces`/`micromatch`/`fast-glob`/`chokidar`, and PostCSS bundled in Next). They process this repo's own CSS at build time. Fixing them needs Tailwind 4 / Next 16.
+* **Dependencies:** after removing unused React Query devtools, `npm audit --omit=dev` reports 9 findings (6 high, 3 moderate; no critical). Most are in Tailwind 3 / Next 15 build-time CSS tooling. Plan and test framework upgrades before full launch; do not use `npm audit fix --force` without regression tests.
 * **Suspended or rejected mentors keep their existing future bookings.** They only stop receiving new ones.
 * **No reminder emails or background jobs.** Bookings are not auto-completed; the mentor marks them.
 * **JWT sessions can't be revoked individually** (up to 7 days). Role and existence are re-checked against the database on every authorization, so demotion and deletion take effect immediately, but a password reset does not log out other devices.

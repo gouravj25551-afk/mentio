@@ -20,14 +20,18 @@ export async function PUT(req: Request) {
       return apiOk({ mode: "INTERNAL" });
     }
     const provider = body.mode === "CAL_COM" ? "CAL_COM" : "CALENDLY";
-    const connection = mentor.calendars.find((c) => c.provider === provider && c.active);
-    if (!connection) throw conflict("Connect this provider before making it your booking method.");
     const url = new URL(body.bookingUrl ?? "");
     const host = url.hostname.toLowerCase();
     const allowed = provider === "CAL_COM" ? host === "cal.com" || host.endsWith(".cal.com") : host === "calendly.com" || host.endsWith(".calendly.com");
     if (url.protocol !== "https:" || !allowed) throw conflict("Use this provider's HTTPS booking page URL.");
     await db.$transaction([
-      db.calendarConnection.update({ where: { id: connection.id }, data: { eventTypeUrl: url.toString() } }),
+      // A public booking page works without OAuth. OAuth, when configured, is
+      // only needed to import busy time through provider webhooks.
+      db.calendarConnection.upsert({
+        where: { mentorProfileId_provider: { mentorProfileId: mentor.id, provider } },
+        update: { eventTypeUrl: url.toString(), active: true },
+        create: { mentorProfileId: mentor.id, provider, externalId: "manual-link", eventTypeUrl: url.toString(), active: true },
+      }),
       db.mentorProfile.update({ where: { id: mentor.id }, data: { schedulingMode: body.mode } }),
     ]);
     return apiOk({ mode: body.mode, bookingUrl: url.toString() });

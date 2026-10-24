@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type Mode = "INTERNAL" | "CAL_COM" | "CALENDLY";
-export function SchedulingModeForm({ initialMode, initialUrl, connected }: { initialMode: Mode; initialUrl: string; connected: Record<"CAL_COM" | "CALENDLY", boolean> }) {
+export function SchedulingModeForm({ initialMode, initialUrl }: { initialMode: Mode; initialUrl: string }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [url, setUrl] = useState(initialUrl);
@@ -26,9 +26,9 @@ export function SchedulingModeForm({ initialMode, initialUrl, connected }: { ini
   }
   return <div className="space-y-4">
     <div className="grid gap-2 sm:grid-cols-3">
-      {(["INTERNAL", "CAL_COM", "CALENDLY"] as Mode[]).map((value) => <Button key={value} type="button" variant={mode === value ? "brand" : "outline"} disabled={busy || (value !== "INTERNAL" && !connected[value])} onClick={() => setMode(value)}>{value === "INTERNAL" ? "Mentio" : value === "CAL_COM" ? "Cal.com" : "Calendly"}</Button>)}
+      {(["INTERNAL", "CAL_COM", "CALENDLY"] as Mode[]).map((value) => <Button key={value} type="button" variant={mode === value ? "brand" : "outline"} disabled={busy} onClick={() => setMode(value)}>{value === "INTERNAL" ? "Mentio" : value === "CAL_COM" ? "Cal.com" : "Calendly"}</Button>)}
     </div>
-    {mode !== "INTERNAL" ? <div className="space-y-2"><Label htmlFor="bookingUrl">{mode === "CAL_COM" ? "Cal.com" : "Calendly"} booking page</Label><Input id="bookingUrl" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder={mode === "CAL_COM" ? "https://cal.com/your-name/30min" : "https://calendly.com/your-name/30min"} /></div> : <p className="text-sm text-muted-foreground">Students choose from the availability you set in Mentio. A confirmed slot disappears for everyone else.</p>}
+    {mode !== "INTERNAL" ? <div className="space-y-2"><Label htmlFor="bookingUrl">{mode === "CAL_COM" ? "Cal.com" : "Calendly"} booking page</Label><Input id="bookingUrl" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder={mode === "CAL_COM" ? "https://cal.com/your-name/30min" : "https://calendly.com/your-name/30min"} /><p className="text-xs text-muted-foreground">Paste your public booking link. Students will complete their booking securely on {mode === "CAL_COM" ? "Cal.com" : "Calendly"}.</p></div> : <p className="text-sm text-muted-foreground">Students choose from the availability you set in Mentio. A confirmed slot disappears for everyone else.</p>}
     <Button type="button" variant="brand" disabled={busy || (mode !== "INTERNAL" && !url)} onClick={() => void save()}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Save booking method</Button>
   </div>;
 }

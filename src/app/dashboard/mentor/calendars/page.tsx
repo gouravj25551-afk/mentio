@@ -31,13 +31,11 @@ export default async function CalendarsPage({ searchParams }: { searchParams: Pr
       .filter(([, p]) => p.enabled())
       .map(async ([slug, p]) => {
         const conn = mentor.calendars.find((c) => c.provider === p.provider);
-        return { slug, name: p.name, health: conn ? await connectionHealth(conn) : null };
+        // A mentor can use a public provider URL without OAuth. Do not try to
+        // refresh a token that does not exist for that manual-link setup.
+        return { slug, name: p.name, health: conn?.eventTypeUrl && !conn.accessToken ? "link_added" : conn ? await connectionHealth(conn) : null };
       }),
   );
-  const connected = {
-    CAL_COM: mentor.calendars.some((c) => c.provider === "CAL_COM" && c.active),
-    CALENDLY: mentor.calendars.some((c) => c.provider === "CALENDLY" && c.active),
-  };
   const selectedConnection = mentor.schedulingMode === "INTERNAL" ? null : mentor.calendars.find((c) => c.provider === mentor.schedulingMode);
 
   return (
@@ -54,7 +52,7 @@ export default async function CalendarsPage({ searchParams }: { searchParams: Pr
 
       <Card>
         <CardHeader><CardTitle>How students book you</CardTitle></CardHeader>
-        <CardContent><SchedulingModeForm initialMode={mentor.schedulingMode} initialUrl={selectedConnection?.eventTypeUrl ?? ""} connected={connected} /></CardContent>
+        <CardContent><SchedulingModeForm initialMode={mentor.schedulingMode} initialUrl={selectedConnection?.eventTypeUrl ?? ""} /></CardContent>
       </Card>
 
       <Card>
@@ -77,7 +75,7 @@ export default async function CalendarsPage({ searchParams }: { searchParams: Pr
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               {p.name}
-              {p.health === "connected" ? <Badge variant="success">Connected</Badge> : p.health ? <Badge variant="warning">Reconnect needed</Badge> : <Badge variant="secondary">Not connected</Badge>}
+              {p.health === "connected" ? <Badge variant="success">Connected</Badge> : p.health === "link_added" ? <Badge variant="success">Link added</Badge> : p.health ? <Badge variant="warning">Reconnect needed</Badge> : <Badge variant="secondary">Not connected</Badge>}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">

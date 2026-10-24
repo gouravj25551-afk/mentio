@@ -41,13 +41,16 @@ export default async function MentorOnboarding() {
     <div className="container mx-auto max-w-3xl space-y-6 py-16">
       <div>
         <div className="text-xs uppercase tracking-widest text-muted-foreground">Mentor onboarding</div>
-        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">Set up your mentor profile</h1>
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">Apply to become a mentor</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Tell students what you offer, add at least one public profile link, and submit your application for approval.</p>
       </div>
       <Card className="p-6">
         <MentorProfileForm
           categories={categories}
           skills={skills}
           status={mentor.status}
+          onboarding
+          applicationSubmitted={mentor.bio.trim().length >= 40 && mentor.experience.trim().length >= 20 && mentor.headline.trim().length >= 10 && mentor.categories.length > 0 && Boolean(mentor.verificationUrl)}
           initial={{
             headline: mentor.headline,
             bio: mentor.bio,

@@ -25,6 +25,7 @@ export default async function MentorProfilePage() {
         categories={categories}
         skills={skills}
         status={mentor.status}
+        applicationSubmitted
         initial={{
           headline: mentor.headline,
           bio: mentor.bio,

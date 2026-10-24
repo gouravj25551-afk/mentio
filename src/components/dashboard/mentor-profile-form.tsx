@@ -44,15 +44,20 @@ export function MentorProfileForm({
   skills,
   initial,
   status,
+  onboarding = false,
+  applicationSubmitted = false,
 }: {
   categories: Category[];
   skills: Skill[];
   initial: State;
   status: MentorStatus;
+  onboarding?: boolean;
+  applicationSubmitted?: boolean;
 }) {
   const router = useRouter();
   const [s, setS] = useState<State>(initial);
   const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(applicationSubmitted);
   const [pending, startTransition] = useTransition();
   const timezones = useMemo(() => {
     const all = listTimezones();
@@ -64,7 +69,9 @@ export function MentorProfileForm({
   }
   const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
   const lines = (v: string) => v.split("\n").map((x) => x.trim()).filter(Boolean);
-  const note = STATUS_NOTE[status];
+  const note = status === "PENDING" && !submitted
+    ? { text: "Complete every required field below, then submit your mentor application. It will stay private until an admin approves it.", tone: "bg-muted" }
+    : STATUS_NOTE[status];
 
   function save() {
     setError(null);
@@ -79,7 +86,12 @@ export function MentorProfileForm({
         setError(b?.error ?? "Could not save. Please try again.");
         return;
       }
-      toast.success("Profile saved");
+      if (onboarding && !submitted) {
+        setSubmitted(true);
+        toast.success("Application submitted for approval");
+      } else {
+        toast.success("Profile saved");
+      }
       router.refresh();
     });
   }
@@ -94,13 +106,15 @@ export function MentorProfileForm({
     >
       {note ? <p role="status" className={cn("rounded-md p-3 text-sm", note.tone)}>{note.text}</p> : null}
 
-      <div className="flex items-center justify-between rounded-md bg-muted p-3">
-        <div>
-          <Label htmlFor="accepting" className="text-sm font-medium">Accepting bookings</Label>
-          <div className="text-xs text-muted-foreground">Pause to stop new bookings.</div>
+      {!onboarding ? (
+        <div className="flex items-center justify-between rounded-md bg-muted p-3">
+          <div>
+            <Label htmlFor="accepting" className="text-sm font-medium">Accepting bookings</Label>
+            <div className="text-xs text-muted-foreground">Pause to stop new bookings.</div>
+          </div>
+          <Switch id="accepting" checked={s.acceptingBookings} onCheckedChange={(v) => update("acceptingBookings", v)} />
         </div>
-        <Switch id="accepting" checked={s.acceptingBookings} onCheckedChange={(v) => update("acceptingBookings", v)} />
-      </div>
+      ) : null}
 
       <Field id="headline" label="Headline" hint="10-140 characters">
         <Input id="headline" required minLength={10} maxLength={140} value={s.headline} onChange={(e) => update("headline", e.target.value)} />
@@ -150,10 +164,10 @@ export function MentorProfileForm({
         </div>
       </fieldset>
 
-      <Field id="portfolio" label="Portfolio links" hint="One https:// link per line">
+      <Field id="portfolio" label="Portfolio links" hint="Optional — one https:// link per line">
         <Textarea id="portfolio" rows={3} defaultValue={s.portfolio.join("\n")} onChange={(e) => update("portfolio", lines(e.target.value))} placeholder="https://github.com/you" />
       </Field>
-      <Field id="verificationUrl" label="Public profile for verification" hint="Required — one public X, Instagram, LinkedIn, GitHub, or other profile URL">
+      <Field id="verificationUrl" label="Public profile link" hint="Required — X, Instagram, LinkedIn, GitHub, portfolio, or another public profile">
         <Input id="verificationUrl" type="url" required value={s.verificationUrl} onChange={(e) => update("verificationUrl", e.target.value)} placeholder="https://www.linkedin.com/in/you" />
       </Field>
       <Field id="achievements" label="Achievements" hint="One per line">
@@ -173,7 +187,7 @@ export function MentorProfileForm({
 
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
       <Button type="submit" variant="brand" disabled={pending}>
-        {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Save profile
+        {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} {onboarding ? submitted ? "Update application" : status === "REJECTED" ? "Resubmit for approval" : "Submit application" : "Save profile"}
       </Button>
     </form>
   );

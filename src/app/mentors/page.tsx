@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/shared/site-header";
 import { SiteFooter } from "@/components/shared/site-footer";
-import { listMentors } from "@/features/mentors/queries";
-import { MentorCard } from "@/components/mentor/mentor-card";
+import { listCategoriesWithCounts, listMentors } from "@/features/mentors/queries";
+import { MentorGrid } from "@/components/mentor/mentor-grid";
+import { PageIntro } from "@/components/shared/page-intro";
+import { CategoryIcon } from "@/components/shared/icons";
 import { DiscoveryFilters } from "@/components/mentor/discovery-filters";
 import { Empty } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
@@ -27,9 +29,11 @@ export default async function MentorsPage({
   const page = searchParams.page;
   const [{ mentors, total, pageCount }, categories, skills] = await Promise.all([
     listMentors(searchParams),
-    db.category.findMany({ orderBy: { order: "asc" } }),
+    listCategoriesWithCounts(),
     db.skill.findMany({ orderBy: { name: "asc" } }),
   ]);
+
+  const active = searchParams.category ? categories.find((c) => c.slug === searchParams.category) : undefined;
 
   const qs = (patch: Record<string, string | number | undefined>) => {
     const url = new URLSearchParams();
@@ -45,34 +49,41 @@ export default async function MentorsPage({
   return (
     <>
       <SiteHeader />
-      <main id="main-content" tabIndex={-1} className="container pb-20 pt-10 outline-none">
-        <div className="flex flex-col gap-2">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Mentors</div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-            {searchParams.category
-              ? categories.find((c) => c.slug === searchParams.category)?.name ?? "Mentors"
-              : "Find your mentor"}
-          </h1>
-          <p className="text-sm text-muted-foreground">{total.toLocaleString()} mentors ready to help.</p>
-        </div>
+      <main id="main-content" tabIndex={-1} className="pb-24 outline-none">
+        <PageIntro
+          eyebrow={active ? "Category" : "Mentors"}
+          title={active ? active.name : "Find the mentor"}
+          accent={active ? undefined : "who gets it."}
+          description={active?.description ?? "Vetted engineers, maintainers, founders and designers. Pick a category, open a profile, book a call."}
+        >
+          {active ? (
+            <div className="mx-auto mt-6 flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs text-white/70">
+              <CategoryIcon name={active.icon} className="h-3.5 w-3.5" style={{ color: active.color ?? undefined }} />
+              {total.toLocaleString()} {total === 1 ? "mentor" : "mentors"} in {active.name}
+            </div>
+          ) : null}
+        </PageIntro>
 
-        <DiscoveryFilters categories={categories} skills={skills} initial={{ q: searchParams.q, category: searchParams.category, skill: searchParams.skill, sort: searchParams.sort }} />
+        <div className="container -mt-12">
+        <DiscoveryFilters categories={categories} skills={skills} />
+
+        <p className="mt-10 text-sm text-muted-foreground" aria-live="polite">{total.toLocaleString()} {total === 1 ? "mentor" : "mentors"}{searchParams.q ? ` for “${searchParams.q}”` : ""}</p>
 
         {mentors.length === 0 ? (
           <Empty
             icon={<Search className="h-5 w-5" />}
-            title={total === 0 ? "Mentors are joining soon" : "No mentors match that yet"}
-            description={total === 0
+            title={total === 0 && !searchParams.q && !searchParams.category && !searchParams.skill ? "Mentors are joining soon" : "No mentors match that yet"}
+            description={total === 0 && !searchParams.q && !searchParams.category && !searchParams.skill
               ? "We are onboarding our first verified mentors. Check back soon, or apply to mentor on Mentio."
-              : "Try removing a filter or searching for a different skill."}
-            action={total === 0
+              : "Try another category, remove a filter, or search for a different skill."}
+            action={total === 0 && !searchParams.q && !searchParams.category && !searchParams.skill
               ? <Button asChild variant="outline"><Link href="/sign-up?role=MENTOR">Become a mentor</Link></Button>
               : <Button asChild variant="outline"><Link href="/mentors">Reset filters</Link></Button>}
-            className="mt-10"
+            className="mt-6"
           />
         ) : (
-          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {mentors.map((m) => <MentorCard key={m.id} mentor={m} />)}
+          <div className="mt-6">
+            <MentorGrid mentors={mentors} resultKey={JSON.stringify(searchParams)} />
           </div>
         )}
 
@@ -89,6 +100,7 @@ export default async function MentorsPage({
             </div>
           </div>
         ) : null}
+        </div>
       </main>
       <SiteFooter />
     </>

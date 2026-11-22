@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import {
   Bell, Bookmark, Calendar, Compass, LayoutDashboard, Settings2,
@@ -30,7 +31,7 @@ const mentorNav: NavItem[] = [
   { href: "/dashboard/mentor/availability", label: "Availability", icon: Clock },
   { href: "/dashboard/mentor/reviews", label: "Reviews", icon: Star },
   { href: "/dashboard/mentor/analytics", label: "Analytics", icon: LineChart },
-  { href: "/dashboard/mentor/calendars", label: "Meeting link", icon: Sparkles },
+  { href: "/dashboard/mentor/calendars", label: "Calendars", icon: Sparkles },
   { href: "/dashboard/mentor/profile", label: "Profile", icon: Settings2 },
 ];
 
@@ -68,7 +69,8 @@ export function DashboardShell({
         </div>
         <nav aria-label="Dashboard" className="mt-6 flex-1 space-y-0.5 px-2">
           {items.map((it) => {
-            const active = path === it.href || path.startsWith(`${it.href}/`);
+            // The first item is the role's overview: it is only active on its own page.
+            const active = path === it.href || (it.href !== items[0].href && path.startsWith(`${it.href}/`));
             return (
               <Link
                 key={it.href}
@@ -76,16 +78,21 @@ export function DashboardShell({
                 onNavigate={() => setPendingHref(it.href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group flex min-h-11 items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
-                  active ? "bg-foreground text-background shadow-soft" : "text-foreground/80 hover:bg-muted hover:text-foreground"
+                  "group relative isolate flex min-h-11 items-center justify-between rounded-xl px-3 py-2 text-sm transition-colors",
+                  active ? "text-white" : "text-foreground/70 hover:bg-white/[0.04] hover:text-foreground"
                 )}
               >
+                {active ? (
+                  <motion.span layoutId="dash-nav" className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-violet-500/25 to-indigo-500/10 ring-1 ring-violet-300/25" transition={{ type: "spring", stiffness: 400, damping: 34 }}>
+                    <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-violet-300" />
+                  </motion.span>
+                ) : null}
                 <span className="inline-flex items-center gap-2">
                   <it.icon className="h-4 w-4" />
                   {it.label}
                 </span>
                 {it.href.endsWith("notifications") && unread > 0 ? (
-                  <span className={cn("rounded-full px-1.5 py-0.5 text-[10px]", active ? "bg-background text-foreground" : "bg-foreground text-background")}>{unread}</span>
+                  <span className={cn("rounded-full px-1.5 py-0.5 text-[10px]", active ? "bg-violet-300 text-[#0b0e22]" : "bg-violet-500 text-white")}>{unread}</span>
                 ) : null}
               </Link>
             );
@@ -115,7 +122,8 @@ export function DashboardShell({
         ) : null}
         <nav aria-label="Dashboard sections" className="flex gap-1 overflow-x-auto border-b bg-background px-3 py-2 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
           {items.map((it) => {
-            const active = path === it.href || path.startsWith(`${it.href}/`);
+            // The first item is the role's overview: it is only active on its own page.
+            const active = path === it.href || (it.href !== items[0].href && path.startsWith(`${it.href}/`));
             return (
               <Link
                 key={it.href}
@@ -124,7 +132,7 @@ export function DashboardShell({
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-colors",
-                  active ? "bg-foreground text-background" : "text-foreground/80 hover:bg-muted",
+                  active ? "bg-violet-500/20 text-white ring-1 ring-violet-300/25" : "text-foreground/70 hover:bg-white/[0.04]",
                 )}
               >
                 <it.icon className="h-4 w-4" aria-hidden />

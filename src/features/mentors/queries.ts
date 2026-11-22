@@ -49,7 +49,7 @@ export async function listMentors(params: DiscoveryParams) {
       where,
       orderBy,
       include: {
-        user: { select: { ...publicUser, profile: { select: { twitter: true, instagram: true, linkedin: true, github: true } } } },
+        user: { select: { ...publicUser, profile: { select: { twitter: true, instagram: true, linkedin: true, github: true, website: true } } } },
         categories: { include: { category: true } },
         skills: { include: { skill: true } },
       },
@@ -90,4 +90,23 @@ export async function getRatingDistribution(mentorProfileId: string) {
   const dist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   for (const r of rows) dist[r.rating] = r._count.rating;
   return dist;
+}
+
+/** Categories in display order, each with how many approved mentors it has. */
+export async function listCategoriesWithCounts() {
+  const rows = await db.category.findMany({
+    orderBy: { order: "asc" },
+    include: { _count: { select: { mentors: { where: { mentorProfile: { status: "APPROVED", acceptingBookings: true } } } } } },
+  });
+  return rows.map(({ _count, ...c }) => ({ ...c, mentorCount: _count.mentors }));
+}
+
+/** Small public numbers for the landing page. */
+export async function publicStats() {
+  const [mentors, sessions, categories] = await Promise.all([
+    db.mentorProfile.count({ where: { status: "APPROVED" } }),
+    db.mentorProfile.aggregate({ where: { status: "APPROVED" }, _sum: { totalSessions: true } }),
+    db.category.count(),
+  ]);
+  return { mentors, categories, sessions: sessions._sum.totalSessions ?? 0 };
 }

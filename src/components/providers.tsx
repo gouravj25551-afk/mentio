@@ -15,7 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       })
   );
   return (
-    <NextThemes attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <NextThemes attribute="class" forcedTheme="dark" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
       <QueryClientProvider client={client}>
         <MotionConfig reducedMotion="user">{children}</MotionConfig>
         <Toaster />

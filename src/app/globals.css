@@ -15,27 +15,29 @@
 @media (prefers-reduced-motion: reduce) { .launch-reveal, .launch-halo, .launch-orbit, .launch-orbit-reverse { animation: none !important; } .launch-card { transition: none; } }
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 4% 40%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.65rem;
+  /* Mentio is dark-first: one midnight palette, shared by the marketing site,
+     the waitlist and the dashboards (the html element always has .dark). */
+  :root, .dark {
+    --background: 234 45% 5%;
+    --foreground: 228 45% 97%;
+    --card: 233 38% 8%;
+    --card-foreground: 228 45% 97%;
+    --popover: 233 40% 9%;
+    --popover-foreground: 228 45% 97%;
+    --primary: 262 90% 68%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 233 30% 13%;
+    --secondary-foreground: 228 45% 97%;
+    --muted: 233 30% 12%;
+    --muted-foreground: 230 18% 68%;
+    --accent: 233 30% 15%;
+    --accent-foreground: 228 45% 97%;
+    --destructive: 0 75% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 232 28% 17%;
+    --input: 232 28% 19%;
+    --ring: 262 90% 72%;
+    --radius: 0.85rem;
 
     --brand-50: 263 85% 97%;
     --brand-100: 263 85% 93%;
@@ -46,28 +48,7 @@
     --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
     --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
     --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
-  }
-
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 5%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 5%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 50%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    color-scheme: dark;
   }
 
   * { @apply border-border; }
@@ -76,6 +57,8 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
   }
   html { scroll-behavior: smooth; }
+  /* Decorative glows bleed past the viewport on purpose; never let them cause sideways scrolling. */
+  html, body { overflow-x: clip; }
   h1, h2, h3 { text-wrap: balance; }
   :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
   ::selection { background: hsl(263 85% 70% / 0.35); }
@@ -93,7 +76,7 @@
 
 @layer utilities {
   .brand-gradient {
-    background-image: linear-gradient(135deg, hsl(263 76% 52%), hsl(238 78% 54%), hsl(214 86% 46%));
+    background-image: linear-gradient(120deg, hsl(262 83% 60%), hsl(245 80% 60%), hsl(198 90% 52%));
   }
   .brand-text {
     @apply bg-clip-text text-transparent;
@@ -147,4 +130,68 @@
     from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: none; }
   }
+}
+
+/* ===== Midnight motion system ===== */
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(100deg, #ffffff 0%, #d7c6ff 35%, #8be3f5 70%, #f0d4ff 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .text-gradient-animated {
+    background: linear-gradient(100deg, #c4b5fd, #7dd3fc, #f0abfc, #c4b5fd);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: gradient-pan 8s linear infinite;
+  }
+  .surface {
+    background: linear-gradient(180deg, hsl(233 38% 10% / 0.85), hsl(233 38% 7% / 0.85));
+    border: 1px solid hsl(0 0% 100% / 0.08);
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.05), 0 20px 50px -30px rgb(0 0 0 / 0.8);
+  }
+  .glow-violet { box-shadow: 0 0 0 1px hsl(262 90% 70% / 0.35), 0 18px 60px -18px hsl(262 90% 60% / 0.65); }
+  .noise::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.035; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  /* Spotlight that follows the pointer (set --x / --y from JS). */
+  .spotlight { position: relative; isolation: isolate; }
+  .spotlight::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1; opacity: 0; transition: opacity .3s ease;
+    background: radial-gradient(420px circle at var(--x, 50%) var(--y, 50%), var(--spot, hsl(262 90% 70% / 0.16)), transparent 45%);
+  }
+  .spotlight:hover::before { opacity: 1; }
+  /* Rotating conic border for highlighted surfaces. */
+  .ring-animated { position: relative; isolation: isolate; }
+  .ring-animated::after {
+    content: ""; position: absolute; inset: -1px; border-radius: inherit; z-index: -1; padding: 1px;
+    background: conic-gradient(from var(--angle), transparent 0 60%, #a78bfa 75%, #67e8f9 85%, transparent 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: spin-angle 6s linear infinite;
+  }
+  .shine { position: relative; overflow: hidden; }
+  .shine::after {
+    content: ""; position: absolute; inset: 0; transform: translateX(-120%);
+    background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.35) 50%, transparent 70%);
+    animation: shine 3.6s ease-in-out infinite;
+  }
+  .marquee { animation: marquee var(--marquee-duration, 40s) linear infinite; }
+  .marquee-reverse { animation-direction: reverse; }
+  .mask-fade-x { mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+  .float-slow { animation: float 7s ease-in-out infinite; }
+  .orbit-spin { animation: orbit 60s linear infinite; }
+  .orbit-spin-reverse { animation: orbit 80s linear infinite reverse; }
+  .counter-spin { animation: orbit 60s linear infinite reverse; }
+  .counter-spin-reverse { animation: orbit 80s linear infinite; }
+  .dark .lift:hover { box-shadow: 0 0 0 1px hsl(262 90% 70% / 0.25), 0 24px 50px -20px hsl(262 90% 50% / 0.45); }
+}
+@property --angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@keyframes spin-angle { to { --angle: 360deg; } }
+@keyframes gradient-pan { to { background-position: 300% 0; } }
+@keyframes shine { 0%, 55% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes float { 50% { transform: translateY(-10px); } }
+@keyframes orbit { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .marquee, .float-slow, .orbit-spin, .orbit-spin-reverse, .counter-spin, .counter-spin-reverse, .shine::after, .ring-animated::after, .text-gradient-animated { animation: none !important; }
 }

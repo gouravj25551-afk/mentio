@@ -12,6 +12,7 @@ import { generateToken, hashToken } from "@/lib/tokens";
 import { slugify } from "@/lib/utils";
 import { forgotSchema, resetSchema, signInSchema, signUpSchema } from "@/lib/validators";
 import { appUrl, sendEmailSafely } from "@/services/email";
+import { waitlistMode } from "@/lib/waitlist";
 
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string; code?: "email_not_verified" | "email_delivery_failed" };
 
@@ -65,10 +66,11 @@ export async function signInWithPassword(_prev: unknown, formData: FormData): Pr
  * Creates an account and emails a verification link.
  *
  * The response is identical whether or not the email is already registered, so
- * this form cannot be used to discover who has an account. (A duplicate gets a
- * "you already have an account" email instead.)
+ * this form cannot be used to discover who has an account. An unverified
+ * duplicate gets a fresh verification link, subject to resend limits.
  */
 export async function signUpAction(_prev: unknown, formData: FormData): Promise<ActionResult> {
+  if (waitlistMode) return { ok: false, error: "Use the email-code waitlist signup flow." };
   const parsed = signUpSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
@@ -81,13 +83,24 @@ export async function signUpAction(_prev: unknown, formData: FormData): Promise<
   if (blocked) return blocked;
 
   const { email, name, role } = parsed.data;
-  const generic: ActionResult = { ok: true, message: "Check your email for a link to verify your account." };
+  const generic: ActionResult = {
+    ok: true,
+    message: waitlistMode
+      ? "Thanks for joining Mentio. We're launching soon! If this email needs verification, check your inbox for a link to confirm your place on the waitlist."
+      : "Check your email for a link to verify your account.",
+  };
 
   // Hash before branching so existing and new addresses take the same time.
   const passwordHash = await hashPassword(parsed.data.password);
 
-  const existing = await db.user.findUnique({ where: { email }, select: { id: true } });
+  const existing = await db.user.findUnique({ where: { email }, select: { id: true, emailVerified: true } });
   if (existing) {
+    if (!existing.emailVerified) {
+      // Reuse the public resend flow so duplicate signups cannot bypass its
+      // per-address and per-IP limits. Keep the same response for every email.
+      await resendVerificationAction(null, formData);
+      return generic;
+    }
     const sent = await sendEmailSafely({
       to: email,
       subject: "You already have a Mentio account",
@@ -101,10 +114,16 @@ export async function signUpAction(_prev: unknown, formData: FormData): Promise<
   try {
     await db.$transaction(async (tx) => {
       const user = await tx.user.create({
-        data: { email, name, role: role as Role, passwordHash, profile: { create: {} } },
+        data: {
+          email,
+          name,
+          role: role as Role,
+          passwordHash,
+          ...(!waitlistMode ? { profile: { create: {} } } : {}),
+        },
         select: { id: true, name: true },
       });
-      if (role === "MENTOR") {
+      if (role === "MENTOR" && !waitlistMode) {
         const base = slugify(name) || "mentor";
         await tx.mentorProfile.create({
           data: {
@@ -129,7 +148,9 @@ export async function signUpAction(_prev: unknown, formData: FormData): Promise<
   const sent = await sendEmailSafely({
     to: email,
     subject: "Verify your Mentio email",
-    text: `Welcome to Mentio, ${name}.\n\nConfirm your email to finish creating your account:\n${appUrl(`/verify-email?token=${token}`)}\n\nThis link expires in 24 hours. If you didn't sign up, ignore this email.`,
+    text: waitlistMode
+      ? `Welcome to the Mentio waitlist, ${name}.\n\nVerify your email to confirm your place:\n${appUrl(`/verify-email?token=${token}`)}\n\nThis link expires in 24 hours. If you didn't sign up, ignore this email.`
+      : `Welcome to Mentio, ${name}.\n\nConfirm your email to finish creating your account:\n${appUrl(`/verify-email?token=${token}`)}\n\nThis link expires in 24 hours. If you didn't sign up, ignore this email.`,
   });
   // The account exists but the link never left: say so instead of "check your email".
   return sent ? generic : EMAIL_FAILED;
@@ -180,7 +201,7 @@ export async function verifyEmailAction(_prev: unknown, formData: FormData): Pro
   if (consumed.count !== 1) return { ok: false, error: "This verification link has already been used." };
 
   await db.user.updateMany({ where: { id: record.userId, emailVerified: null }, data: { emailVerified: new Date() } });
-  return { ok: true, message: "Email verified. You can sign in now." };
+  return { ok: true, message: waitlistMode ? "Email verified. You're on the Mentio waitlist. Sign in to see your status." : "Email verified. You can sign in now." };
 }
 
 export async function signInWithGoogle() {

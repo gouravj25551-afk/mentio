@@ -13,7 +13,7 @@ import { slugify } from "@/lib/utils";
  * admin can never be downgraded by it.
  */
 export async function becomeMentorAction() {
-  const user = await requireRole("STUDENT");
+  const user = await requireRole(["STUDENT", "MENTOR"]);
   const existing = await db.mentorProfile.findUnique({ where: { userId: user.id }, select: { id: true } });
   if (!existing) {
     await db.$transaction([
@@ -26,7 +26,7 @@ export async function becomeMentorAction() {
           experience: "",
         },
       }),
-      db.user.update({ where: { id: user.id }, data: { role: "MENTOR" } }),
+      ...(user.role === "STUDENT" ? [db.user.update({ where: { id: user.id }, data: { role: "MENTOR" } })] : []),
     ]);
   }
   redirect("/onboarding/mentor");

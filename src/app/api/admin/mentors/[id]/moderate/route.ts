@@ -33,7 +33,10 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
 
     const mentor = await db.mentorProfile.findUnique({
       where: { id },
-      include: { categories: { select: { categoryId: true } } },
+      select: {
+        userId: true, headline: true, bio: true, experience: true, status: true,
+        categories: { select: { categoryId: true } },
+      },
     });
     if (!mentor) throw notFound("Mentor not found.");
 

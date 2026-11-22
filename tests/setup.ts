@@ -7,11 +7,20 @@ Object.assign(process.env, {
   DATABASE_URL: TEST_DATABASE_URL,
   AUTH_SECRET: "test-secret-test-secret-test-secret-123456",
   NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+  // Integration tests exercise the post-launch booking/API flows. Keep the
+  // prelaunch gate off here; waitlist behavior has its own focused tests.
+  WAITLIST_MODE: "false",
 });
 
 vi.mock("next/headers", async () => {
   const { testState } = await import("./helpers/state");
-  return { headers: async () => testState.headers, cookies: async () => new Map() };
+  return { headers: async () => testState.headers, cookies: async () => ({
+    get: (name: string) => {
+      const value = testState.cookies.get(name);
+      return value === undefined ? undefined : { name, value };
+    },
+    set: (name: string, value: string) => { testState.cookies.set(name, value); },
+  }) };
 });
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }));
 vi.mock("next/navigation", () => ({
@@ -53,6 +62,7 @@ beforeEach(async () => {
   testState.userId = null;
   testState.outbox.length = 0;
   testState.emailFails = false;
+  testState.cookies.clear();
   testState.headers = new Headers({ "x-forwarded-for": "203.0.113.10" });
 });
 

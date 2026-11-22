@@ -31,7 +31,9 @@ npx prisma migrate deploy
 
 ### B. Existing database that was created with `prisma db push`
 
-1. **Back up first.**
+**Current production is in this category, but partially upgraded.** On 2026-10-12 it had no `_prisma_migrations` table, did have `RateLimitBucket`, and lacked `MentorProfile.schedulingMode`. The generic procedure below is **only for an otherwise unmodified original schema; do not run it on current production**. Its hardening migration would try to recreate objects already present. Keep `WAITLIST_MODE=true` until a backed-up, schema-diffed migration plan is rehearsed on a copy and applied. `/api/ready` checks required mentor columns and will report degraded until they exist.
+
+1. **Back up first.** For the current production database, inspect every table, column, constraint, enum, and migration before resolving anything. Baseline only fully applied migrations; reconcile partially applied ones on a restored copy before production. **Stop here for current production; the commands below are not its migration plan.**
 2. Check for overlapping active bookings (the old code could create them under concurrency). This must return no rows:
    ```sql
    SELECT a.id, b.id FROM "Booking" a JOIN "Booking" b
@@ -108,4 +110,4 @@ Counters live in Postgres (`RateLimitBucket`) and are updated with one atomic up
 * `apiCatch` returns a generic 500 for anything unexpected and logs `api.unhandled`.
 * Notifications are best effort after a change is committed: a notification or email failure is logged as `notification.failed` and never turns a saved booking into an error.
 * UI errors show a reference (the Next.js digest) and recovery buttons, never a stack trace. Boundaries: `src/app/error.tsx`, `src/app/dashboard/error.tsx`, `src/app/global-error.tsx`.
-* Monitor `GET /api/ready` (503 `degraded` means the database is unreachable). `GET /api/health` only proves the process is up.
+* Monitor `GET /api/ready` (503 `degraded` means the database or required schema is unavailable). `GET /api/health` only proves the process is up.

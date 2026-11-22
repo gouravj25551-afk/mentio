@@ -1,12 +1,14 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
 import { logError } from "@/lib/log";
+import { waitlistMode } from "@/lib/waitlist";
 
 // Rendered per request (and cached by Next) so new mentors appear without a rebuild.
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  if (waitlistMode) return [{ url: `${base}/waitlist`, changeFrequency: "weekly", priority: 1 }];
   const pages: MetadataRoute.Sitemap = [
     { url: `${base}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${base}/mentors`, changeFrequency: "daily", priority: 0.9 },

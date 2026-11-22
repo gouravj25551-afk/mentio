@@ -46,10 +46,10 @@ export default async function MentorOverview() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Upcoming calls" value={upcoming.length} icon={<Calendar className="h-4 w-4 text-indigo-500" />} />
-        <Stat label="Last 30 days" value={completed30d} hint="completed sessions" icon={<Users className="h-4 w-4 text-indigo-500" />} />
-        <Stat label="Avg rating" value={mentor.averageRating.toFixed(1)} hint={`${mentor.totalReviews} reviews`} icon={<Star className="h-4 w-4 text-indigo-500" />} />
-        <Stat label="Sessions (total)" value={mentor.totalSessions} hint="completed" icon={<Wallet className="h-4 w-4 text-indigo-500" />} />
+        <Stat label="Upcoming calls" value={upcoming.length} icon={<Calendar className="h-4 w-4 text-muted-foreground" />} />
+        <Stat label="Last 30 days" value={completed30d} hint="completed sessions" icon={<Users className="h-4 w-4 text-muted-foreground" />} />
+        <Stat label="Avg rating" value={mentor.averageRating.toFixed(1)} hint={`${mentor.totalReviews} reviews`} icon={<Star className="h-4 w-4 text-muted-foreground" />} />
+        <Stat label="Sessions (total)" value={mentor.totalSessions} hint="completed" icon={<Wallet className="h-4 w-4 text-muted-foreground" />} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -98,7 +98,7 @@ export default async function MentorOverview() {
                     <div className="flex items-center gap-2">
                       <Avatar className="h-7 w-7"><AvatarFallback>{initials(r.author.name)}</AvatarFallback></Avatar>
                       <div className="font-medium">{r.author.name ?? "Student"}</div>
-                      <div className="ml-auto flex items-center gap-0.5 text-amber-400">
+                      <div className="ml-auto flex items-center gap-0.5 text-white">
                         {Array.from({ length: r.rating }).map((_, i) => <Star key={i} className="h-3.5 w-3.5 fill-current" />)}
                       </div>
                     </div>

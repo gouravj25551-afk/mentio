@@ -3,10 +3,8 @@ import { cn } from "@/lib/utils";
 
 export function Logo({ className, href = "/" }: { className?: string; href?: string }) {
   return (
-    <Link href={href} className={cn("inline-flex min-h-11 items-center gap-2 rounded-md font-display text-lg font-semibold tracking-tight", className)}>
-      <span className="relative inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg brand-gradient text-white shadow-soft">
-        <span className="relative text-[13px] font-black">M</span>
-      </span>
+    <Link href={href} className={cn("inline-flex min-h-9 items-center gap-2 rounded-md font-display text-[15px] font-semibold tracking-tight", className)}>
+      <span className="inline-flex h-5 w-5 items-center justify-center rounded-[5px] bg-white text-[11px] font-black text-black">M</span>
       <span>Mentio</span>
     </Link>
   );

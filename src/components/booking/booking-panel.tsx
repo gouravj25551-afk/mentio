@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SlotPicker, type Slot } from "@/components/booking/slot-picker";
+import { play } from "@/lib/sound";
 
 /**
  * Students always book on Mentio: pick a day, pick a time, add a topic, confirm.
@@ -70,15 +71,18 @@ export function BookingPanel({
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
+        play("error");
         setError(body?.error ?? "Something went wrong. Please try again.");
         // The slot may have just been taken: reload the list so it disappears.
         if (res.status === 409) router.refresh();
         return;
       }
+      play("success");
       toast.success("Booking confirmed");
       setOpen(false);
       router.push(`/dashboard/student/bookings/${body.id}`);
     } catch {
+      play("error");
       setError("Network problem. Check your connection and try again.");
     } finally {
       setSubmitting(false);
@@ -86,27 +90,27 @@ export function BookingPanel({
   }
 
   return (
-    <div id="book" className="ring-animated scroll-mt-24 rounded-3xl">
-      <div className="surface rounded-3xl backdrop-blur-xl">
-        <div className="flex items-start justify-between gap-4 border-b border-white/[0.07] p-6">
+    <div id="book" className="scroll-mt-20">
+      <div className="rounded-xl border border-white/12 bg-black">
+        <div className="flex items-start justify-between gap-4 border-b border-white/10 p-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-white/45">Book a call</p>
-            <p className="mt-1 font-display text-2xl font-semibold text-white">{priceLabel}</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Book a call</p>
+            <p className="mt-1 font-display text-xl font-semibold">{priceLabel}</p>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/75">
-            <Video className="h-3.5 w-3.5 text-cyan-300" aria-hidden /> {mentor.sessionLength} min
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-2.5 py-1 text-[11px] text-white/75">
+            <Video className="h-3 w-3" aria-hidden /> {mentor.sessionLength} min
           </span>
         </div>
 
-        <div className="space-y-5 p-6">
+        <div className="space-y-4 p-4">
           {blockedReason ? (
-            <p role="status" className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-muted-foreground">{blockedReason}</p>
+            <p role="status" className="rounded-md border border-white/10 p-3 text-[13px] text-muted-foreground">{blockedReason}</p>
           ) : (
             <SlotPicker slots={slots} selected={selected?.startsAt} onSelect={setSelected} />
           )}
 
           {!blockedReason && viewer && viewer.role !== "STUDENT" ? (
-            <p className="rounded-2xl bg-white/[0.03] p-3 text-xs text-muted-foreground">Only student accounts can book sessions.</p>
+            <p className="rounded-md border border-white/10 p-3 text-xs text-muted-foreground">Only student accounts can book sessions.</p>
           ) : null}
 
           {!blockedReason && slots.length > 0 ? (
@@ -117,12 +121,12 @@ export function BookingPanel({
                     type="button"
                     variant="brand"
                     size="lg"
-                    className="shine w-full rounded-2xl"
+                    className="w-full"
                     onClick={proceed}
                     disabled={Boolean(viewer) && !canBook}
                   >
                     {viewer ? `Book ${format(new Date(selected.startsAt), "EEE d · p")}` : "Sign in to book"}
-                    <ArrowRight className="h-4 w-4" aria-hidden />
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                   </Button>
                 </motion.div>
               ) : (
@@ -135,7 +139,7 @@ export function BookingPanel({
           ) : null}
 
           <p className="flex items-center justify-center gap-1.5 text-[11px] text-white/40">
-            <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> Instant confirmation · free to reschedule before the call
+            <ShieldCheck className="h-3 w-3" aria-hidden /> Instant confirmation · free to reschedule before the call
           </p>
         </div>
       </div>
@@ -160,7 +164,7 @@ export function BookingPanel({
             {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
             <DialogFooter>
               <Button type="submit" variant="brand" disabled={submitting || !canBook}>
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+                {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : null}
                 Confirm booking
               </Button>
             </DialogFooter>

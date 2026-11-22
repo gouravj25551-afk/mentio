@@ -17,9 +17,9 @@ export default async function CategoriesPage() {
       <main id="main-content" tabIndex={-1} className="outline-none">
         <PageIntro eyebrow="Categories" title="What do you want to" accent="grow in?" description="Pick a path to see the mentors who can help you with it." />
         {categories.length === 0 ? (
-          <Empty title="Categories are coming soon" description="We're setting things up. Check back shortly." className="container mt-10" />
+          <Empty title="Categories are coming soon" description="We're setting things up. Check back shortly." className="mx-auto mt-10 max-w-[1100px]" />
         ) : (
-          <div className="-mt-16"><CategoryGrid categories={categories} heading={false} /></div>
+          <CategoryGrid categories={categories} heading={false} />
         )}
       </main>
       <SiteFooter />

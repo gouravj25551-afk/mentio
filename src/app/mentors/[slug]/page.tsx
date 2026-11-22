@@ -66,26 +66,25 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
   const color = mentor.categories[0]?.category.color ?? "#8b5cf6";
 
   const about = (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <section>
-        <h2 className="font-display text-xl font-semibold text-white">About {name.split(" ")[0]}</h2>
-        <p className="mt-3 whitespace-pre-line leading-7 text-white/70">{mentor.bio}</p>
+        <h2 className="font-display text-base font-semibold">About {name.split(" ")[0]}</h2>
+        <p className="mt-2.5 whitespace-pre-line text-[14px] leading-7 text-white/65">{mentor.bio}</p>
       </section>
       {mentor.skills.length ? (
         <section>
-          <h2 className="font-display text-xl font-semibold text-white">Can help you with</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {mentor.skills.map((s) => <span key={s.skillId} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-white/80">{s.skill.name}</span>)}
+          <h2 className="font-display text-base font-semibold">Can help you with</h2>
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {mentor.skills.map((s) => <span key={s.skillId} className="rounded-full border border-white/12 px-2.5 py-1 text-xs text-white/75">{s.skill.name}</span>)}
           </div>
         </section>
       ) : null}
       {mentor.achievements.length ? (
         <section>
-          <h2 className="font-display text-xl font-semibold text-white">Highlights</h2>
-          <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+          <h2 className="font-display text-base font-semibold">Highlights</h2>
+          <ul className="mt-2.5 grid gap-2 sm:grid-cols-2">
             {mentor.achievements.map((a) => (
-              <li key={a} className="surface rounded-2xl p-4 text-sm text-white/80">
-                <span className="mb-2 block h-1 w-8 rounded-full" style={{ background: color }} aria-hidden />
+              <li key={a} className="rounded-md border border-white/10 p-3.5 text-[13px] leading-6 text-white/75 transition-colors hover:border-white/25">
                 {a}
               </li>
             ))}
@@ -98,15 +97,15 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
   const experience = (
     <div className="space-y-8">
       <section>
-        <h2 className="font-display text-xl font-semibold text-white">Experience</h2>
-        <p className="mt-3 whitespace-pre-line leading-7 text-white/70">{mentor.experience}</p>
+        <h2 className="font-display text-base font-semibold">Experience</h2>
+        <p className="mt-2.5 whitespace-pre-line text-[14px] leading-7 text-white/65">{mentor.experience}</p>
       </section>
       {mentor.portfolio.some((p) => p.startsWith("https://")) ? (
         <section>
-          <h2 className="font-display text-xl font-semibold text-white">Work &amp; links</h2>
-          <ul className="mt-3 space-y-2 text-sm">
+          <h2 className="font-display text-base font-semibold">Work &amp; links</h2>
+          <ul className="mt-2.5 space-y-1.5 text-[13px]">
             {mentor.portfolio.filter((p) => p.startsWith("https://")).map((p) => (
-              <li key={p}><a href={p} target="_blank" rel="noreferrer noopener" className="break-all text-violet-300 underline-offset-4 hover:underline">{p}</a></li>
+              <li key={p}><a href={p} target="_blank" rel="noreferrer noopener" className="break-all text-white/70 underline underline-offset-4 hover:text-white">{p}</a></li>
             ))}
           </ul>
         </section>
@@ -116,11 +115,11 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
 
   const reviews = (
     <div className="space-y-6">
-      <div className="surface flex flex-wrap items-center gap-8 rounded-3xl p-6">
+      <div className="flex flex-wrap items-center gap-8 rounded-xl border border-white/10 p-5">
         <div>
-          <div className="font-display text-5xl font-semibold text-white">{mentor.totalReviews ? mentor.averageRating.toFixed(1) : "–"}</div>
-          <div className="mt-1 flex items-center gap-0.5 text-amber-300">
-            {Array.from({ length: 5 }).map((_, i) => <Star key={i} className={`h-4 w-4 ${i < Math.round(mentor.averageRating) ? "fill-current" : "opacity-30"}`} aria-hidden />)}
+          <div className="font-display text-4xl font-semibold">{mentor.totalReviews ? mentor.averageRating.toFixed(1) : "–"}</div>
+          <div className="mt-1 flex items-center gap-0.5 text-white">
+            {Array.from({ length: 5 }).map((_, i) => <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(mentor.averageRating) ? "fill-current" : "opacity-30"}`} aria-hidden />)}
           </div>
           <div className="mt-1 text-xs text-muted-foreground">{mentor.totalReviews} reviews</div>
         </div>
@@ -128,8 +127,8 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
           {[5, 4, 3, 2, 1].map((n) => (
             <div key={n} className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="w-3 text-right">{n}</span>
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
-                <div className="h-full rounded-full bg-gradient-to-r from-violet-400 to-cyan-300" style={{ width: `${total ? (dist[n] / total) * 100 : 0}%` }} />
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full rounded-full bg-white" style={{ width: `${total ? (dist[n] / total) * 100 : 0}%` }} />
               </div>
               <span className="w-6 text-right">{dist[n]}</span>
             </div>
@@ -141,7 +140,7 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
       ) : (
         <ul className="space-y-3">
           {mentor.reviews.map((r) => (
-            <li key={r.id} className="surface rounded-2xl p-5">
+            <li key={r.id} className="rounded-xl border border-white/10 p-4">
               <div className="flex items-start gap-3">
                 <Avatar className="h-9 w-9">
                   <AvatarImage src={r.author.image ?? undefined} alt="" />
@@ -149,13 +148,13 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
                 </Avatar>
                 <div className="flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="text-sm font-medium text-white">{r.author.name ?? "Student"}</div>
+                    <div className="text-[13px] font-medium">{r.author.name ?? "Student"}</div>
                     <span className="text-xs text-muted-foreground">{formatDate(r.createdAt)}</span>
                   </div>
-                  <div className="flex items-center gap-0.5 text-amber-300">
-                    {Array.from({ length: 5 }).map((_, i) => <Star key={i} className={`h-3.5 w-3.5 ${i < r.rating ? "fill-current" : "opacity-30"}`} aria-hidden />)}
+                  <div className="flex items-center gap-0.5 text-white">
+                    {Array.from({ length: 5 }).map((_, i) => <Star key={i} className={`h-3 w-3 ${i < r.rating ? "fill-current" : "opacity-30"}`} aria-hidden />)}
                   </div>
-                  {r.comment ? <p className="mt-2 text-sm leading-6 text-white/70">{r.comment}</p> : null}
+                  {r.comment ? <p className="mt-2 text-[13px] leading-6 text-white/65">{r.comment}</p> : null}
                 </div>
               </div>
             </li>
@@ -189,7 +188,7 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
           actions={isStudent ? <SaveMentorButton mentorProfileId={mentor.id} initialSaved={Boolean(saved)} /> : null}
         />
 
-        <div className="container mt-12 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_400px]">
+        <div className="mx-auto mt-10 grid max-w-[1100px] grid-cols-1 gap-10 px-5 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="min-w-0">
             <ProfileTabs
               tabs={[
@@ -199,7 +198,7 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
               ]}
             />
           </div>
-          <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+          <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
             <BookingPanel
               mentor={{ id: mentor.id, slug: mentor.slug, name, sessionLength: mentor.sessionLength, timezone: mentorTimezone }}
               slots={slots}

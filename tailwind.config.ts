@@ -8,7 +8,7 @@ const config: Config = {
     container: {
       center: true,
       padding: { DEFAULT: "1rem", sm: "1.5rem" },
-      screens: { "2xl": "1200px" },
+      screens: { "2xl": "1100px" },
     },
     extend: {
       fontFamily: {

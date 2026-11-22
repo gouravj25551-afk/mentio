@@ -4,6 +4,7 @@ import { MotionConfig } from "framer-motion";
 import { ThemeProvider as NextThemes } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toast";
+import { installUiSounds } from "@/lib/sound";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [client] = React.useState(
@@ -14,6 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         },
       })
   );
+  React.useEffect(() => installUiSounds(), []);
   return (
     <NextThemes attribute="class" forcedTheme="dark" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
       <QueryClientProvider client={client}>

@@ -22,7 +22,7 @@ export function ProfileTabs({ tabs }: { tabs: ProfileTab[] }) {
 
   return (
     <div>
-      <div ref={listRef} role="tablist" aria-label="Mentor profile" onKeyDown={onKey} className="flex gap-1 border-b border-white/[0.08]">
+      <div ref={listRef} role="tablist" aria-label="Mentor profile" onKeyDown={onKey} className="flex gap-1 border-b border-white/10">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -33,11 +33,11 @@ export function ProfileTabs({ tabs }: { tabs: ProfileTab[] }) {
             aria-controls={`panel-${t.id}`}
             tabIndex={t.id === active ? 0 : -1}
             onClick={() => setActive(t.id)}
-            className={cn("relative px-4 pb-3 pt-2 text-sm font-medium transition-colors", t.id === active ? "text-white" : "text-white/50 hover:text-white/80")}
+            className={cn("relative px-3.5 pb-2.5 pt-2 text-[13px] font-medium transition-colors", t.id === active ? "text-white" : "text-white/50 hover:text-white/80")}
           >
             {t.label}
             {t.id === active ? (
-              <motion.span layoutId="profile-tab" className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-gradient-to-r from-violet-400 to-cyan-300" transition={{ type: "spring", stiffness: 400, damping: 34 }} />
+              <motion.span layoutId="profile-tab" className="absolute inset-x-0 -bottom-px h-px bg-white" transition={{ type: "spring", stiffness: 400, damping: 34 }} />
             ) : null}
           </button>
         ))}
@@ -52,7 +52,7 @@ export function ProfileTabs({ tabs }: { tabs: ProfileTab[] }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
           transition={{ duration: 0.25 }}
-          className="pt-8"
+          className="pt-6"
         >
           {current.content}
         </motion.div>

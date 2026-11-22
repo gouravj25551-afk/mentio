@@ -57,17 +57,17 @@ export default async function MentorsPage({
           description={active?.description ?? "Vetted engineers, maintainers, founders and designers. Pick a category, open a profile, book a call."}
         >
           {active ? (
-            <div className="mx-auto mt-6 flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs text-white/70">
-              <CategoryIcon name={active.icon} className="h-3.5 w-3.5" style={{ color: active.color ?? undefined }} />
+            <div className="mt-5 flex w-fit items-center gap-2 rounded-full border border-white/12 px-3 py-1 text-xs text-white/70">
+              <CategoryIcon name={active.icon} className="h-3 w-3" />
               {total.toLocaleString()} {total === 1 ? "mentor" : "mentors"} in {active.name}
             </div>
           ) : null}
         </PageIntro>
 
-        <div className="container -mt-12">
+        <div className="mx-auto max-w-[1100px] px-5 pt-8">
         <DiscoveryFilters categories={categories} skills={skills} />
 
-        <p className="mt-10 text-sm text-muted-foreground" aria-live="polite">{total.toLocaleString()} {total === 1 ? "mentor" : "mentors"}{searchParams.q ? ` for “${searchParams.q}”` : ""}</p>
+        <p className="mt-8 text-[13px] text-muted-foreground" aria-live="polite">{total.toLocaleString()} {total === 1 ? "mentor" : "mentors"}{searchParams.q ? ` for “${searchParams.q}”` : ""}</p>
 
         {mentors.length === 0 ? (
           <Empty
@@ -82,13 +82,13 @@ export default async function MentorsPage({
             className="mt-6"
           />
         ) : (
-          <div className="mt-6">
+          <div className="mt-4">
             <MentorGrid mentors={mentors} resultKey={JSON.stringify(searchParams)} />
           </div>
         )}
 
         {pageCount > 1 ? (
-          <div className="mt-10 flex items-center justify-between text-sm">
+          <div className="mt-10 flex items-center justify-between text-[13px]">
             <div className="text-muted-foreground">Page {page} of {pageCount}</div>
             <div className="flex gap-2">
               {page > 1 ? (

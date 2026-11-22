@@ -1,63 +1,30 @@
 "use client";
 import * as React from "react";
-import { AnimatePresence, animate, motion, useInView, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
+import { AnimatePresence, animate, motion, useInView, useReducedMotion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 
 export const ease = [0.2, 0.7, 0.2, 1] as const;
 
-/** A card whose border glow follows the pointer. `color` tints the light (any CSS color). */
-export function SpotlightCard({
-  className,
-  color,
-  children,
-  ...rest
-}: React.HTMLAttributes<HTMLDivElement> & { color?: string }) {
-  const onMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    e.currentTarget.style.setProperty("--x", `${e.clientX - r.left}px`);
-    e.currentTarget.style.setProperty("--y", `${e.clientY - r.top}px`);
-  };
-  return (
-    <div
-      onPointerMove={onMove}
-      className={cn("spotlight", className)}
-      style={color ? ({ "--spot": color } as React.CSSProperties) : undefined}
-      {...rest}
-    >
-      {children}
-    </div>
-  );
-}
-
-/** Tilts gently toward the pointer in 3D. Flat for reduced motion and touch. */
-export function TiltCard({ className, children, max = 8 }: { className?: string; children: React.ReactNode; max?: number }) {
-  const reduce = useReducedMotion();
-  const px = useMotionValue(0.5);
-  const py = useMotionValue(0.5);
-  const rx = useSpring(useTransform(py, [0, 1], [max, -max]), { stiffness: 200, damping: 20 });
-  const ry = useSpring(useTransform(px, [0, 1], [-max, max]), { stiffness: 200, damping: 20 });
+/** Fades and lifts a block in once as it scrolls into view. */
+export function FadeIn({ children, className, delay = 0, y = 10 }: { children: React.ReactNode; className?: string; delay?: number; y?: number }) {
   return (
     <motion.div
-      className={cn("[transform-style:preserve-3d]", className)}
-      style={reduce ? undefined : { rotateX: rx, rotateY: ry, transformPerspective: 900 }}
-      onPointerMove={(e) => {
-        if (e.pointerType !== "mouse") return;
-        const r = e.currentTarget.getBoundingClientRect();
-        px.set((e.clientX - r.left) / r.width);
-        py.set((e.clientY - r.top) / r.height);
-      }}
-      onPointerLeave={() => {
-        px.set(0.5);
-        py.set(0.5);
-      }}
+      initial={{ opacity: 0, y }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "0px 0px -8% 0px" }}
+      transition={{ duration: 0.5, delay, ease }}
+      className={className}
     >
       {children}
     </motion.div>
   );
 }
 
-/** Reveals text word by word with a soft blur. Screen readers get the plain sentence. */
+export const listVariants = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
+export const itemVariants = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.45, ease } } };
+
+/** Reveals text word by word. Screen readers get the plain sentence. */
 export function WordReveal({ text, className, delay = 0, as: Tag = "span" }: { text: string; className?: string; delay?: number; as?: "span" | "h1" | "h2" | "p" }) {
   const words = text.split(" ");
   return (
@@ -68,9 +35,9 @@ export function WordReveal({ text, className, delay = 0, as: Tag = "span" }: { t
           key={`${w}-${i}`}
           aria-hidden
           className="inline-block whitespace-pre"
-          initial={{ opacity: 0, y: "0.4em", filter: "blur(10px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          transition={{ duration: 0.7, delay: delay + i * 0.06, ease }}
+          initial={{ opacity: 0, y: "0.3em" }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: delay + i * 0.05, ease }}
         >
           {w}
           {i < words.length - 1 ? " " : ""}
@@ -87,11 +54,12 @@ export function CountUp({ value, decimals = 0, suffix = "", className }: { value
   const reduce = useReducedMotion();
   const [shown, setShown] = React.useState(reduce ? value : 0);
   React.useEffect(() => {
-    if (!inView || reduce) {
-      if (reduce) setShown(value);
+    if (reduce) {
+      setShown(value);
       return;
     }
-    const controls = animate(0, value, { duration: 1.4, ease, onUpdate: setShown });
+    if (!inView) return;
+    const controls = animate(0, value, { duration: 1.1, ease, onUpdate: setShown });
     return () => controls.stop();
   }, [inView, value, reduce]);
   return (
@@ -114,7 +82,6 @@ export function RotatingWords({ words, className, interval = 2200 }: { words: st
   const longest = words.reduce((a, b) => (b.length > a.length ? b : a), "");
   return (
     <span className={cn("relative inline-block overflow-hidden text-left align-bottom", className)}>
-      {/* The longest word reserves the width so the line never jumps. */}
       <span className="invisible">{longest}</span>
       <span className="sr-only">{words[i]}</span>
       <AnimatePresence initial={false}>
@@ -125,11 +92,16 @@ export function RotatingWords({ words, className, interval = 2200 }: { words: st
           initial={{ y: "100%", opacity: 0 }}
           animate={{ y: "0%", opacity: 1 }}
           exit={{ y: "-100%", opacity: 0 }}
-          transition={{ duration: 0.5, ease }}
+          transition={{ duration: 0.45, ease }}
         >
           {words[i]}
         </motion.span>
       </AnimatePresence>
     </span>
   );
+}
+
+/** Small uppercase mono label used above section titles. */
+export function Eyebrow({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <p className={cn("font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground", className)}>{children}</p>;
 }

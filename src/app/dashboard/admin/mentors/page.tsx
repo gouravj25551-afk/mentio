@@ -39,8 +39,8 @@ async function Section({ status }: { status: "PENDING" | "APPROVED" | "REJECTED"
           <div className="min-w-0 flex-1">
             <div className="truncate font-medium"><Link href={`/mentors/${m.slug}`} className="underline-offset-4 hover:underline">{m.user.name}</Link></div>
             <div className="truncate text-xs text-muted-foreground">{m.headline}</div>
-            <a href={m.verificationUrl ?? undefined} target="_blank" rel="noreferrer noopener" className="mt-1 block truncate text-xs text-indigo-600 underline">{m.verificationUrl ? `Verify public profile: ${m.verificationUrl}` : "Public profile not submitted"}</a>
-            {counts[i] ? <Link href="/dashboard/admin/bookings" className="mt-1 block text-xs font-medium text-amber-700 underline">{counts[i]} upcoming {counts[i] === 1 ? "session" : "sessions"} still booked</Link> : null}
+            <a href={m.verificationUrl ?? undefined} target="_blank" rel="noreferrer noopener" className="mt-1 block truncate text-xs text-white/70 underline hover:text-white">{m.verificationUrl ? `Verify public profile: ${m.verificationUrl}` : "Public profile not submitted"}</a>
+            {counts[i] ? <Link href="/dashboard/admin/bookings" className="mt-1 block text-xs font-medium text-white underline">{counts[i]} upcoming {counts[i] === 1 ? "session" : "sessions"} still booked</Link> : null}
             <div className="mt-1 flex flex-wrap gap-1.5">
               {m.categories.map((c) => <Badge key={c.categoryId} variant="secondary" className="text-[10px]">{c.category.name}</Badge>)}
             </div>

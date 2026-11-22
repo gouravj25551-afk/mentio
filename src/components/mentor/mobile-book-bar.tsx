@@ -16,13 +16,13 @@ export function MobileBookBar({ name, nextSlot }: { name: string; nextSlot: stri
       transition={{ delay: 0.8, type: "spring", stiffness: 260, damping: 26 }}
       className="fixed inset-x-3 bottom-3 z-40 lg:hidden"
     >
-      <a href="#book" className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#0b0e22]/90 p-3 pl-4 shadow-2xl backdrop-blur-xl">
+      <a href="#book" className="flex items-center justify-between gap-3 rounded-xl border border-white/15 bg-black/90 p-2.5 pl-4 backdrop-blur-xl">
         <span className="min-w-0">
-          <span className="block truncate text-sm font-medium text-white">Book a call with {name.split(" ")[0]}</span>
-          <span className="block text-xs text-white/50">{nextSlot && mounted ? `Next: ${format(new Date(nextSlot), "EEE d · p")}` : "See availability"}</span>
+          <span className="block truncate text-[13px] font-medium">Book a call with {name.split(" ")[0]}</span>
+          <span className="block text-[11px] text-white/50">{nextSlot && mounted ? `Next: ${format(new Date(nextSlot), "EEE d · p")}` : "See availability"}</span>
         </span>
-        <span className="brand-gradient inline-flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white">
-          <CalendarCheck2 className="h-4 w-4" aria-hidden /> Book
+        <span className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-white px-3.5 text-[13px] font-medium text-black">
+          <CalendarCheck2 className="h-3.5 w-3.5" aria-hidden /> Book
         </span>
       </a>
     </motion.div>

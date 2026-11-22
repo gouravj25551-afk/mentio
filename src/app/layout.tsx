@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -24,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className={`dark ${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans">
         <nav aria-label="Skip links">
           <a href="#main-content" className="sr-only z-[100] rounded-md bg-background px-4 py-2 text-sm font-medium shadow-soft focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to content</a>

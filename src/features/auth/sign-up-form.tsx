@@ -25,7 +25,7 @@ export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { default
 
   if (state?.ok) {
     return (
-      <div role="status" className="rounded-2xl border border-violet-200 bg-violet-50/70 p-6 text-sm">
+      <div role="status" className="rounded-xl border border-white/15 p-6 text-sm">
         <div className="font-display text-xl font-semibold">Thanks for joining — launching soon!</div>
         <p className="mt-1 text-muted-foreground">{state.message}</p>
         <p className="mt-4 text-muted-foreground">No verification email? Check spam, then request another link below.</p>
@@ -34,7 +34,7 @@ export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { default
           <ResendButton />
         </form>
         {resent ? <p role="status" className="mt-2 text-muted-foreground">{resent.ok ? resent.message : resent.error}</p> : null}
-        <Link href="/sign-in" className="mt-4 inline-block font-medium text-violet-700 underline underline-offset-4 dark:text-violet-300">Go to sign in</Link>
+        <Link href="/sign-in" className="mt-4 inline-block font-medium text-white underline underline-offset-4">Go to sign in</Link>
       </div>
     );
   }

@@ -39,15 +39,15 @@ export default async function AdminOverview() {
         <p className="text-sm text-muted-foreground">Platform health at a glance.</p>
       </div>
       {affected > 0 ? (
-        <Link href="/dashboard/admin/bookings" className="block rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 focus-visible:outline focus-visible:outline-2">
+        <Link href="/dashboard/admin/bookings" className="block rounded-lg border border-white/25 border-dashed p-4 text-sm text-white/85 focus-visible:outline focus-visible:outline-2">
           {affected} upcoming {affected === 1 ? "session is" : "sessions are"} booked with a rejected or suspended mentor. Review {affected === 1 ? "it" : "them"}.
         </Link>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Users" value={users.toLocaleString()} icon={<Users className="h-4 w-4 text-indigo-500" />} />
-        <Stat label="Approved mentors" value={approvedMentors} hint={`${pendingMentors} pending`} icon={<UserCheck className="h-4 w-4 text-indigo-500" />} />
-        <Stat label="Total bookings" value={bookings.toLocaleString()} icon={<Calendar className="h-4 w-4 text-indigo-500" />} />
-        <Stat label="Avg mentor rating" value={(avgRating._avg.averageRating ?? 0).toFixed(2)} icon={<Star className="h-4 w-4 text-indigo-500" />} />
+        <Stat label="Users" value={users.toLocaleString()} icon={<Users className="h-4 w-4 text-muted-foreground" />} />
+        <Stat label="Approved mentors" value={approvedMentors} hint={`${pendingMentors} pending`} icon={<UserCheck className="h-4 w-4 text-muted-foreground" />} />
+        <Stat label="Total bookings" value={bookings.toLocaleString()} icon={<Calendar className="h-4 w-4 text-muted-foreground" />} />
+        <Stat label="Avg mentor rating" value={(avgRating._avg.averageRating ?? 0).toFixed(2)} icon={<Star className="h-4 w-4 text-muted-foreground" />} />
       </div>
       <Card>
         <CardHeader><CardTitle>New bookings (30d)</CardTitle></CardHeader>

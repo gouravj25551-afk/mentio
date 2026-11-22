@@ -33,9 +33,9 @@ export default async function StudentOverview() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Stat label="Upcoming" value={upcoming.length} icon={<Calendar className="h-4 w-4 text-indigo-500" />} />
-        <Stat label="Completed" value={past} icon={<Clock className="h-4 w-4 text-indigo-500" />} />
-        <Stat label="Saved mentors" value={saved} icon={<Bookmark className="h-4 w-4 text-indigo-500" />} />
+        <Stat label="Upcoming" value={upcoming.length} icon={<Calendar className="h-4 w-4 text-muted-foreground" />} />
+        <Stat label="Completed" value={past} icon={<Clock className="h-4 w-4 text-muted-foreground" />} />
+        <Stat label="Saved mentors" value={saved} icon={<Bookmark className="h-4 w-4 text-muted-foreground" />} />
       </div>
 
       <Card>

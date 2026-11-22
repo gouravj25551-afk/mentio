@@ -8,6 +8,7 @@ import {
   Users, LineChart, Shield, Sparkles, Star, Clock,
 } from "lucide-react";
 
+import { SoundToggle } from "@/components/shared/sound-toggle";
 import { Logo } from "@/components/shared/logo";
 import { UserMenu } from "@/components/shared/user-menu";
 import { Badge } from "@/components/ui/badge";
@@ -59,15 +60,15 @@ export function DashboardShell({
   const navigating = pendingHref !== null && pendingHref !== path;
 
   return (
-    <div className="flex min-h-screen bg-muted/20">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r bg-background md:flex md:flex-col">
-        <div className="px-6 py-5">
+    <div className="flex min-h-screen">
+      <aside className="sticky top-0 hidden h-screen w-56 shrink-0 border-r border-white/10 md:flex md:flex-col">
+        <div className="px-4 py-4">
           <Logo />
         </div>
         <div className="px-3">
-          <Badge variant="brand" className="w-full justify-center capitalize">{user.role.toLowerCase()}</Badge>
+          <Badge variant="brand" className="w-full justify-center font-mono text-[10px] uppercase tracking-wider">{user.role.toLowerCase()}</Badge>
         </div>
-        <nav aria-label="Dashboard" className="mt-6 flex-1 space-y-0.5 px-2">
+        <nav aria-label="Dashboard" className="mt-5 flex-1 space-y-0.5 px-2">
           {items.map((it) => {
             // The first item is the role's overview: it is only active on its own page.
             const active = path === it.href || (it.href !== items[0].href && path.startsWith(`${it.href}/`));
@@ -78,49 +79,48 @@ export function DashboardShell({
                 onNavigate={() => setPendingHref(it.href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group relative isolate flex min-h-11 items-center justify-between rounded-xl px-3 py-2 text-sm transition-colors",
-                  active ? "text-white" : "text-foreground/70 hover:bg-white/[0.04] hover:text-foreground"
+                  "group relative isolate flex h-9 items-center justify-between rounded-md px-2.5 text-[13px] transition-colors",
+                  active ? "text-white" : "text-white/55 hover:bg-white/[0.04] hover:text-white"
                 )}
               >
                 {active ? (
-                  <motion.span layoutId="dash-nav" className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-violet-500/25 to-indigo-500/10 ring-1 ring-violet-300/25" transition={{ type: "spring", stiffness: 400, damping: 34 }}>
-                    <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-violet-300" />
-                  </motion.span>
+                  <motion.span layoutId="dash-nav" className="absolute inset-0 -z-10 rounded-md bg-white/[0.08]" transition={{ type: "spring", stiffness: 450, damping: 36 }} />
                 ) : null}
                 <span className="inline-flex items-center gap-2">
-                  <it.icon className="h-4 w-4" />
+                  <it.icon className="h-3.5 w-3.5" />
                   {it.label}
                 </span>
                 {it.href.endsWith("notifications") && unread > 0 ? (
-                  <span className={cn("rounded-full px-1.5 py-0.5 text-[10px]", active ? "bg-violet-300 text-[#0b0e22]" : "bg-violet-500 text-white")}>{unread}</span>
+                  <span className={cn("rounded-full px-1.5 py-0.5 text-[10px]", active ? "bg-white text-black" : "bg-white/15 text-white")}>{unread}</span>
                 ) : null}
               </Link>
             );
           })}
         </nav>
-        <div className="border-t p-4 text-xs text-muted-foreground">
+        <div className="border-t border-white/10 p-4 text-xs text-muted-foreground">
           <div className="truncate font-medium text-foreground">{user.name ?? user.email}</div>
           <div className="truncate">{user.email}</div>
         </div>
       </aside>
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-5 backdrop-blur md:px-10">
+        <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-white/10 bg-black/70 px-5 backdrop-blur md:px-8">
           <div className="md:hidden"><Logo /></div>
-          <div className="ml-auto flex items-center gap-3">
-            <Link href="/dashboard/student/notifications" className="relative inline-flex h-11 w-11 items-center justify-center rounded-lg border bg-background transition-colors hover:bg-muted">
+          <div className="ml-auto flex items-center gap-1.5">
+            <SoundToggle />
+            <Link href="/dashboard/student/notifications" className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-white/65 transition-colors hover:bg-white/[0.06] hover:text-white">
               <Bell className="h-4 w-4" aria-hidden />
               <span className="sr-only">Notifications</span>
-              {unread > 0 ? <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] text-white">{unread}</span> : null}
+              {unread > 0 ? <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-medium text-black">{unread}</span> : null}
             </Link>
             <UserMenu user={user} />
           </div>
         </header>
         {navigating ? (
-          <div role="status" aria-live="polite" className="border-b border-violet-200 bg-violet-50 px-5 py-2 text-sm text-violet-900 md:px-10">
+          <div role="status" aria-live="polite" className="border-b border-white/10 px-5 py-2 text-xs text-muted-foreground md:px-8">
             Loading {items.find((item) => item.href === pendingHref)?.label ?? "page"}…
           </div>
         ) : null}
-        <nav aria-label="Dashboard sections" className="flex gap-1 overflow-x-auto border-b bg-background px-3 py-2 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
+        <nav aria-label="Dashboard sections" className="flex gap-1 overflow-x-auto border-b border-white/10 px-3 py-1.5 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
           {items.map((it) => {
             // The first item is the role's overview: it is only active on its own page.
             const active = path === it.href || (it.href !== items[0].href && path.startsWith(`${it.href}/`));
@@ -131,17 +131,17 @@ export function DashboardShell({
                 onNavigate={() => setPendingHref(it.href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-colors",
-                  active ? "bg-violet-500/20 text-white ring-1 ring-violet-300/25" : "text-foreground/70 hover:bg-white/[0.04]",
+                  "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md px-3 text-[13px] transition-colors",
+                  active ? "bg-white/[0.1] text-white" : "text-white/55 hover:bg-white/[0.04] hover:text-white",
                 )}
               >
-                <it.icon className="h-4 w-4" aria-hidden />
+                <it.icon className="h-3.5 w-3.5" aria-hidden />
                 {it.label}
               </Link>
             );
           })}
         </nav>
-        <main id="main-content" tabIndex={-1} className="px-5 py-8 outline-none md:px-10">{children}</main>
+        <main id="main-content" tabIndex={-1} className="px-5 py-6 outline-none md:px-8">{children}</main>
       </div>
     </div>
   );

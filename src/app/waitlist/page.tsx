@@ -24,23 +24,20 @@ export default async function WaitlistPage() {
   const firstName = session?.user?.name?.trim().split(/\s+/)[0];
 
   if (joined) return (
-    <main className="launch-scene relative isolate min-h-screen overflow-hidden bg-[#070916] text-white">
-      <div className="launch-halo pointer-events-none absolute left-1/2 top-[36%] h-[46rem] w-[46rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-500/20 blur-[110px]" aria-hidden />
-      <div className="pointer-events-none absolute inset-0 opacity-[0.12] grid-bg" aria-hidden />
-      <div className="launch-orbit pointer-events-none absolute left-1/2 top-[43%] h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-violet-200/15" aria-hidden />
-      <div className="launch-orbit-reverse pointer-events-none absolute left-1/2 top-[43%] h-[23rem] w-[23rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/15" aria-hidden />
+    <main className="launch-scene relative isolate min-h-screen overflow-hidden bg-black text-white">
+            <div className="pointer-events-none absolute inset-0 opacity-[0.12] grid-bg" aria-hidden />
       <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-7 sm:px-10"><Logo href="/waitlist" className="text-white" />{session?.user ? <form action={signOutAction}><button type="submit" className="text-sm text-white/65 transition hover:text-white">Sign out</button></form> : <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">Mentio early access</span>}</header>
       <section className="relative z-10 mx-auto flex min-h-[calc(100vh-150px)] max-w-7xl flex-col items-center justify-center px-6 pb-24 pt-12 text-center">
-        <div className="launch-reveal mb-8 inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-200/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-300" /> Your spot is confirmed</div>
-        <p className="launch-reveal text-sm font-medium uppercase tracking-[0.45em] text-violet-200/75" style={{ animationDelay: "100ms" }}>Thank you{firstName ? `, ${firstName}` : ""}</p>
+        <div className="launch-reveal mb-8 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/80"><span className="h-2 w-2 animate-pulse rounded-full bg-white" /> Your spot is confirmed</div>
+        <p className="launch-reveal text-sm font-medium uppercase tracking-[0.45em] text-white/80" style={{ animationDelay: "100ms" }}>Thank you{firstName ? `, ${firstName}` : ""}</p>
         <h1 className="launch-reveal mt-5 max-w-5xl font-display text-[clamp(4.2rem,11vw,10rem)] font-bold leading-[0.88] tracking-[-0.09em]" style={{ animationDelay: "180ms" }}>Launching <span className="launch-gradient block pb-4">soon.</span></h1>
         <p className="launch-reveal mx-auto mt-5 max-w-2xl text-lg leading-8 text-white/65 sm:text-xl" style={{ animationDelay: "260ms" }}>Your email is verified. You’re on the Mentio waitlist, and we’ll email you when the doors open. No more steps today.</p>
-        <div className="launch-reveal mt-10 h-px w-40 bg-gradient-to-r from-transparent via-violet-300/80 to-transparent" style={{ animationDelay: "340ms" }} />
+        <div className="launch-reveal mt-10 h-px w-40 bg-gradient-to-r from-transparent via-white/40 to-transparent" style={{ animationDelay: "340ms" }} />
         <p className="launch-reveal mt-8 max-w-xl text-base leading-7 text-white/75" style={{ animationDelay: "400ms" }}>Mentio brings you closer to people who’ve been where you want to go. Find the right mentor, have a focused 1:1 conversation, and turn a question into your next move.</p>
         <div className="launch-reveal mt-12 grid w-full max-w-4xl gap-3 text-left sm:grid-cols-3" style={{ animationDelay: "480ms" }}>
-          <div className="launch-card rounded-3xl border border-white/15 bg-white/[0.05] p-6 backdrop-blur-xl"><Users className="h-6 w-6 text-violet-300" /><h2 className="mt-7 font-display text-lg font-semibold">People, not profiles.</h2><p className="mt-2 text-sm leading-6 text-white/55">Learn from real experience and the stories behind it.</p></div>
-          <div className="launch-card rounded-3xl border border-white/15 bg-white/[0.05] p-6 backdrop-blur-xl"><CalendarDays className="h-6 w-6 text-cyan-300" /><h2 className="mt-7 font-display text-lg font-semibold">A conversation that counts.</h2><p className="mt-2 text-sm leading-6 text-white/55">Focused time to ask the questions that matter most.</p></div>
-          <div className="launch-card rounded-3xl border border-white/15 bg-white/[0.05] p-6 backdrop-blur-xl"><Sparkles className="h-6 w-6 text-pink-300" /><h2 className="mt-7 font-display text-lg font-semibold">Your next move starts here.</h2><p className="mt-2 text-sm leading-6 text-white/55">Leave with clarity, confidence, and a way forward.</p></div>
+          <div className="launch-card rounded-xl border border-white/15 bg-white/[0.05] p-6 "><Users className="h-6 w-6 text-white/80" /><h2 className="mt-7 font-display text-lg font-semibold">People, not profiles.</h2><p className="mt-2 text-sm leading-6 text-white/55">Learn from real experience and the stories behind it.</p></div>
+          <div className="launch-card rounded-xl border border-white/15 bg-white/[0.05] p-6 "><CalendarDays className="h-6 w-6 text-white/80" /><h2 className="mt-7 font-display text-lg font-semibold">A conversation that counts.</h2><p className="mt-2 text-sm leading-6 text-white/55">Focused time to ask the questions that matter most.</p></div>
+          <div className="launch-card rounded-xl border border-white/15 bg-white/[0.05] p-6 "><Sparkles className="h-6 w-6 text-white/80" /><h2 className="mt-7 font-display text-lg font-semibold">Your next move starts here.</h2><p className="mt-2 text-sm leading-6 text-white/55">Leave with clarity, confidence, and a way forward.</p></div>
         </div>
         <p className="mt-10 text-xs uppercase tracking-[0.24em] text-white/35">The future of mentorship is warming up</p>
       </section>
@@ -49,8 +46,8 @@ export default async function WaitlistPage() {
   );
 
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-[#09091b] text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(111,66,231,0.28),transparent_37%),radial-gradient(circle_at_80%_80%,rgba(27,173,194,0.14),transparent_35%)]" aria-hidden />
+    <main className="relative isolate min-h-screen overflow-hidden bg-black text-white">
+      <div className="pointer-events-none absolute inset-0 " aria-hidden />
       <div className="pointer-events-none absolute inset-0 opacity-20 grid-bg" aria-hidden />
 
       <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-7 sm:px-10">
@@ -72,26 +69,26 @@ export default async function WaitlistPage() {
               <div className="flex gap-3"><div className="h-4 w-16 rounded-full bg-white/25" /><div className="h-4 w-16 rounded-full bg-white/25" /></div>
             </div>
             <div className="grid gap-6 py-10 md:grid-cols-[1.4fr_1fr]">
-              <div className="rounded-3xl border border-violet-300/20 bg-gradient-to-br from-violet-500/30 to-indigo-700/10 p-8">
-                <Sparkles className="h-7 w-7 text-violet-200" />
+              <div className="rounded-xl border border-white/20 bg-gradient-to-br from-white/[0.06] to-transparent p-8">
+                <Sparkles className="h-7 w-7 text-white/80" />
                 <p className="mt-8 font-display text-3xl font-semibold">Find your next mentor.</p>
                 <p className="mt-3 max-w-sm text-white/60">Real conversations with people who have been where you want to go.</p>
                 <div className="mt-9 h-10 w-32 rounded-xl bg-white/35" />
               </div>
               <div className="space-y-4">
-                <div className="rounded-2xl border border-white/15 bg-white/[0.08] p-6"><Users className="h-6 w-6 text-cyan-200" /><p className="mt-6 text-lg font-semibold">Vetted mentors</p><p className="mt-2 text-sm text-white/55">People worth learning from.</p></div>
-                <div className="rounded-2xl border border-white/15 bg-white/[0.08] p-6"><CalendarDays className="h-6 w-6 text-violet-200" /><p className="mt-6 text-lg font-semibold">Focused 1:1 calls</p><p className="mt-2 text-sm text-white/55">A clearer path, one call at a time.</p></div>
+                <div className="rounded-lg border border-white/15 bg-white/[0.08] p-6"><Users className="h-6 w-6 text-white/80" /><p className="mt-6 text-lg font-semibold">Vetted mentors</p><p className="mt-2 text-sm text-white/55">People worth learning from.</p></div>
+                <div className="rounded-lg border border-white/15 bg-white/[0.08] p-6"><CalendarDays className="h-6 w-6 text-white/80" /><p className="mt-6 text-lg font-semibold">Focused 1:1 calls</p><p className="mt-2 text-sm text-white/55">A clearer path, one call at a time.</p></div>
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
-              {["Open source", "Career growth", "Interview prep"].map((label) => <div key={label} className="h-28 rounded-2xl border border-white/15 bg-white/[0.07] p-5 text-sm text-white/70">{label}</div>)}
+              {["Open source", "Career growth", "Interview prep"].map((label) => <div key={label} className="h-28 rounded-lg border border-white/15 bg-white/[0.07] p-5 text-sm text-white/70">{label}</div>)}
             </div>
           </div>
         </div>
 
-        <div className="relative z-10 mx-auto w-full max-w-xl rounded-[2rem] border border-white/20 bg-[#111128]/95 px-7 py-10 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:px-12 sm:py-14">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-300/25 bg-violet-400/15 text-violet-200"><LockKeyhole className="h-6 w-6" /></div>
-          <div className="mt-7 inline-flex items-center gap-2 rounded-full border border-violet-300/20 bg-violet-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-violet-200"><span className="h-1.5 w-1.5 rounded-full bg-violet-300" /> Mentio early access</div>
+        <div className="relative z-10 mx-auto w-full max-w-xl rounded-[2rem] border border-white/20 bg-[#111128]/95 px-7 py-10 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)]  sm:px-12 sm:py-14">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white/80"><LockKeyhole className="h-6 w-6" /></div>
+          <div className="mt-7 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-white/80"><span className="h-1.5 w-1.5 rounded-full bg-white/10" /> Mentio early access</div>
           <h1 className="mt-6 font-display text-4xl font-semibold tracking-tight sm:text-6xl">{joined ? `${firstName ? `${firstName}, you’re` : "You’re"} on the list.` : "Something good is coming."}</h1>
           <p className="mx-auto mt-5 max-w-lg text-base leading-7 text-white/65 sm:text-lg">
             {joined
@@ -99,7 +96,7 @@ export default async function WaitlistPage() {
               : "Mentio is almost here. Join the waitlist to be among the first to find mentors, have better conversations, and take your next step."}
           </p>
           {joined ? (
-            <div role="status" className="mx-auto mt-8 max-w-sm rounded-xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">You’ve joined the waitlist. Keep an eye on your inbox.</div>
+            <div role="status" className="mx-auto mt-8 max-w-sm rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white/80">You’ve joined the waitlist. Keep an eye on your inbox.</div>
           ) : (
             <Button asChild variant="brand" size="xl" className="mt-8 w-full max-w-xs">
               <Link href="/sign-up">Join the waitlist <ArrowRight className="h-4 w-4" /></Link>

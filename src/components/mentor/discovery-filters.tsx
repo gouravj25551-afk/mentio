@@ -8,7 +8,6 @@ import { Loader2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { CategoryIcon } from "@/components/shared/icons";
 import { cn } from "@/lib/utils";
 
 type CategoryOption = { id: string; slug: string; name: string; icon: string | null; color: string | null; mentorCount?: number };
@@ -38,59 +37,51 @@ export function DiscoveryFilters({ categories, skills }: { categories: CategoryO
   const skillOptions = useMemo(() => skills.slice(0, 60), [skills]);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           const fd = new FormData(e.currentTarget);
           push({ q: String(fd.get("q") ?? "") });
         }}
-        className="surface relative mx-auto w-full max-w-2xl rounded-2xl p-1.5"
+        className="relative w-full max-w-xl"
       >
-        <Search aria-hidden className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
           name="q"
           type="search"
           aria-label="Search mentors"
           defaultValue={params.get("q") ?? ""}
           placeholder="Search by name, company, or what they help with"
-          className="h-12 border-0 bg-transparent pl-10 pr-28 text-base focus-visible:ring-0 sm:text-sm"
+          className="h-10 pl-9 pr-20"
         />
-        <Button type="submit" size="sm" variant="brand" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-4">
-          {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+        <Button type="submit" size="sm" variant="brand" className="absolute right-1.5 top-1/2 h-7 -translate-y-1/2 px-3">
+          {pending ? <Loader2 className="h-3 w-3 animate-spin" aria-hidden /> : null}
           Search
         </Button>
       </form>
 
       <div
-        className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:px-0 [&::-webkit-scrollbar]:hidden"
+        className="-mx-5 flex items-center gap-1.5 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden"
         role="group"
         aria-label="Filter by category"
       >
         <Chip label="All" active={!activeCat} onClick={() => push({ category: undefined })} />
         {categories.map((c) => (
-          <Chip
-            key={c.id}
-            label={c.name}
-            icon={c.icon}
-            color={c.color}
-            count={c.mentorCount}
-            active={activeCat === c.slug}
-            onClick={() => push({ category: c.slug })}
-          />
+          <Chip key={c.id} label={c.name} count={c.mentorCount} active={activeCat === c.slug} onClick={() => push({ category: c.slug })} />
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Select value={activeSkill || "any"} onValueChange={(v) => push({ skill: v === "any" ? undefined : v })}>
-          <SelectTrigger aria-label="Filter by skill" className="h-10 w-48 rounded-full border-white/10 bg-white/[0.03]"><SelectValue placeholder="Any skill" /></SelectTrigger>
+          <SelectTrigger aria-label="Filter by skill" className="h-8 w-40 text-xs"><SelectValue placeholder="Any skill" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="any">Any skill</SelectItem>
             {skillOptions.map((s) => <SelectItem key={s.id} value={s.slug}>{s.name}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={activeSort} onValueChange={(v) => push({ sort: v })}>
-          <SelectTrigger aria-label="Sort mentors" className="h-10 w-44 rounded-full border-white/10 bg-white/[0.03]"><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label="Sort mentors" className="h-8 w-36 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="recommended">Recommended</SelectItem>
             <SelectItem value="rating">Top rated</SelectItem>
@@ -103,28 +94,20 @@ export function DiscoveryFilters({ categories, skills }: { categories: CategoryO
   );
 }
 
-function Chip({ label, active, onClick, icon, color, count }: { label: string; active: boolean; onClick: () => void; icon?: string | null; color?: string | null; count?: number }) {
+function Chip({ label, active, onClick, count }: { label: string; active: boolean; onClick: () => void; count?: number }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "relative isolate inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm transition-colors",
-        active ? "border-transparent text-white" : "border-white/10 bg-white/[0.02] text-white/65 hover:border-white/25 hover:text-white",
+        "relative isolate inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs transition-colors",
+        active ? "border-transparent text-black" : "border-white/12 text-white/65 hover:border-white/40 hover:text-white",
       )}
     >
-      {active ? (
-        <motion.span
-          layoutId="category-chip"
-          className="absolute inset-0 -z-10 rounded-full"
-          style={{ background: `linear-gradient(120deg, ${color ?? "#8b5cf6"}, #4f46e5)` }}
-          transition={{ type: "spring", stiffness: 380, damping: 30 }}
-        />
-      ) : null}
-      {icon !== undefined ? <CategoryIcon name={icon} className="h-3.5 w-3.5" style={{ color: active ? "#fff" : color ?? undefined }} /> : null}
+      {active ? <motion.span layoutId="category-chip" className="absolute inset-0 -z-10 rounded-full bg-white" transition={{ type: "spring", stiffness: 420, damping: 34 }} /> : null}
       {label}
-      {count !== undefined ? <span className={cn("text-[11px]", active ? "text-white/80" : "text-white/35")}>{count}</span> : null}
+      {count !== undefined ? <span className={cn("font-mono text-[10px]", active ? "text-black/55" : "text-white/35")}>{count}</span> : null}
     </button>
   );
 }

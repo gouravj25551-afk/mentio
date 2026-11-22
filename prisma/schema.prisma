@@ -158,9 +158,8 @@ model MentorProfile {
   averageRating     Float        @default(0)
   totalReviews      Int          @default(0)
   acceptingBookings Boolean      @default(true)
-  // Mentors either publish slots in Mentio or send students to one connected
-  // scheduling provider. External events are imported as CalendarBlocks so
-  // they still hide matching Mentio slots.
+  // No longer read: students always book on Mentio. Connected Cal.com / Calendly
+  // accounts only contribute busy time (CalendarBlocks). Kept until a migration drops it.
   schedulingMode   SchedulingMode @default(INTERNAL)
   approvedAt        DateTime?
   createdAt         DateTime     @default(now())

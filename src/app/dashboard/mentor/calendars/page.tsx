@@ -4,12 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MeetingLinkForm } from "@/components/dashboard/meeting-link-form";
-import { SchedulingModeForm } from "@/components/dashboard/scheduling-mode-form";
+import Link from "next/link";
 import { ALLOWED_MEETING_HOSTS } from "@/lib/meeting-links";
 import { connectionHealth, PROVIDERS, type ProviderSlug } from "@/services/calendar/oauth";
 import { env } from "@/lib/env";
 
-export const metadata = { title: "Meeting link" };
+export const metadata = { title: "Calendars & meeting link" };
 
 const MESSAGES: Record<string, string> = {
   state: "That connection attempt couldn't be verified. Please try again.",
@@ -34,18 +34,15 @@ export default async function CalendarsPage({ searchParams }: { searchParams: Pr
         return { slug, name: p.name, health: conn ? await connectionHealth(conn) : null };
       }),
   );
-  const connected = {
-    CAL_COM: mentor.calendars.some((c) => c.provider === "CAL_COM" && c.active),
-    CALENDLY: mentor.calendars.some((c) => c.provider === "CALENDLY" && c.active),
-  };
-  const selectedConnection = mentor.schedulingMode === "INTERNAL" ? null : mentor.calendars.find((c) => c.provider === mentor.schedulingMode);
+  const hasAvailability = (await db.availability.count({ where: { mentorProfileId: mentor.id } })) > 0;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Scheduling</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">Calendars &amp; meeting link</h1>
         <p className="text-sm text-muted-foreground">
-          Choose Mentio availability or an attached Cal.com / Calendly booking page.
+          Students always book (and later pay) on Mentio, inside the free hours you set. Connect Cal.com or Calendly and
+          anything booked there is hidden here automatically, so you are never double-booked.
         </p>
       </div>
 
@@ -53,8 +50,20 @@ export default async function CalendarsPage({ searchParams }: { searchParams: Pr
       {connectionCreated ? <p role="status" className="rounded-md bg-muted p-3 text-sm">Connected.</p> : null}
 
       <Card>
-        <CardHeader><CardTitle>How students book you</CardTitle></CardHeader>
-        <CardContent><SchedulingModeForm initialMode={mentor.schedulingMode} initialUrl={selectedConnection?.eventTypeUrl ?? ""} connected={connected} /></CardContent>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            Your free hours
+            {hasAvailability ? <Badge variant="success">Set</Badge> : <Badge variant="warning">Not set</Badge>}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {hasAvailability
+              ? "Students pick from these weekly hours, in their own timezone. A booked slot disappears for everyone else."
+              : "You have no free hours yet, so students can't book you. Add your weekly hours first."}
+          </p>
+          <Button asChild variant={hasAvailability ? "outline" : "brand"}><Link href="/dashboard/mentor/availability">{hasAvailability ? "Edit free hours" : "Set free hours"}</Link></Button>
+        </CardContent>
       </Card>
 
       <Card>
@@ -72,6 +81,13 @@ export default async function CalendarsPage({ searchParams }: { searchParams: Pr
         </CardContent>
       </Card>
 
+      {providers.length === 0 ? (
+        <Card>
+          <CardHeader><CardTitle className="flex items-center justify-between">Cal.com &amp; Calendly <Badge variant="secondary">Coming soon</Badge></CardTitle></CardHeader>
+          <CardContent><p className="text-sm text-muted-foreground">Calendar sync isn&apos;t switched on yet. Until then, keep your Mentio free hours up to date.</p></CardContent>
+        </Card>
+      ) : null}
+
       {providers.map((p) => (
         <Card key={p.slug}>
           <CardHeader>
@@ -81,7 +97,7 @@ export default async function CalendarsPage({ searchParams }: { searchParams: Pr
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">Connect your account, then choose its booking page above. Provider webhooks keep occupied times hidden in Mentio.</p>
+            <p className="text-sm text-muted-foreground">Connect {p.name} so meetings booked there hide the same times on Mentio. Your Mentio free hours stay the source of truth.</p>
             {p.health === "connected" ? <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">Webhook URL: {env.NEXT_PUBLIC_APP_URL}/api/webhooks/calendars/{p.slug}. Add it to {p.name} using the app signing secret configured for Mentio.</p> : null}
             {p.health ? (
               <form action={`/api/calendars/${p.slug}/disconnect`} method="post">

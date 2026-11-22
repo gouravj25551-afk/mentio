@@ -61,6 +61,12 @@ async function assertNoOverlap(tx: Tx, opts: { mentorProfileId: string; studentI
     where: { mentorProfileId: opts.mentorProfileId, status: { in: ACTIVE_STATUSES }, ...overlapping, ...notSelf },
   });
   if (mentorBusy > 0) throw conflict(SLOT_TAKEN);
+  // Meetings booked in a connected Cal.com / Calendly account block the same time
+  // here too. The slot picker hides them, but a stale page must not book over one.
+  const calendarBusy = await tx.calendarBlock.count({
+    where: { calendarConnection: { mentorProfileId: opts.mentorProfileId, active: true }, cancelledAt: null, ...overlapping },
+  });
+  if (calendarBusy > 0) throw conflict(SLOT_TAKEN);
   const studentBusy = await tx.booking.count({
     where: { studentId: opts.studentId, status: { in: ACTIVE_STATUSES }, ...overlapping, ...notSelf },
   });

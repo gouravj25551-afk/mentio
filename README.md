@@ -12,7 +12,7 @@ A Next.js application with real auth, a real database, a transactional booking e
 - **Auth** — NextAuth v5 (email + password with email verification, optional Google), bcrypt, forgot/reset flow with hashed single-use tokens, no user enumeration, database-backed rate limits.
 - **Booking engine** — mentor-timezone availability → generated slots → transactional, double-booking-proof booking (advisory locks plus a database exclusion constraint) → cancel / reschedule / complete / review.
 - **Free beta, honestly** — no payment provider exists, so every session is free and paid bookings are impossible rather than faked. See [`docs/PRODUCTION.md`](docs/PRODUCTION.md).
-- **Meeting links** — an unguessable Jitsi room per booking, or the mentor's own validated link. Mentors can switch scheduling to Cal.com or Calendly (`schedulingMode`); busy times imported by verified webhooks hide matching slots. Mentio itself does not create events in those tools.
+- **Meeting links** — an unguessable Jitsi room per booking, or the mentor's own validated link. Students always book on Mentio inside the mentor's weekly free hours. Mentors can connect Cal.com or Calendly: meetings booked there arrive through verified webhooks and hide (and server-side block) the same times on Mentio. Mentio itself does not create events in those tools.
 - **Notifications + email** — persisted notifications plus Resend email (required in production; console in development).
 - **Admin dashboard** — mentor approval queue (complete profiles only), moderation, users, bookings, analytics.
 - **Tests** — integration tests against a real Postgres (`npm test`) and a browser smoke test (`npm run test:e2e`).

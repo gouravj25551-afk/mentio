@@ -34,7 +34,7 @@ export function SignUpForm({ defaultRole = "STUDENT", googleEnabled }: { default
           <ResendButton />
         </form>
         {resent ? <p role="status" className="mt-2 text-muted-foreground">{resent.ok ? resent.message : resent.error}</p> : null}
-        <Link href="/waitlist" className="mt-4 inline-block font-medium text-violet-700 underline underline-offset-4">See the waitlist page</Link>
+        <Link href="/sign-in" className="mt-4 inline-block font-medium text-violet-700 underline underline-offset-4 dark:text-violet-300">Go to sign in</Link>
       </div>
     );
   }
@@ -100,7 +100,7 @@ function Submit() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" variant="brand" size="lg" className="w-full" disabled={pending}>
-      {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Join the waitlist
+      {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Create account
     </Button>
   );
 }

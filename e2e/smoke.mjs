@@ -27,6 +27,21 @@ const linkFromLog = (path) => {
   return matches.length ? `${BASE}${path}?token=${matches.at(-1)[1]}` : null;
 };
 
+// Clicks the first day (inside `scope`) that offers at least `min` times, so the
+// test doesn't depend on what time of day it runs.
+async function pickBusyDay(scope, min) {
+  const days = page.locator(`${scope} [aria-labelledby='slot-days-label'] button:not([disabled])`);
+  await days.first().waitFor({ timeout: 60000 });
+  const n = await days.count();
+  for (let i = 0; i < n; i++) {
+    await days.nth(i).click();
+    await page.waitForTimeout(400);
+    const times = page.locator(`${scope} button[aria-pressed]`).filter({ hasText: /\d:\d\d/ });
+    if ((await times.count()) >= min) return times;
+  }
+  throw new Error(`no day with ${min}+ times`);
+}
+
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, timezoneId: "America/New_York" });
 const page = await context.newPage();
@@ -86,13 +101,12 @@ try {
 
   // --- Book through the UI ------------------------------------------------------
   await page.goto(`${BASE}/mentors/aarav-mehta`);
-  await page.getByText("Available times").waitFor();
-  const firstDay = page.locator("[aria-labelledby='slot-days-label'] button:not([disabled])").first();
-  await firstDay.click();
-  const timeButtons = page.locator("button[aria-pressed]:has-text('M')").filter({ hasText: /\d:\d\d/ });
+  await page.locator("#book [aria-labelledby='slot-days-label']").waitFor();
+  const timeButtons = await pickBusyDay("#book", 3);
   const nSlots = await timeButtons.count();
-  check("slot picker shows times in the viewer's timezone", nSlots > 0 && (await page.getByText("Times shown in America/New_York").isVisible()), `${nSlots} slots`);
+  check("slot picker shows times in the viewer's timezone", nSlots > 0 && (await page.getByText("(America/New_York)", { exact: false }).isVisible()), `${nSlots} slots`);
   await timeButtons.nth(2).click();
+  await page.locator("#book").getByRole("button", { name: /^Book / }).click();
   await page.getByLabel("What do you want to talk about?").fill("E2E resume review");
   await page.getByRole("button", { name: "Confirm booking" }).click();
   await page.waitForURL("**/dashboard/student/bookings/**");
@@ -105,14 +119,13 @@ try {
   // --- Double-booking through the UI: same slot, second student ---------------------
   // (covered concurrently in the integration suite; here we check the slot disappears)
   await page.goto(`${BASE}/mentors/aarav-mehta`);
-  await page.getByText("Available times").waitFor();
+  await page.locator("#book [aria-labelledby='slot-days-label']").waitFor();
 
   // --- Reschedule ---------------------------------------------------------------------
   await page.goto(bookingUrl);
   await page.getByRole("button", { name: "Reschedule" }).click();
   await page.getByText("Pick a new time").waitFor();
-  await page.locator("[role='dialog'] [aria-labelledby='slot-days-label'] button:not([disabled])").nth(1).click();
-  await page.locator("[role='dialog'] button[aria-pressed]").filter({ hasText: /\d:\d\d/ }).nth(4).click();
+  await (await pickBusyDay("[role='dialog']", 5)).nth(4).click();
   await page.getByRole("button", { name: "Confirm new time" }).click();
   await page.waitForURL((u) => u.href !== bookingUrl && u.pathname.includes("/dashboard/student/bookings/"));
   check("reschedule moves to a new booking", page.url() !== bookingUrl);
@@ -143,8 +156,8 @@ try {
   // --- Mobile ----------------------------------------------------------------------------------------
   await page.setViewportSize({ width: 390, height: 800 });
   await page.goto(`${BASE}/dashboard/student`);
-  await page.locator("nav[aria-label='Dashboard']:visible").waitFor();
-  check("dashboard has mobile navigation", await page.locator("nav[aria-label='Dashboard']:visible").getByText("Bookings").isVisible());
+  await page.locator("nav[aria-label^='Dashboard']:visible").waitFor();
+  check("dashboard has mobile navigation", await page.locator("nav[aria-label^='Dashboard']:visible").getByText("Bookings").isVisible());
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
   check("no horizontal scroll on mobile dashboard", !overflow);
   await page.goto(`${BASE}/mentors/aarav-mehta`);
@@ -199,19 +212,18 @@ try {
     await mp.getByLabel("Experience").fill("Twelve years of building and operating production systems at scale.");
     await mp.getByRole("button", { name: "Software Engineering" }).click();
     await mp.getByLabel("Your timezone").selectOption("Asia/Kolkata");
+    await mp.locator("#verificationUrl").fill("https://www.linkedin.com/in/e2e-mentor");
     await mp.getByRole("button", { name: "Save profile" }).click();
     await mp.getByText("Profile saved").first().waitFor();
     check("mentor saves profile (headline, bio, experience, category, timezone)", true);
 
     await mp.goto(`${BASE}/dashboard/mentor/availability`);
-    await mp.getByText("Asia/Kolkata", { exact: false }).first().waitFor();
-    await mp.getByRole("button", { name: "Save availability" }).click();
-    await mp.getByText("Availability updated").first().waitFor();
-    check("mentor saves availability (shown in the mentor's timezone)", true);
+    await mp.getByText("Availability opens after approval").waitFor();
+    check("pending mentor can't publish availability yet", true);
 
     await mp.goto(`${BASE}/mentors?q=${encodeURIComponent(mentorName)}`);
     await mp.waitForLoadState("networkidle");
-    check("pending mentor is NOT publicly discoverable", (await mp.getByText(mentorName).count()) === 0);
+    check("pending mentor is NOT publicly discoverable", (await mp.getByRole("link", { name: mentorName }).count()) === 0);
 
     const actx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     const ap = await actx.newPage();
@@ -236,6 +248,12 @@ try {
     await mp.goto(`${BASE}/dashboard/mentor`);
     await mp.getByText("Status: APPROVED").waitFor();
     check("mentor dashboard shows APPROVED", true);
+
+    await mp.goto(`${BASE}/dashboard/mentor/availability`);
+    await mp.getByText("Asia/Kolkata", { exact: false }).first().waitFor();
+    await mp.getByRole("button", { name: "Save availability" }).click();
+    await mp.getByText("Availability updated").first().waitFor();
+    check("mentor saves availability (shown in the mentor's timezone)", true);
     await actx.close();
     await mctx.close();
   } else {

@@ -4,7 +4,7 @@ import { WaitlistSignupFlow } from "@/features/auth/waitlist-signup-flow";
 import { isGoogleOAuthEnabled } from "@/lib/env";
 import { waitlistMode } from "@/lib/waitlist";
 
-export const metadata = { title: "Join the waitlist" };
+export const metadata = { title: waitlistMode ? "Join the waitlist" : "Create your account" };
 
 export default async function SignUpPage({ searchParams }: { searchParams: Promise<{ role?: string }> }) {
   const { role } = await searchParams;
@@ -12,7 +12,7 @@ export default async function SignUpPage({ searchParams }: { searchParams: Promi
   return (
     <>
       <div>
-        <h1 className="font-display text-3xl font-semibold tracking-tight">Join the Mentio waitlist</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{waitlistMode ? "Join the Mentio waitlist" : "Create your account"}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{waitlistMode ? "Add your email, verify the code right here, and you’re on the list." : "Create your Mentio account."}</p>
         {!waitlistMode ? <p className="mt-3 text-sm text-muted-foreground">Already have an account?{" "}<Link href="/sign-in" className="font-medium underline-offset-4 hover:underline">Sign in</Link></p> : null}
       </div>

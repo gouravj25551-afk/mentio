@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import {
   Bell, Bookmark, Calendar, Compass, LayoutDashboard, Settings2,
-  Users, LineChart, Shield, Sparkles, Star, Clock,
+  Users, LineChart, Shield, Sparkles, Star, Clock, Wallet,
 } from "lucide-react";
 
 import { SoundToggle } from "@/components/shared/sound-toggle";
@@ -41,6 +41,7 @@ const adminNav: NavItem[] = [
   { href: "/dashboard/admin/mentors", label: "Mentors", icon: Users },
   { href: "/dashboard/admin/users", label: "Users", icon: Shield },
   { href: "/dashboard/admin/bookings", label: "Bookings", icon: Calendar },
+  { href: "/dashboard/admin/payments", label: "Payments", icon: Wallet },
   { href: "/dashboard/admin/categories", label: "Categories", icon: Compass },
   { href: "/dashboard/admin/analytics", label: "Analytics", icon: LineChart },
 ];

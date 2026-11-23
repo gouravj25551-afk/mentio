@@ -12,8 +12,16 @@ import { bookingRowSelect, toBookingRow } from "@/features/bookings/rows";
 import type { CurrentUser } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { formatDayInZone, formatTimeInZone } from "@/lib/time";
-import { initials } from "@/lib/utils";
+import { formatMoney, initials } from "@/lib/utils";
 import { meetingKindLabel } from "@/services/calendar";
+
+const PAYMENT_LABEL: Record<string, string> = {
+  PAID: "Paid",
+  PENDING: "Waiting for payment",
+  FAILED: "Payment failed",
+  REFUND_DUE: "Refund on its way",
+  REFUNDED: "Refunded",
+};
 
 const STATUS: Record<string, { label: string; variant: "success" | "warning" | "secondary" | "destructive" }> = {
   CONFIRMED: { label: "Confirmed", variant: "success" },
@@ -63,6 +71,16 @@ export async function BookingDetailView({ viewer, bookingId, area }: { viewer: C
               {formatTimeInZone(booking.startsAt, viewer.timezone)} – {formatTimeInZone(booking.endsAt, viewer.timezone, true)}
             </Field>
           </div>
+          {booking.amountCents > 0 ? (
+            <Field label="Payment">
+              {formatMoney(booking.amountCents, booking.currency)} · {PAYMENT_LABEL[booking.paymentStatus ?? ""] ?? booking.paymentStatus}
+              {booking.can.pay && booking.holdExpiresAt ? (
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Your time is held until {formatTimeInZone(booking.holdExpiresAt, viewer.timezone)}. Pay before then to keep it.
+                </span>
+              ) : null}
+            </Field>
+          ) : null}
           {booking.notes ? <Field label="Context">{booking.notes}</Field> : null}
           {booking.cancelReason && booking.status === "CANCELLED" ? <Field label="Cancellation">{booking.cancelReason}</Field> : null}
 

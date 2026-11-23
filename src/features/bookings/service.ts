@@ -18,6 +18,7 @@ import {
 import { conflict, forbidden, HttpError, notFound, tooMany } from "@/lib/errors";
 import { logError } from "@/lib/log";
 import { allowed, limiters } from "@/lib/rate-limit";
+import { DEFAULT_CURRENCY } from "@/lib/pricing";
 import { formatInZone, safeTimezone } from "@/lib/time";
 import {
   bookingCancelSchema,
@@ -30,10 +31,11 @@ import {
 import type { CurrentUser } from "@/lib/auth/guards";
 import { notifySafely } from "@/features/notifications/service";
 import { resolveMeeting } from "@/services/calendar";
-import { assertBookable } from "@/services/payments";
+import { assertBookable, holdCutoff } from "@/services/payments";
 
 type Tx = Prisma.TransactionClient;
 
+export const HOLD_EXPIRED_REASON = "Payment not completed in time";
 const SLOT_TAKEN = "That slot was just taken. Please pick another.";
 
 /**
@@ -42,7 +44,7 @@ const SLOT_TAKEN = "That slot was just taken. Please pick another.";
  * always taken mentor-first so two requests can never deadlock each other.
  * (The Booking_no_overlap exclusion constraint is the backstop if this is bypassed.)
  */
-async function lockMentorAndStudent(tx: Tx, mentorProfileId: string, studentId: string) {
+export async function lockMentorAndStudent(tx: Tx, mentorProfileId: string, studentId: string) {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"mentor:" + mentorProfileId}))`;
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"student:" + studentId}))`;
 }
@@ -54,7 +56,24 @@ function mapDbConflict(err: unknown): never {
   throw err;
 }
 
-async function assertNoOverlap(tx: Tx, opts: { mentorProfileId: string; studentId: string; startsAt: Date; endsAt: Date; ignoreBookingId?: string }) {
+/**
+ * Frees slots held by a student who started paying and never finished. Run under the
+ * mentor/student lock, before the overlap check, so an abandoned checkout can't
+ * block a slot for longer than HOLD_MINUTES.
+ */
+export async function releaseExpiredHolds(tx: Tx, opts: { mentorProfileId: string; studentId: string }, now = new Date()) {
+  await tx.booking.updateMany({
+    where: {
+      status: "PENDING",
+      paymentStatus: PAYMENT.PENDING,
+      createdAt: { lt: holdCutoff(now) },
+      OR: [{ mentorProfileId: opts.mentorProfileId }, { studentId: opts.studentId }],
+    },
+    data: { status: "CANCELLED", cancelledAt: now, cancelReason: HOLD_EXPIRED_REASON },
+  });
+}
+
+export async function assertNoOverlap(tx: Tx, opts: { mentorProfileId: string; studentId: string; startsAt: Date; endsAt: Date; ignoreBookingId?: string }) {
   const overlapping = { startsAt: { lt: opts.endsAt }, endsAt: { gt: opts.startsAt } };
   const notSelf = opts.ignoreBookingId ? { id: { not: opts.ignoreBookingId } } : {};
   const mentorBusy = await tx.booking.count({
@@ -132,10 +151,14 @@ export async function createBooking(actor: CurrentUser, input: unknown): Promise
         assertStartAllowed(startsAt, mentor, now);
 
         await lockMentorAndStudent(tx, mentor.id, actor.id);
+        await releaseExpiredHolds(tx, { mentorProfileId: mentor.id, studentId: actor.id }, now);
         const endsAt = new Date(startsAt.getTime() + mentor.sessionLength * 60_000);
         await assertNoOverlap(tx, { mentorProfileId: mentor.id, studentId: actor.id, startsAt, endsAt });
 
-        const meeting = resolveMeeting(mentor);
+        // Paid: hold the slot as PENDING with no meeting link. It confirms only when the
+        // payment is verified (src/features/bookings/payments.ts). Free: confirmed now.
+        const paid = mentor.rateCents > 0;
+        const meeting = paid ? null : resolveMeeting(mentor);
         const booking = await tx.booking.create({
           data: {
             studentId: actor.id,
@@ -144,13 +167,12 @@ export async function createBooking(actor: CurrentUser, input: unknown): Promise
             endsAt,
             topic: data.topic,
             notes: data.notes || null,
-            // Free session: confirmed immediately, no payment involved.
-            amountCents: 0,
-            currency: mentor.currency,
-            status: "CONFIRMED",
-            paymentStatus: PAYMENT.NOT_REQUIRED,
-            meetingUrl: meeting.url,
-            meetingKind: meeting.kind,
+            amountCents: paid ? mentor.rateCents : 0,
+            // Razorpay charges in INR; the column default is USD, so never inherit it for a paid session.
+            currency: paid ? DEFAULT_CURRENCY : mentor.currency,
+            status: paid ? "PENDING" : "CONFIRMED",
+            paymentStatus: paid ? PAYMENT.PENDING : PAYMENT.NOT_REQUIRED,
+            ...(meeting ? { meetingUrl: meeting.url, meetingKind: meeting.kind } : {}),
           },
         });
         return { booking, mentorUserId: mentor.userId, mentorName: mentor.user.name, mentorTz: safeTimezone(mentor.timezone) };
@@ -159,6 +181,12 @@ export async function createBooking(actor: CurrentUser, input: unknown): Promise
     ));
   } catch (err) {
     mapDbConflict(err);
+  }
+
+  // A paid booking is announced once the payment is verified, not when the slot is held.
+  if (booking.status === "PENDING") {
+    revalidatePath("/dashboard", "layout");
+    return booking;
   }
 
   const tzs = await timezonesFor([actor.id]);
@@ -204,7 +232,13 @@ export async function cancelBooking(actor: CurrentUser, bookingId: string, input
   // Conditional update: if a concurrent request changed the status first, count is 0.
   const result = await db.booking.updateMany({
     where: { id: booking.id, status: { in: ACTIVE_STATUSES }, startsAt: { gt: new Date() } },
-    data: { status: "CANCELLED", cancelReason: reason || null, cancelledAt: new Date() },
+    data: {
+      status: "CANCELLED",
+      cancelReason: reason || null,
+      cancelledAt: new Date(),
+      // A paid session that won't happen needs a refund (done from the Razorpay dashboard).
+      ...(booking.paymentStatus === PAYMENT.PAID && booking.amountCents > 0 ? { paymentStatus: PAYMENT.REFUND_DUE } : {}),
+    },
   });
   if (result.count !== 1) throw conflict("This booking was just updated. Refresh and try again.");
 
@@ -254,6 +288,7 @@ export async function rescheduleBooking(actor: CurrentUser, bookingId: string, i
         }
         assertStartAllowed(startsAt, mentor, now);
         await lockMentorAndStudent(tx, mentor.id, actor.id);
+        await releaseExpiredHolds(tx, { mentorProfileId: mentor.id, studentId: actor.id }, now);
 
         // Re-read under the lock: it may have been cancelled or already rescheduled meanwhile.
         const current = await tx.booking.findUniqueOrThrow({ where: { id: booking.id } });

@@ -1,3 +1,4 @@
+import { paymentsEnabled } from "@/lib/pricing";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { SiteHeader } from "@/components/shared/site-header";
 
@@ -17,8 +18,18 @@ export default function TermsPage() {
           <p>Keep your credentials secure and provide accurate information. You are responsible for activity on your account. Mentors must represent their experience honestly.</p>
           <h2>Mentor profiles and bookings</h2>
           <p>Mentor profiles are reviewed before publication. Students and mentors must attend confirmed sessions or communicate promptly about changes. Mentio may suspend accounts that create safety, fraud, or abuse risks.</p>
-          <h2>Free beta</h2>
-          <p>Mentio is currently a free beta. Paid sessions are not available until a payment provider, refunds, and related terms are formally introduced.</p>
+          {paymentsEnabled() ? (
+            <>
+              <h2>Payments and refunds</h2>
+              <p>Sessions are priced by each mentor in Indian rupees, shown before you book. Payments are processed by Razorpay; Mentio never sees or stores your card, UPI or bank details. A booking is confirmed only after your payment succeeds, and your chosen time is held for 15 minutes while you pay.</p>
+              <p>If a session is cancelled by the mentor, or the time is no longer available after you paid, you will be refunded in full to your original payment method. Refunds typically reach your account within 5–7 working days. For any other cancellation, contact support before the session.</p>
+            </>
+          ) : (
+            <>
+              <h2>Free beta</h2>
+              <p>Mentio is currently a free beta. Paid sessions are not available until a payment provider, refunds, and related terms are formally introduced.</p>
+            </>
+          )}
           <h2>Content and conduct</h2>
           <p>Do not upload unlawful, abusive, deceptive, or infringing content. You retain ownership of content you submit and grant Mentio permission to display it as needed to operate the service.</p>
           <h2>Service availability</h2>

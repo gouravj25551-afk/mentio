@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SlotPicker, type Slot } from "@/components/booking/slot-picker";
 import { play } from "@/lib/sound";
+import { openCheckout, verifyPayment, type CheckoutParams } from "@/lib/razorpay-checkout";
 
 /**
  * Students always book on Mentio: pick a day, pick a time, add a topic, confirm.
@@ -26,6 +27,7 @@ export function BookingPanel({
   viewer,
   blockedReason,
   priceLabel,
+  paid = false,
 }: {
   mentor: { id: string; slug: string; name: string; sessionLength: number; timezone: string };
   slots: Slot[];
@@ -34,6 +36,8 @@ export function BookingPanel({
   /** Set by the server when this mentor can't be booked at all (not accepting, paid, not public...). */
   blockedReason: string | null;
   priceLabel: string;
+  /** True when this session costs money and checkout is on. */
+  paid?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -75,6 +79,28 @@ export function BookingPanel({
         setError(body?.error ?? "Something went wrong. Please try again.");
         // The slot may have just been taken: reload the list so it disappears.
         if (res.status === 409) router.refresh();
+        return;
+      }
+      if (body.checkout) {
+        // Paid: the slot is held. Pay now; the booking confirms only once the server verifies it.
+        const result = await openCheckout(body.checkout as CheckoutParams);
+        if (result.status === "paid") {
+          try {
+            await verifyPayment(body.id, result);
+          } catch (e) {
+            play("error");
+            setError((e as Error).message);
+            router.refresh();
+            return;
+          }
+          play("success");
+          toast.success("Payment received. Booking confirmed");
+        } else {
+          play("error");
+          toast(result.status === "failed" ? result.message : "Payment not completed. Your time is held for 15 minutes.");
+        }
+        setOpen(false);
+        router.push(`/dashboard/student/bookings/${body.id}`);
         return;
       }
       play("success");
@@ -139,7 +165,7 @@ export function BookingPanel({
           ) : null}
 
           <p className="flex items-center justify-center gap-1.5 text-[11px] text-white/40">
-            <ShieldCheck className="h-3 w-3" aria-hidden /> Instant confirmation · free to reschedule before the call
+            <ShieldCheck className="h-3 w-3" aria-hidden /> {paid ? "Secure payment by Razorpay · confirmed instantly" : "Instant confirmation"} · free to reschedule before the call
           </p>
         </div>
       </div>
@@ -165,7 +191,7 @@ export function BookingPanel({
             <DialogFooter>
               <Button type="submit" variant="brand" disabled={submitting || !canBook}>
                 {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : null}
-                Confirm booking
+                {paid ? `Pay ${priceLabel} & book` : "Confirm booking"}
               </Button>
             </DialogFooter>
           </form>

@@ -2,6 +2,7 @@ import { apiCatch, apiOk, readJson } from "@/lib/api";
 import { requireApiUser } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { HttpError, notFound } from "@/lib/errors";
+import { DEFAULT_CURRENCY } from "@/lib/pricing";
 import { mentorProfileSchema } from "@/lib/validators";
 
 export async function PUT(req: Request) {
@@ -30,7 +31,8 @@ export async function PUT(req: Request) {
           bio: data.bio,
           experience: data.experience,
           rateCents: data.rateCents,
-          currency: data.currency,
+          // Razorpay settles in INR, so every price is in INR.
+          currency: DEFAULT_CURRENCY,
           sessionLength: data.sessionLength,
           responseTimeHrs: data.responseTimeHrs,
           timezone: data.timezone,

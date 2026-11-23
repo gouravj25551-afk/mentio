@@ -11,7 +11,7 @@ Mentio is **ready for a controlled free beta**, not for charging money. This pag
 | `AUTH_URL`, `NEXT_PUBLIC_APP_URL` | yes | Same public `https://` origin. Google/OAuth callbacks are built from it. |
 | `RESEND_API_KEY`, `EMAIL_FROM` | yes | Verification and password-reset mail will not be delivered without them, so the app won't boot. The sender domain must be verified in Resend (SPF/DKIM). |
 | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | no | Add `https://<host>/api/auth/callback/google` as a redirect URI. |
-| `PAYMENTS_MODE` | no | Leave `free_beta`. |
+| `NEXT_PUBLIC_PAYMENTS_MODE` | no | `free_beta` (default) or `razorpay`. Set before `next build`. With `razorpay` the app also requires `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET`, and rejects `rzp_test_` keys in production. See `docs/PAYMENTS.md`. |
 | `CALENDAR_OAUTH_ENABLED` | no | Leave `false`. |
 
 Do not set `SEED_*` variables in production.

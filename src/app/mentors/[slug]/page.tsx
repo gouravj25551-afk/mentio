@@ -15,7 +15,7 @@ import { ProfileTabs } from "@/components/mentor/profile-tabs";
 import { MobileBookBar } from "@/components/mentor/mobile-book-bar";
 import { optionalUser } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
-import { displayPrice } from "@/lib/pricing";
+import { displayPrice, paymentsEnabled } from "@/lib/pricing";
 import { socialLinks } from "@/lib/socials";
 import { safeTimezone } from "@/lib/time";
 
@@ -56,7 +56,7 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
       ? "This profile isn't public yet, so it can't be booked."
       : !mentor.acceptingBookings
         ? "This mentor isn't accepting new bookings right now."
-        : mentor.rateCents > 0
+        : mentor.rateCents > 0 && !paymentsEnabled()
           ? "Paid sessions aren't available yet. Mentio is free during the beta."
           : viewer?.id === mentor.userId
             ? "This is your own profile."
@@ -205,6 +205,7 @@ export default async function MentorPage({ params }: { params: Promise<{ slug: s
               viewer={viewer ? { role: viewer.role } : null}
               blockedReason={blockedReason}
               priceLabel={displayPrice(mentor.rateCents, mentor.currency)}
+              paid={paymentsEnabled() && mentor.rateCents > 0}
             />
           </aside>
         </div>

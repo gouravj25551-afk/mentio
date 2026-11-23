@@ -1,7 +1,8 @@
 import "server-only";
 import type { BookingStatus, MeetingKind, Prisma } from "@prisma/client";
 
-import { ACTIVE_STATUSES } from "@/lib/booking-rules";
+import { ACTIVE_STATUSES, PAYMENT } from "@/lib/booking-rules";
+import { HOLD_MINUTES, holdCutoff } from "@/services/payments";
 import { publicUser } from "@/lib/public-select";
 
 /** The booking fields a dashboard needs. Nothing else is serialized to the browser. */
@@ -15,6 +16,10 @@ export const bookingRowSelect = {
   meetingUrl: true,
   meetingKind: true,
   cancelReason: true,
+  amountCents: true,
+  currency: true,
+  paymentStatus: true,
+  createdAt: true,
   studentId: true,
   student: { select: publicUser },
   mentorProfile: { select: { slug: true, userId: true, user: { select: publicUser } } },
@@ -37,8 +42,13 @@ export type BookingRowData = {
   /** The other party in the conversation, from the viewer's point of view. */
   counterpart: { name: string | null; image: string | null };
   rating: number | null;
+  amountCents: number;
+  currency: string;
+  paymentStatus: string | null;
+  /** When an unpaid hold releases its slot (ISO), or null. */
+  holdExpiresAt: string | null;
   /** What the viewer may do. Computed here from the same rules the API enforces. */
-  can: { join: boolean; cancel: boolean; reschedule: boolean; complete: boolean; review: boolean };
+  can: { join: boolean; cancel: boolean; reschedule: boolean; complete: boolean; review: boolean; pay: boolean };
 };
 
 /** Shapes a booking for a viewer and works out which actions are currently allowed. */
@@ -48,6 +58,8 @@ export function toBookingRow(b: Row, viewer: { id: string; role: "STUDENT" | "ME
   const active = ACTIVE_STATUSES.includes(b.status);
   const future = b.startsAt > now;
   const ended = b.endsAt <= now;
+  // An unpaid hold that hasn't expired yet: the student can still pay.
+  const holding = b.status === "PENDING" && b.paymentStatus === PAYMENT.PENDING && b.amountCents > 0 && b.createdAt >= holdCutoff(now);
   const other = isStudent ? b.mentorProfile.user : b.student;
 
   return {
@@ -63,7 +75,12 @@ export function toBookingRow(b: Row, viewer: { id: string; role: "STUDENT" | "ME
     mentorSlug: b.mentorProfile.slug,
     counterpart: { name: other.name, image: other.image },
     rating: b.review?.rating ?? null,
+    amountCents: b.amountCents,
+    currency: b.currency,
+    paymentStatus: b.paymentStatus,
+    holdExpiresAt: holding ? new Date(b.createdAt.getTime() + HOLD_MINUTES * 60_000).toISOString() : null,
     can: {
+      pay: holding && isStudent,
       join: b.status === "CONFIRMED" && !ended && Boolean(b.meetingUrl),
       cancel: active && future && (isStudent || isMentor || viewer.role === "ADMIN"),
       reschedule: active && future && isStudent,

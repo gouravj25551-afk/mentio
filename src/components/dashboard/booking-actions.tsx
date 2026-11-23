@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RescheduleDialog } from "@/components/booking/reschedule-dialog";
+import { PayNow } from "@/components/dashboard/pay-now";
 import type { BookingRowData } from "@/features/bookings/rows";
 
 async function post(url: string, body: unknown) {
@@ -19,7 +20,7 @@ async function post(url: string, body: unknown) {
 }
 
 /** Cancel / reschedule / mark-finished controls. Which ones show is decided on the server (`booking.can`). */
-export function BookingActions({ booking }: { booking: Pick<BookingRowData, "id" | "mentorSlug" | "can"> }) {
+export function BookingActions({ booking }: { booking: Pick<BookingRowData, "id" | "mentorSlug" | "can" | "amountCents" | "currency"> }) {
   const router = useRouter();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
@@ -56,6 +57,7 @@ export function BookingActions({ booking }: { booking: Pick<BookingRowData, "id"
 
   return (
     <>
+      {booking.can.pay ? <PayNow bookingId={booking.id} amountCents={booking.amountCents} currency={booking.currency} /> : null}
       {booking.can.complete ? (
         <>
           <Button variant="brand" size="sm" disabled={busy !== null} onClick={() => complete("COMPLETED")}>

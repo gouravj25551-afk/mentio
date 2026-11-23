@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { MAX_PRICE_PAISE, MIN_PRICE_PAISE, paymentsEnabled } from "@/lib/pricing";
+
 import { isValidTimezone } from "@/lib/time";
 import { validateMeetingLink } from "@/lib/meeting-links";
 import { validateAvailability } from "@/lib/booking-rules";
@@ -65,9 +67,15 @@ export const mentorProfileSchema = z.object({
   headline: z.string().trim().min(10, "Headline must be at least 10 characters").max(140),
   bio: z.string().trim().min(40, "Bio must be at least 40 characters").max(4000),
   experience: z.string().trim().min(20, "Experience must be at least 20 characters").max(4000),
-  // Free beta: no provider can charge, so a price can't be set (see src/services/payments).
-  rateCents: z.number().int().min(0).max(0, "Paid sessions aren't available yet during the beta.").default(0),
-  currency: z.string().length(3).default("USD"),
+  // In paise. 0 = free. Only settable once payments are on (see src/services/payments).
+  rateCents: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .refine((v) => v === 0 || paymentsEnabled(), "Paid sessions aren't available yet during the beta.")
+    .refine((v) => v === 0 || (v >= MIN_PRICE_PAISE && v <= MAX_PRICE_PAISE), `Price must be between ₹${MIN_PRICE_PAISE / 100} and ₹${MAX_PRICE_PAISE / 100}.`),
+  currency: z.string().length(3).default("INR"),
   sessionLength: z.number().int().min(15).max(240).default(30),
   responseTimeHrs: z.number().int().min(1).max(168).default(24),
   timezone: z.string().refine(isValidTimezone, "Pick a valid timezone").default("UTC"),

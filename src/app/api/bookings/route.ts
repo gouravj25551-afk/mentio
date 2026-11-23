@@ -3,12 +3,15 @@ import { requireApiUser } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { participantUser, publicUser } from "@/lib/public-select";
 import { createBooking } from "@/features/bookings/service";
+import { startCheckout } from "@/features/bookings/payments";
 
 export async function POST(req: Request) {
   try {
     const user = await requireApiUser("STUDENT");
     const booking = await createBooking(user, await readJson(req));
-    return apiOk(booking, 201);
+    // Paid: the slot is held and the student must pay before it confirms.
+    const checkout = booking.status === "PENDING" ? await startCheckout(user, booking.id) : undefined;
+    return apiOk(checkout ? { ...booking, checkout } : booking, 201);
   } catch (err) {
     return apiCatch(err);
   }

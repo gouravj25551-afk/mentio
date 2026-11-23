@@ -25,8 +25,10 @@ const TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
 export const canTransition = (from: BookingStatus, to: BookingStatus) => TRANSITIONS[from].includes(to);
 
 // ---- Payment status ----------------------------------------------------------
+// REFUND_DUE: the student paid but the session will not happen (cancelled, or the
+// payment arrived after the hold expired). Refund it from the Razorpay dashboard.
 
-export const PAYMENT = { NOT_REQUIRED: "NOT_REQUIRED", PENDING: "PENDING", PAID: "PAID", FAILED: "FAILED", REFUNDED: "REFUNDED" } as const;
+export const PAYMENT = { NOT_REQUIRED: "NOT_REQUIRED", PENDING: "PENDING", PAID: "PAID", FAILED: "FAILED", REFUNDED: "REFUNDED", REFUND_DUE: "REFUND_DUE" } as const;
 
 /**
  * A booking may only be CONFIRMED or COMPLETED if it is free or PAID. Mirrors the

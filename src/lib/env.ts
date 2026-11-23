@@ -16,8 +16,14 @@ const EnvSchema = z.object({
   EMAIL_FROM: z.string().default("Mentio <noreply@mentio.app>"),
   RESEND_API_KEY: optional(z.string()),
   // Payments. "free_beta" (default): every session is free and mentors cannot
-  // set a price. No other mode exists until a real provider is implemented.
-  PAYMENTS_MODE: z.enum(["free_beta"]).default("free_beta"),
+  // set a price. "razorpay": mentors set a price and students pay at checkout.
+  // NEXT_PUBLIC_ so the browser bundle can show prices; it is inlined at build time.
+  NEXT_PUBLIC_PAYMENTS_MODE: z.enum(["free_beta", "razorpay"]).default("free_beta"),
+  // Razorpay (https://dashboard.razorpay.com/app/keys). The key id is public; the secrets are not.
+  RAZORPAY_KEY_ID: optional(z.string()),
+  RAZORPAY_KEY_SECRET: optional(z.string()),
+  // Secret you type into Razorpay's webhook settings; authenticates payment events.
+  RAZORPAY_WEBHOOK_SECRET: optional(z.string()),
   // Calendar OAuth (Cal.com / Calendly). Off unless explicitly enabled.
   CALENDAR_OAUTH_ENABLED: z.enum(["true", "false"]).default("false"),
   CAL_COM_CLIENT_ID: optional(z.string()),
@@ -47,6 +53,12 @@ export function productionProblems(e: Env): string[] {
   }
   if (!e.RESEND_API_KEY) {
     problems.push("RESEND_API_KEY is required so password-reset and verification emails are delivered");
+  }
+  if (e.NEXT_PUBLIC_PAYMENTS_MODE === "razorpay") {
+    if (!e.RAZORPAY_KEY_ID) problems.push("RAZORPAY_KEY_ID is required when NEXT_PUBLIC_PAYMENTS_MODE=razorpay");
+    if (!e.RAZORPAY_KEY_SECRET) problems.push("RAZORPAY_KEY_SECRET is required when NEXT_PUBLIC_PAYMENTS_MODE=razorpay");
+    if (!e.RAZORPAY_WEBHOOK_SECRET) problems.push("RAZORPAY_WEBHOOK_SECRET is required when NEXT_PUBLIC_PAYMENTS_MODE=razorpay");
+    if (e.RAZORPAY_KEY_ID?.startsWith("rzp_test_")) problems.push("RAZORPAY_KEY_ID is a TEST key: use your rzp_live_ key in production");
   }
   if (e.CALENDAR_OAUTH_ENABLED === "true") {
     if (!e.TOKEN_ENCRYPTION_KEY) problems.push("TOKEN_ENCRYPTION_KEY is required when CALENDAR_OAUTH_ENABLED=true");
@@ -95,5 +107,5 @@ export const isResendEnabled = Boolean(env.RESEND_API_KEY);
 export const isCalendarOAuthEnabled = env.CALENDAR_OAUTH_ENABLED === "true";
 export const isCalComEnabled = isCalendarOAuthEnabled && Boolean(env.CAL_COM_CLIENT_ID && env.CAL_COM_CLIENT_SECRET);
 export const isCalendlyEnabled = isCalendarOAuthEnabled && Boolean(env.CALENDLY_CLIENT_ID && env.CALENDLY_CLIENT_SECRET);
-/** True while payments are not implemented: all sessions must be free. */
-export const isFreeBeta = env.PAYMENTS_MODE === "free_beta";
+/** True while no payment provider is on: all sessions must be free. */
+export const isFreeBeta = env.NEXT_PUBLIC_PAYMENTS_MODE === "free_beta";

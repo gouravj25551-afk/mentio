@@ -29,6 +29,7 @@ export default async function MentorProfilePage() {
           headline: mentor.headline,
           bio: mentor.bio,
           experience: mentor.experience,
+          priceRupees: Math.round(mentor.rateCents / 100),
           sessionLength: mentor.sessionLength,
           responseTimeHrs: mentor.responseTimeHrs,
           timezone: mentor.timezone,

@@ -11,13 +11,18 @@ const good: Env = {
   AUTH_GOOGLE_SECRET: undefined,
   EMAIL_FROM: "Mentio <noreply@mentio.example.com>",
   RESEND_API_KEY: "re_live_123",
-  PAYMENTS_MODE: "free_beta",
+  NEXT_PUBLIC_PAYMENTS_MODE: "free_beta",
   CALENDAR_OAUTH_ENABLED: "false",
   CAL_COM_CLIENT_ID: undefined,
   CAL_COM_CLIENT_SECRET: undefined,
   CALENDLY_CLIENT_ID: undefined,
   CALENDLY_CLIENT_SECRET: undefined,
   TOKEN_ENCRYPTION_KEY: undefined,
+  RAZORPAY_KEY_ID: undefined,
+  RAZORPAY_KEY_SECRET: undefined,
+  RAZORPAY_WEBHOOK_SECRET: undefined,
+  CAL_COM_WEBHOOK_SECRET: undefined,
+  CALENDLY_WEBHOOK_SIGNING_KEY: undefined,
 };
 
 describe("production environment validation", () => {
@@ -39,5 +44,13 @@ describe("production environment validation", () => {
     const problems = productionProblems({ ...good, CALENDAR_OAUTH_ENABLED: "true" });
     expect(problems.join(" ")).toMatch(/TOKEN_ENCRYPTION_KEY/);
     expect(problems.join(" ")).toMatch(/credentials/);
+  });
+
+  it("requires every Razorpay secret, and a live key, when payments are on", () => {
+    const on = { ...good, NEXT_PUBLIC_PAYMENTS_MODE: "razorpay" as const };
+    expect(productionProblems(on).join(" ")).toMatch(/RAZORPAY_KEY_ID.*RAZORPAY_KEY_SECRET.*RAZORPAY_WEBHOOK_SECRET/);
+    const test = productionProblems({ ...on, RAZORPAY_KEY_ID: "rzp_test_abc", RAZORPAY_KEY_SECRET: "s", RAZORPAY_WEBHOOK_SECRET: "w" });
+    expect(test.join(" ")).toMatch(/TEST key/);
+    expect(productionProblems({ ...on, RAZORPAY_KEY_ID: "rzp_live_abc", RAZORPAY_KEY_SECRET: "s", RAZORPAY_WEBHOOK_SECRET: "w" })).toEqual([]);
   });
 });

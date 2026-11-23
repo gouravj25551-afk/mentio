@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { MAX_PRICE_PAISE, MIN_PRICE_PAISE, paymentsEnabled, rupeesToPaise } from "@/lib/pricing";
 import { listTimezones } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,8 @@ type State = {
   headline: string;
   bio: string;
   experience: string;
+  /** Whole rupees per session; 0 = free. */
+  priceRupees: number;
   sessionLength: number;
   responseTimeHrs: number;
   timezone: string;
@@ -65,6 +68,7 @@ export function MentorProfileForm({
   const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
   const lines = (v: string) => v.split("\n").map((x) => x.trim()).filter(Boolean);
   const note = STATUS_NOTE[status];
+  const priced = paymentsEnabled();
 
   function save() {
     setError(null);
@@ -72,7 +76,7 @@ export function MentorProfileForm({
       const res = await fetch("/api/mentors/me/profile", {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...s, rateCents: 0 }),
+        body: JSON.stringify({ ...s, priceRupees: undefined, rateCents: priced ? rupeesToPaise(s.priceRupees) : 0 }),
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
@@ -112,6 +116,21 @@ export function MentorProfileForm({
         <Textarea id="experience" required minLength={20} maxLength={4000} rows={4} value={s.experience} onChange={(e) => update("experience", e.target.value)} />
       </Field>
 
+      {priced ? (
+        <Field id="price" label="Price per session (₹)" hint={`0 for free, or ₹${MIN_PRICE_PAISE / 100}–₹${MAX_PRICE_PAISE / 100}`}>
+          <Input
+            id="price"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={MAX_PRICE_PAISE / 100}
+            step={10}
+            value={s.priceRupees}
+            onChange={(e) => update("priceRupees", Math.max(0, Math.floor(Number(e.target.value) || 0)))}
+          />
+        </Field>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-3">
         <Field id="sessionLength" label="Session length (min)">
           <Input id="sessionLength" type="number" min={15} max={240} step={15} value={s.sessionLength} onChange={(e) => update("sessionLength", Number(e.target.value) || 30)} />
@@ -130,7 +149,7 @@ export function MentorProfileForm({
           </select>
         </Field>
       </div>
-      <p className="text-xs text-muted-foreground">Sessions are free during the beta. Your availability hours use this timezone.</p>
+      <p className="text-xs text-muted-foreground">{priced ? "Students pay you through Mentio at checkout. " : "Sessions are free during the beta. "}Your availability hours use this timezone.</p>
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">Categories <span className="font-normal text-muted-foreground">(pick up to 5)</span></legend>

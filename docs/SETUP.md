@@ -34,7 +34,7 @@ Production additionally requires `RESEND_API_KEY` and a verified `EMAIL_FROM`, a
 | Variable                                       | What                                                                 |
 | ---------------------------------------------- | -------------------------------------------------------------------- |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`        | Enables "Continue with Google"                                       |
-| `PAYMENTS_MODE`                                | Only `free_beta` exists (the default). See `docs/PRODUCTION.md`      |
+| `NEXT_PUBLIC_PAYMENTS_MODE` + `RAZORPAY_*`      | `free_beta` (default) or `razorpay`. See `docs/PAYMENTS.md`          |
 | `CALENDAR_OAUTH_ENABLED` + provider credentials + `TOKEN_ENCRYPTION_KEY` | Cal.com/Calendly account linking. **Off; do not enable** (see PRODUCTION.md) |
 
 ### Database

@@ -1,7 +1,8 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { ACTIVE_STATUSES, generateSlots, type Slot } from "@/lib/booking-rules";
+import { generateSlots, type Slot } from "@/lib/booking-rules";
 import { safeTimezone } from "@/lib/time";
+import { holdCutoff } from "@/services/payments";
 
 export type { Slot };
 
@@ -26,7 +27,8 @@ export async function getAvailableSlots(mentor: {
     db.booking.findMany({
       where: {
         mentorProfileId: mentor.id,
-        status: { in: ACTIVE_STATUSES },
+        // An unpaid hold blocks its slot only until it expires.
+        OR: [{ status: "CONFIRMED" }, { status: "PENDING", createdAt: { gte: holdCutoff(now) } }],
         endsAt: { gt: now },
         startsAt: { lt: new Date(now.getTime() + (days + 2) * 86_400_000) },
       },

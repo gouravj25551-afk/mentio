@@ -3,12 +3,13 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus } from "lucide-react";
 
+import { paymentsEnabled } from "@/lib/pricing";
 import { Eyebrow, FadeIn } from "@/components/motion/primitives";
 
 const items = [
-  { q: "How much does a session cost?", a: "Each mentor sets their own price, and you always see it before you book. During early access, sessions are free." },
+  { q: "How much does a session cost?", a: paymentsEnabled() ? "Each mentor sets their own price and you always see it before you book. You pay securely at checkout with UPI, card or netbanking." : "Each mentor sets their own price, and you always see it before you book. During early access, sessions are free." },
   { q: "How are mentors vetted?", a: "An admin reviews each mentor profile before it goes live. Ratings only come from students who completed a session." },
-  { q: "What if a mentor cancels?", a: "You're notified by email and in your dashboard, and you can book another time or another mentor." },
+  { q: "What if a mentor cancels?", a: paymentsEnabled() ? "You're notified and refunded, and you can book another time or another mentor." : "You're notified by email and in your dashboard, and you can book another time or another mentor." },
   { q: "Can I reschedule?", a: "Yes, any time before the session starts, from your bookings page." },
   { q: "Can I become a mentor?", a: "Yes. Create a mentor account and complete your profile. It goes live once an admin approves it." },
 ];

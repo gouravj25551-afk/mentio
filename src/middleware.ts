@@ -46,7 +46,12 @@ export default auth((req) => {
       "/forgot-password", "/reset-password", "/privacy", "/terms",
     ]);
 
-    const publicApi = path === "/api/auth" || path.startsWith("/api/auth/") || path === "/api/health" || path === "/api/ready";
+    // Webhooks authenticate themselves (HMAC signature on the raw body), so the gate
+    // must not swallow them: Razorpay/Cal.com/Calendly retries would otherwise fail.
+    const publicApi =
+      path === "/api/auth" || path.startsWith("/api/auth/") ||
+      path === "/api/health" || path === "/api/ready" ||
+      path.startsWith("/api/webhooks/");
     if (path.startsWith("/api/") && !publicApi) {
       return NextResponse.json({ error: "Mentio is launching soon." }, { status: 503 });
     }
